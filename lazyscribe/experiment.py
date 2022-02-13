@@ -6,12 +6,37 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, Union
 
-from attrs import define, field, frozen, Factory
+from attrs import asdict, define, field, frozen, Factory
 from slugify import slugify
 
 LOG = logging.getLogger(__name__)
 
-# TODO: Add dependencies
+
+def serializer(inst, field, value):
+    """Custom serializer for :meth:`attrs.asdict`.
+
+    Parameters
+    ----------
+    inst
+        Included for compatibility.
+    field
+        The field name.
+    value
+        The field value.
+
+    Returns
+    -------
+    Any
+        Converted value for easy serialization.
+    """
+    if isinstance(value, datetime):
+        return value.isoformat(timespec="seconds")
+    if field is not None and field.name == "dependencies":
+        new = [f"{exp.project}/{exp.slug}" for exp in value.values()]
+        return new
+
+    return value
+
 
 @define(order=True)
 class Experiment:
@@ -24,6 +49,8 @@ class Experiment:
     ----------
     name : str
         The name of the experiment.
+    project : Path
+        The path to the project JSON associated with the project.
     dir : Path
         The directory in which the project resides. Used to provide the ``path`` attribute.
     author : str, optional (default ``getpass.getuser()``)
@@ -43,15 +70,27 @@ class Experiment:
     """
 
     name: str
-    dir: Path = field(eq=False, factory=Path().resolve)
+    project: Path = field(eq=False)
+    dir: Path = field(eq=False)
     author: str = Factory(getpass.getuser)
     metrics: Dict = Factory(lambda: {})
     parameters: Dict = Factory(lambda: {})
     created_at: datetime = Factory(datetime.now)
     last_updated: datetime = field(order=True, factory=datetime.now)
-    dependencies: Dict = Factory(lambda: {})
+    dependencies: Dict = field(eq=False, factory=lambda: {})
     short_slug: str = field()
     slug: str = field()
+
+    @dir.default
+    def _dir_factory(self) -> Path:
+        """Get the default directory for the project and experiment.
+
+        Returns
+        -------
+        Path
+            Absolute path to the directory.
+        """
+        return self.project.parent
 
     @short_slug.default
     def _short_slug_factory(self) -> str:
@@ -132,6 +171,20 @@ class Experiment:
         if name in self.parameters:
             LOG.warning(f"Overwriting existing value for {name}")
         self.parameters[name] = value
+
+    def to_dict(self) -> Dict:
+        """Serialize the experiment to a dictionary.
+
+        Returns
+        -------
+        Dict
+            The experiment dictionary.
+        """
+        return asdict(
+            self,
+            value_serializer=serializer,
+            filter=lambda attr, _: attr.name not in ["dir", "project"]
+        )
 
 
 @frozen
