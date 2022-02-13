@@ -40,10 +40,7 @@ class Project:
     """
 
     def __init__(
-        self,
-        fpath: str = "project.json",
-        mode: str = "w",
-        author: Optional[str] = None
+        self, fpath: str = "project.json", mode: str = "w", author: Optional[str] = None
     ):
         """Init method."""
         if isinstance(fpath, str):
@@ -81,7 +78,9 @@ class Project:
 
             if self.mode in ("r", "a"):
                 self.experiments.append(
-                    ReadOnlyExperiment(**exp, project=self.fpath, dependencies=dependencies)
+                    ReadOnlyExperiment(
+                        **exp, project=self.fpath, dependencies=dependencies
+                    )
                 )
             else:
                 self.experiments.append(
@@ -107,7 +106,7 @@ class Project:
         ----------
         name : str
             The name of the experiment.
-        
+
         Yields
         ------
         Experiment

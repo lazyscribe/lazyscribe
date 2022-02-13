@@ -150,10 +150,9 @@ class Experiment:
         else:
             self.metrics[name] = value
 
-
     def log_parameter(self, name: str, value: Any):
         """Log a parameter to the experiment.
-        
+
         This method will overwrite existing keys.
 
         Parameters
@@ -179,7 +178,7 @@ class Experiment:
         return asdict(
             self,
             value_serializer=serializer,
-            filter=lambda attr, _: attr.name not in ["dir", "project"]
+            filter=lambda attr, _: attr.name not in ["dir", "project"],
         )
 
     def __gt__(self, other):
