@@ -51,8 +51,6 @@ class Experiment:
         The name of the experiment.
     project : Path
         The path to the project JSON associated with the project.
-    dir : Path
-        The directory in which the project resides. Used to provide the ``path`` attribute.
     author : str, optional (default ``getpass.getuser()``)
         The author of the experiment.
     metrics : dict, optional (default {})
@@ -112,9 +110,7 @@ class Experiment:
         str
             Experiment slug, in the format `{name}-{created_at}-{author}`.
         """
-        return slugify(
-            f"{self.name}-{self.created_at.strftime('%Y%m%d%H%M%S')}-{self.author}"
-        )
+        return slugify(f"{self.name}-{self.created_at.strftime('%Y%m%d%H%M%S')}")
 
     @property
     def path(self) -> Path:

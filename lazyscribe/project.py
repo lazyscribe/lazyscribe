@@ -32,6 +32,11 @@ class Project:
     author : str, optional (default None)
         The project author. This author will be used for any new experiments or modifications to
         existing experiments. If not supplied, ``getpass.getuser()`` will be used.
+
+    Attributes
+    ----------
+    experiments : list
+        The list of experiments in the project.
     """
 
     def __init__(
