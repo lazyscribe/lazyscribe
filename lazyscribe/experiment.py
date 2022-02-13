@@ -38,7 +38,7 @@ def serializer(inst, field, value):
     return value
 
 
-@define(order=True)
+@define
 class Experiment:
     """Experiment data class.
 
@@ -76,7 +76,7 @@ class Experiment:
     metrics: Dict = Factory(lambda: {})
     parameters: Dict = Factory(lambda: {})
     created_at: datetime = Factory(datetime.now)
-    last_updated: datetime = field(order=True, factory=datetime.now)
+    last_updated: datetime = Factory(datetime.now)
     dependencies: Dict = field(eq=False, factory=lambda: {})
     short_slug: str = field()
     slug: str = field()
@@ -185,6 +185,18 @@ class Experiment:
             value_serializer=serializer,
             filter=lambda attr, _: attr.name not in ["dir", "project"]
         )
+
+    def __gt__(self, other):
+        """Determine whether this experiment is newer than another experiment.
+
+        If the experiments have the same ``slug``, this function will compare using the
+        ``last_updated`` attribute. If the ``slug`` is different, this function will use
+        the ``created_at`` value.
+        """
+        if self.slug == other.slug:
+            return self.last_updated > other.last_updated
+        else:
+            return self.created_at > other.created_at
 
 
 @frozen

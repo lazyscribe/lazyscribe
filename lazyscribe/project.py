@@ -55,11 +55,33 @@ class Project:
         self.author = getpass.getuser() if author is None else author
 
     def load(self):
-        """Load existing experiments."""
-        # Read in the project JSON
-        # If in ``r`` or ``a`` mode, instantiate existing experiments as read-only
-        # Otherwise, make them editable
-        # Dependencies need to be read as experiments
+        """Load existing experiments.
+
+        If the project is in read-only or append mode, existing experiments will
+        be loaded in read-only mode. If opened in editable mode, existing experiments
+        will be loaded in editable mode.
+        """
+        with open(self.fpath, "r") as infile:
+            data = json.load(infile)
+
+        for exp in data:
+            dependencies = {}
+            if exp.get("dependencies"):
+                deplist = exp.pop("dependencies")
+                for dep in deplist:
+                    project = Project(fpath=dep.split("/")[0], mode="r")
+                    project.load()
+                    depexp = project[dep.split("/")[1]]
+                    dependencies[depexp.short_slug] = depexp
+
+            if self.mode in ("r", "a"):
+                self.experiments.append(
+                    ReadOnlyExperiment(**exp, project=self.fpath, dependencies=dependencies)
+                )
+            else:
+                self.experiments.append(
+                    Experiment(**exp, project=self.fpath, dependencies=dependencies)
+                )
 
     def save(self):
         """Save the project data."""
@@ -93,7 +115,7 @@ class Project:
             read-only mode.
         """
         if self.mode == "r":
-            raise RuntimeError("No logging available in read-only mode.")
+            raise RuntimeError("Project is in read-only mode.")
         experiment = Experiment(name=name, project=self.fpath, author=self.author)
 
         try:
