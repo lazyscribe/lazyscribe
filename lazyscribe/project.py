@@ -6,7 +6,7 @@ from contextlib import contextmanager
 import getpass
 import json
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Iterator, List, Optional, Union
 
 from .experiment import Experiment, ReadOnlyExperiment
 
@@ -99,7 +99,7 @@ class Project:
         """Merge two projects."""
 
     @contextmanager
-    def log(self, name: str) -> Experiment:
+    def log(self, name: str) -> Iterator[Experiment]:
         """Log an experiment to the project.
 
         Parameters
