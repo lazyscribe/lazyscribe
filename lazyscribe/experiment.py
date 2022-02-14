@@ -116,18 +116,16 @@ class Experiment:
     def path(self) -> Path:
         """The path to an experiment folder.
 
-        On retrieval, this property function will create the
-        experiment folder if necessary.
+        This folder can be used to store any plots or artifacts that you want to associate
+        with the experiment.
 
         Returns
         -------
         Path
             The path for the experiment.
         """
-        out = self.dir / self.name  # TODO: Change to slug
-        out.mkdir(exist_ok=True)
+        return self.dir / self.slug
 
-        return out
 
     def log_metric(self, name: str, value: Union[float, int]):
         """Log a metric to the experiment.
