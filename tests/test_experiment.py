@@ -53,6 +53,34 @@ def test_experiment_serialization():
     }
 
 
+def test_experiment_serialization_dependencies():
+    """Test serializing an experiment with a dependency."""
+    today = datetime.now()
+    upstream = Experiment(
+        name="My experiment", project=Path("other-project.json"), author="root"
+    )
+    exp = Experiment(
+        name="My downstream experiment",
+        project=Path("project.json"),
+        author="root",
+        dependencies={"my-experiment": upstream}
+    )
+
+    assert exp.to_dict() == {
+        "name": "My downstream experiment",
+        "author": "root",
+        "metrics": {},
+        "parameters": {},
+        "created_at": today.strftime("%Y-%m-%dT%H:%M:%S"),
+        "last_updated": today.strftime("%Y-%m-%dT%H:%M:%S"),
+        "dependencies": [
+            f"other-project.json/my-experiment-{today.strftime('%Y%m%d%H%M%S')}"
+        ],
+        "short_slug": "my-downstream-experiment",
+        "slug": f"my-downstream-experiment-{today.strftime('%Y%m%d%H%M%S')}"
+    }
+
+
 def test_experiment_comparison():
     """Test comparing two experiments."""
     exp = Experiment(name="My experiment", project=Path("project.json"))
