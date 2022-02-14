@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
+from datetime import datetime
 import getpass
 import json
 from pathlib import Path
@@ -65,13 +66,17 @@ class Project:
         """
         with open(self.fpath, "r") as infile:
             data = json.load(infile)
+        for idx, entry in enumerate(data):
+            data[idx]["created_at"] = datetime.fromisoformat(entry["created_at"])
+            data[idx]["last_updated"] = datetime.fromisoformat(entry["last_updated"])
 
+        parent = self.fpath.parent
         for exp in data:
             dependencies = {}
-            if exp.get("dependencies"):
+            if "dependencies" in exp:
                 deplist = exp.pop("dependencies")
                 for dep in deplist:
-                    project = Project(fpath=dep.split("/")[0], mode="r")
+                    project = Project(fpath=parent / dep.split("/")[0], mode="r")
                     project.load()
                     depexp = project[dep.split("/")[1]]
                     dependencies[depexp.short_slug] = depexp

@@ -161,8 +161,6 @@ class Experiment:
             The parameter itself.
         """
         self.last_updated = datetime.now()
-        if name in self.parameters:
-            LOG.warning(f"Overwriting existing value for {name}")
         self.parameters[name] = value
 
     def to_dict(self) -> Dict:
