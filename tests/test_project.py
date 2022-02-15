@@ -127,3 +127,82 @@ def test_load_project_dependencies():
     )
 
     assert project.experiments == [expected]
+
+def test_merge_append():
+    """Test merging a project with one that has an extra experiment."""
+    current = Project(fpath=DATA_DIR / "project.json", mode="r")
+    newer = Project(fpath=DATA_DIR / "merge_append.json", mode="r")
+
+    new = current.merge(newer)
+
+    assert new.experiments == [
+        ReadOnlyExperiment(
+            name="My experiment",
+            project=DATA_DIR / "project.json",
+            author="root",
+            metrics={"name": 0.5},
+            created_at=datetime(2022, 1, 1, 9, 30, 0),
+            last_updated=datetime(2022, 1, 1, 9, 30, 0),
+        ),
+        ReadOnlyExperiment(
+            name="My second experiment",
+            project=DATA_DIR / "merge_append.json",
+            author="root",
+            parameters={"features": ["col1", "col2"]},
+            created_at=datetime(2022, 1, 1, 10, 30, 0),
+            last_updated=datetime(2022, 1, 1, 10, 30, 0)
+        )
+    ]
+
+def test_merge_distinct():
+    """Test merging two projects with the no overlapping data."""
+    current = Project(fpath=DATA_DIR / "project.json", mode="r")
+    newer = Project(fpath=DATA_DIR / "merge_distinct.json", mode="r")
+
+    new = current.merge(newer)
+
+    assert new.experiments == [
+        ReadOnlyExperiment(
+            name="My experiment",
+            project=DATA_DIR / "project.json",
+            author="root",
+            metrics={"name": 0.5},
+            created_at=datetime(2022, 1, 1, 9, 30, 0),
+            last_updated=datetime(2022, 1, 1, 9, 30, 0),
+        ),
+        ReadOnlyExperiment(
+            name="My second experiment",
+            project=DATA_DIR / "merge_distinct.json",
+            author="root",
+            parameters={"features": ["col1", "col2"]},
+            created_at=datetime(2022, 1, 1, 10, 30, 0),
+            last_updated=datetime(2022, 1, 1, 10, 30, 0)
+        )
+    ]
+
+def test_merge_update():
+    """Test merging projects with an updated experiment."""
+    current = Project(fpath=DATA_DIR / "project.json", mode="r")
+    newer = Project(fpath=DATA_DIR / "merge_update.json", mode="r")
+
+    new = current.merge(newer)
+
+    assert new.experiments == [
+        ReadOnlyExperiment(
+            name="My experiment",
+            project=DATA_DIR / "merge_update.json",
+            author="friend",
+            metrics={"name": 0.5},
+            parameters={"features": ["col1", "col2", "col3"]},
+            created_at=datetime(2022, 1, 1, 9, 30, 0),
+            last_updated=datetime(2022, 1, 10, 9, 30, 0),
+        ),
+        ReadOnlyExperiment(
+            name="My second experiment",
+            project=DATA_DIR / "merge_update.json",
+            author="root",
+            parameters={"features": ["col1", "col2"]},
+            created_at=datetime(2022, 1, 1, 10, 30, 0),
+            last_updated=datetime(2022, 1, 1, 10, 30, 0)
+        )
+    ]

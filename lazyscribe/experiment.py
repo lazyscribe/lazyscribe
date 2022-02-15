@@ -189,6 +189,36 @@ class Experiment:
         else:
             return self.created_at > other.created_at
 
+    def __lt__(self, other):
+        """Determine whether this experiment is older than another experiment.
+
+        If the experiments have the same ``slug``, this function will compare using the
+        ``last_updated`` attribute. If the ``slug`` is different, this function will use
+        the ``created_at`` value.
+        """
+        if self.slug == other.slug:
+            return self.last_updated < other.last_updated
+        else:
+            return self.created_at < other.created_at
+
+    def __ge__(self, other):
+        """Determine whether this experiment is newer than another experiment.
+
+        If the experiments have the same ``slug``, this function will compare using the
+        ``last_updated`` attribute. If the ``slug`` is different, this function will use
+        the ``created_at`` value.
+        """
+        return bool(self == other or self > other)
+
+    def __le__(self, other):
+        """Determine whether this experiment is older than another experiment.
+
+        If the experiments have the same ``slug``, this function will compare using the
+        ``last_updated`` attribute. If the ``slug`` is different, this function will use
+        the ``created_at`` value.
+        """
+        return bool(self == other or self < other)
+
 
 @frozen
 class ReadOnlyExperiment(Experiment):

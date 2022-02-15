@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Iterator, List, Optional, Union
 
 from .experiment import Experiment, ReadOnlyExperiment
+from .linked import LinkedList, merge
 
 
 class Project:
@@ -101,7 +102,28 @@ class Project:
             json.dump(data, outfile)
 
     def merge(self, other: Project) -> Project:
-        """Merge two projects."""
+        """Merge two projects.
+
+        The new project will inherit the current project ``fpath``,
+        ``author``, and ``mode.
+
+        Returns
+        -------
+        Project
+            A new project.
+        """
+        # Create linked lists of experiments
+        cexp = LinkedList.from_list(self.experiments)
+        oexp = LinkedList.from_list(other.experiments)
+        # Get the merged list of experiments
+        merged = merge(cexp.head, oexp.head).to_list()
+        # De-dupe the merged list based on slug
+        slugs = [exp.slug for exp in merged]
+
+        new = Project(fpath=self.fpath, mode=self.mode, author=self.author)
+        new.experiments = [val for idx, val in enumerate(merged) if val.slug not in slugs[idx + 1:]]
+
+        return new
 
     @contextmanager
     def log(self, name: str) -> Iterator[Experiment]:
