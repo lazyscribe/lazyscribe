@@ -23,6 +23,7 @@ def test_logging_experiment():
     assert project.experiments[0].to_dict() == {
         "name": "My experiment",
         "author": "root",
+        "last_updated_by": "root",
         "metrics": {"name": 0.5},
         "parameters": {},
         "created_at": today.strftime("%Y-%m-%dT%H:%M:%S"),
@@ -199,7 +200,8 @@ def test_merge_update():
         ReadOnlyExperiment(
             name="My experiment",
             project=DATA_DIR / "merge_update.json",
-            author="friend",
+            author="root",
+            last_updated_by="friend",
             metrics={"name": 0.5},
             parameters={"features": ["col1", "col2", "col3"]},
             created_at=datetime(2022, 1, 1, 9, 30, 0),

@@ -1,7 +1,8 @@
 [
     {
         "name": "My experiment",
-        "author": "friend",
+        "author": "root",
+        "last_updated_by": "friend",
         "metrics": {"name": 0.5},
         "parameters": {"features": ["col1", "col2", "col3"]},
         "created_at": "2022-01-01T09:30:00",

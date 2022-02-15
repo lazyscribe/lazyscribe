@@ -71,6 +71,7 @@ class Experiment:
     project: Path = field(eq=False)
     dir: Path = field(eq=False)
     author: str = Factory(getpass.getuser)
+    last_updated_by: str = field()
     metrics: Dict = Factory(lambda: {})
     parameters: Dict = Factory(lambda: {})
     created_at: datetime = Factory(datetime.now)
@@ -89,6 +90,11 @@ class Experiment:
             Absolute path to the directory.
         """
         return self.project.parent
+
+    @last_updated_by.default
+    def _last_updated_by_factory(self) -> str:
+        """Default last updated by is the author."""
+        return self.author
 
     @short_slug.default
     def _short_slug_factory(self) -> str:

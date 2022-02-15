@@ -106,7 +106,7 @@ def merge(list1: Node, list2: Node) -> Any:
     # Loop while some data exists in the latest node
     while list1 or list2:
         # Add the earliest available node from either l1 or l2
-        if list1 and (not list2 or list1.data <= list2.data):
+        if list1 and (not list2 or list1.data < list2.data):
             temp.next = Node(list1.data)
             # Scroll the list
             list1 = list1.next

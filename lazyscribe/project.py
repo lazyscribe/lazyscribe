@@ -7,7 +7,7 @@ from datetime import datetime
 import getpass
 import json
 from pathlib import Path
-from typing import Iterator, List, Optional, Union
+from typing import Dict, Iterator, List, Optional, Union
 
 from .experiment import Experiment, ReadOnlyExperiment
 from .linked import LinkedList, merge
@@ -39,6 +39,9 @@ class Project:
     ----------
     experiments : list
         The list of experiments in the project.
+    snapshot : dict
+        A on-load snapshot of the experiments and their last update timestamp. If the last updated
+        timestamp has shifted when ``save`` is called, the ``last_updated_by`` field will be adjusted.
     """
 
     def __init__(
@@ -55,6 +58,7 @@ class Project:
 
         # If in ``r``, ``a``, or ``w+`` mode, read in the existing project.
         self.experiments: List[Union[Experiment, ReadOnlyExperiment]] = []
+        self.snapshot: Dict = {}
         self.mode = mode
         if mode in ("r", "a", "w+"):
             self.load()
@@ -95,11 +99,19 @@ class Project:
                 self.experiments.append(
                     Experiment(**exp, project=self.fpath, dependencies=dependencies)
                 )
+            self.snapshot[self.experiments[-1].slug] = self.experiments[-1].last_updated
 
     def save(self):
         """Save the project data."""
         if self.mode == "r":
             raise RuntimeError("Project is in read-only mode.")
+        elif self.mode == "w+":
+            for slug, last_updated in self.snapshot.items():
+                if slug not in self:
+                    continue
+                if self[slug].last_updated > last_updated:
+                    self[slug].last_updated_by = self.author
+
         data = [exp.to_dict() for exp in self.experiments]
         with open(self.fpath, "w") as outfile:
             json.dump(data, outfile)
