@@ -13,7 +13,7 @@ LOG = logging.getLogger(__name__)
 
 
 def serializer(inst, field, value):
-    """Custom serializer for :meth:`attrs.asdict`.
+    """Datetime and dependencies converter for :meth:`attrs.asdict`.
 
     Parameters
     ----------
@@ -114,7 +114,7 @@ class Experiment:
 
     @property
     def path(self) -> Path:
-        """The path to an experiment folder.
+        """Path to an experiment folder.
 
         This folder can be used to store any plots or artifacts that you want to associate
         with the experiment.
@@ -125,7 +125,6 @@ class Experiment:
             The path for the experiment.
         """
         return self.dir / self.slug
-
 
     def log_metric(self, name: str, value: Union[float, int]):
         """Log a metric to the experiment.

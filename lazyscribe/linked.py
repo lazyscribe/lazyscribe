@@ -6,7 +6,7 @@ The code for this module is lifted from
 
 from __future__ import annotations
 
-from typing import Any, List, Optional, Union
+from typing import Any, List
 
 from attrs import define
 
@@ -22,6 +22,7 @@ class Node:
     next : any, optional (default None)
         The next data in the chain.
     """
+
     data: Any = None
     next: Any = None
 
@@ -51,6 +52,7 @@ class LinkedList:
     head : any, optional (default None)
         The start of the list.
     """
+
     head: Any = None
 
     def append(self, data: Any):
@@ -83,7 +85,7 @@ class LinkedList:
         return out
 
 
-def merge(list1: Node, list2: Node) -> Node:
+def merge(list1: Node, list2: Node) -> Any:
     """Merge two linked lists.
 
     Parameters

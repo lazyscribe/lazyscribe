@@ -42,7 +42,10 @@ class Project:
     """
 
     def __init__(
-        self, fpath: str = "project.json", mode: str = "w", author: Optional[str] = None
+        self,
+        fpath: Union[str, Path] = "project.json",
+        mode: str = "w",
+        author: Optional[str] = None,
     ):
         """Init method."""
         if isinstance(fpath, str):
@@ -121,7 +124,9 @@ class Project:
         slugs = [exp.slug for exp in merged]
 
         new = Project(fpath=self.fpath, mode=self.mode, author=self.author)
-        new.experiments = [val for idx, val in enumerate(merged) if val.slug not in slugs[idx + 1:]]
+        new.experiments = [
+            val for idx, val in enumerate(merged) if val.slug not in slugs[idx + 1 :]
+        ]
 
         return new
 
