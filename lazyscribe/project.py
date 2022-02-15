@@ -161,6 +161,17 @@ class Project:
         except Exception as exc:
             raise exc
 
+    def __contains__(self, item: str) -> bool:
+        """Check if the project contains an experiment with the given slug or short slug."""
+        for exp in self.experiments:
+            if exp.slug == item or exp.short_slug == item:
+                out = True
+                break
+        else:
+            out = False
+
+        return out
+
     def __getitem__(self, arg: str) -> Union[Experiment, ReadOnlyExperiment]:
         """Use brackets to retrieve an experiment by slug.
 

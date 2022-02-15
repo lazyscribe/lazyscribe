@@ -31,7 +31,7 @@ with project.log(name="My experiment") as exp:
 You've created an experiment! To view the experimental data, call ``to_dict``:
 
 ```python
-project.experiments[-1].to_dict()
+project["my-experiment"].to_dict()
 ```
 
 ```json
