@@ -85,6 +85,14 @@ def test_load_project():
 
     assert project.experiments == [expected]
 
+def test_load_project_edit():
+    """Test loading a project and editing an experiment."""
+    project = Project(fpath=DATA_DIR / "project.json", mode="w+")
+    exp = project["my-experiment"]
+    last_updated = exp.last_updated
+    exp.log_metric("name", 0.6)
+
+    assert exp.last_updated > last_updated
 
 def test_load_project_readonly():
     """Test loading a project in read-only or append mode."""
