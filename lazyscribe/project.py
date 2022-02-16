@@ -120,7 +120,7 @@ class Project:
         """Merge two projects.
 
         The new project will inherit the current project ``fpath``,
-        ``author``, and ``mode.
+        ``author``, and ``mode``.
 
         Returns
         -------
