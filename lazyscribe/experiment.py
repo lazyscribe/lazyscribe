@@ -93,7 +93,7 @@ class Experiment:
 
     @last_updated_by.default
     def _last_updated_by_factory(self) -> str:
-        """Default last updated by is the author."""
+        """Last editor."""
         return self.author
 
     @short_slug.default

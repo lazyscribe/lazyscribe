@@ -41,7 +41,8 @@ class Project:
         The list of experiments in the project.
     snapshot : dict
         A on-load snapshot of the experiments and their last update timestamp. If the last updated
-        timestamp has shifted when ``save`` is called, the ``last_updated_by`` field will be adjusted.
+        timestamp has shifted when ``save`` is called, the ``last_updated_by`` field will be
+        adjusted.
     """
 
     def __init__(
