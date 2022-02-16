@@ -112,9 +112,9 @@ class Project:
                 if self[slug].last_updated > last_updated:
                     self[slug].last_updated_by = self.author
 
-        data = [exp.to_dict() for exp in self.experiments]
+        data = list(self)
         with open(self.fpath, "w") as outfile:
-            json.dump(data, outfile)
+            json.dump(data, outfile, sort_keys=True, indent=4)
 
     def merge(self, other: Project) -> Project:
         """Merge two projects.
@@ -210,3 +210,8 @@ class Project:
             raise KeyError(f"No experiment with slug {arg}")
 
         return out
+
+    def __iter__(self):
+        """Iterate through each experiment and return the dictionary."""
+        for exp in self.experiments:
+            yield exp.to_dict()

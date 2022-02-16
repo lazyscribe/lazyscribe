@@ -37,6 +37,7 @@ project["my-experiment"].to_dict()
 ```json
 {"name": "My experiment",
  "author": "<AUTHOR>",
+ "last_updated_by": "<AUTHOR>",
  "metrics": {"auroc": 0.5},
  "parameters": {"algorithm": "lightgbm"},
  "created_at": "<CREATED_AT>",

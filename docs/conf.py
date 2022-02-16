@@ -78,6 +78,7 @@ todo_include_todos = False
 
 sphinx_gallery_conf = {
      'examples_dirs': '../tutorials',
+     'filename_pattern': '',
      'gallery_dirs': 'tutorials',
 }
 

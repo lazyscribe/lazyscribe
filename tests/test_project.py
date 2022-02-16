@@ -1,5 +1,6 @@
 """Test the project class."""
 
+import json
 from datetime import datetime
 from pathlib import Path
 
@@ -63,13 +64,32 @@ def test_not_logging_experiment_readonly():
 def test_save_project(tmpdir):
     """Test saving a project to an output JSON."""
     location = tmpdir.mkdir("my-project")
-    project = Project(fpath=Path(str(location)) / "project.json", author="root")
+    project_location = Path(str(location)) / "project.json"
+    today = datetime.now()
+    project = Project(fpath=project_location, author="root")
     with project.log(name="My experiment") as exp:
         exp.log_metric("name", 0.5)
 
     project.save()
-    assert (Path(str(location)) / "project.json").is_file()
+    assert project_location.is_file()
 
+    with open(project_location, "r") as infile:
+        serialized = json.load(infile)
+
+    assert serialized == [
+        {
+            "name": "My experiment",
+            "author": "root",
+            "last_updated_by": "root",
+            "metrics": {"name": 0.5},
+            "parameters": {},
+            "created_at": today.strftime("%Y-%m-%dT%H:%M:%S"),
+            "last_updated": today.strftime("%Y-%m-%dT%H:%M:%S"),
+            "dependencies": [],
+            "short_slug": "my-experiment",
+            "slug": f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}"
+        }
+    ]
 
 def test_load_project():
     """Test loading a project back into python."""
@@ -86,14 +106,25 @@ def test_load_project():
 
     assert project.experiments == [expected]
 
-def test_load_project_edit():
+def test_load_project_edit(tmpdir):
     """Test loading a project and editing an experiment."""
-    project = Project(fpath=DATA_DIR / "project.json", mode="w+")
+    location = tmpdir.mkdir("my-location")
+    project_location = Path(str(location)) / "project.json"
+    project = Project(fpath=project_location, author="root")
+    with project.log(name="My experiment") as exp:
+        exp.log_metric("name", 0.5)
+
+    project.save()
+
+    # Load the project back
+    project = Project(fpath=project_location, mode="w+", author="friend")
     exp = project["my-experiment"]
     last_updated = exp.last_updated
     exp.log_metric("name", 0.6)
+    project.save()
 
     assert exp.last_updated > last_updated
+    assert exp.last_updated_by == "friend"
 
 def test_load_project_readonly():
     """Test loading a project in read-only or append mode."""
