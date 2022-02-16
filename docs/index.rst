@@ -33,6 +33,7 @@ Contents
     :caption: How-to...
 
     how-to/basic
+    how-to/readonly
 
 .. toctree::
     :maxdepth: 2
