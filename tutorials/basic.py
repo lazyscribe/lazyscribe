@@ -25,6 +25,7 @@ with project.log(name="Base performance") as exp:
     model = SVC(kernel="linear")
     model.fit(X, y)
     exp.log_metric("score", model.score(X, y))
+    exp.log_parameter("features", list(range(10)))
 
 # %%
 # Finally, let's print and view the experiment data.

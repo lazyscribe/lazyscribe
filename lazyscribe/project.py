@@ -84,9 +84,9 @@ class Project:
             if "dependencies" in exp:
                 deplist = exp.pop("dependencies")
                 for dep in deplist:
-                    project = Project(fpath=parent / dep.split("/")[0], mode="r")
+                    project = Project(fpath=parent / dep.split("|")[0], mode="r")
                     project.load()
-                    depexp = project[dep.split("/")[1]]
+                    depexp = project[dep.split("|")[1]]
                     dependencies[depexp.short_slug] = depexp
 
             if self.mode in ("r", "a"):

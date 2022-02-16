@@ -76,7 +76,7 @@ def test_experiment_serialization_dependencies():
         "created_at": today.strftime("%Y-%m-%dT%H:%M:%S"),
         "last_updated": today.strftime("%Y-%m-%dT%H:%M:%S"),
         "dependencies": [
-            f"other-project.json/my-experiment-{today.strftime('%Y%m%d%H%M%S')}"
+            f"other-project.json|my-experiment-{today.strftime('%Y%m%d%H%M%S')}"
         ],
         "short_slug": "my-downstream-experiment",
         "slug": f"my-downstream-experiment-{today.strftime('%Y%m%d%H%M%S')}"

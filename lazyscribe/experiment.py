@@ -32,7 +32,7 @@ def serializer(inst, field, value):
     if isinstance(value, datetime):
         return value.isoformat(timespec="seconds")
     if field is not None and field.name == "dependencies":
-        new = [f"{exp.project}/{exp.slug}" for exp in value.values()]
+        new = [f"{exp.project}|{exp.slug}" for exp in value.values()]
         return new
 
     return value

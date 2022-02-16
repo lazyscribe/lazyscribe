@@ -33,7 +33,10 @@ Contents
     :caption: How-to...
 
     how-to/basic
+    how-to/artifact
+    how-to/dependencies
     how-to/readonly
+    how-to/merge
 
 .. toctree::
     :maxdepth: 2
