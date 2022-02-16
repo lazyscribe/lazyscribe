@@ -32,6 +32,8 @@ Contents
     :maxdepth: 2
     :caption: How-to...
 
+    how-to/basic
+
 .. toctree::
     :maxdepth: 2
     :caption: Explanation
