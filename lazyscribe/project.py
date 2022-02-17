@@ -61,7 +61,7 @@ class Project:
         self.experiments: List[Union[Experiment, ReadOnlyExperiment]] = []
         self.snapshot: Dict = {}
         self.mode = mode
-        if mode in ("r", "a", "w+"):
+        if mode in ("r", "a", "w+") and self.fpath.is_file():
             self.load()
 
         self.author = getpass.getuser() if author is None else author

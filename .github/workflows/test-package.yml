@@ -37,9 +37,9 @@ jobs:
               run: python -m flake8 lazyscribe
             - name: Run unit testing
               run: python -m pytest tests --cov=./ --cov-report=xml
-            - name: Run Codecov
-              uses: codecov/codecov-action@v2
-              with:
-                fail_ci_if_error: true
-                files: ./coverage.xml
-                verbose: true
+            # - name: Run Codecov
+            #   uses: codecov/codecov-action@v2
+            #   with:
+            #     fail_ci_if_error: true
+            #     files: ./coverage.xml
+            #     verbose: true
