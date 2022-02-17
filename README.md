@@ -1,3 +1,5 @@
+[![codecov](https://codecov.io/github/lazyscribe/lazyscribe/branch/main/graph/badge.svg?token=M5BHYS2SSU)](https://codecov.io/github/lazyscribe/lazyscribe)
+
 # Lightweight, lazy experiment logging
 
 ``lazyscribe`` is a lightweight package for model experiment logging. It creates a single JSON
