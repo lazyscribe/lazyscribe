@@ -1,0 +1,13 @@
+[
+    {
+        "name": "My experiment",
+        "author": "root",
+        "metrics": {"name": 0.5},
+        "parameters": {},
+        "created_at": "2022-01-01T09:30:00",
+        "last_updated": "2022-01-01T09:30:00",
+        "dependencies": [],
+        "short_slug": "my-experiment",
+        "slug": "my-experiment-20220101093000"
+    }
+]

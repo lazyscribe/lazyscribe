@@ -1,9 +1,10 @@
+[![codecov](https://codecov.io/github/lazyscribe/lazyscribe/branch/main/graph/badge.svg?token=M5BHYS2SSU)](https://codecov.io/github/lazyscribe/lazyscribe)
+
 # Lightweight, lazy experiment logging
 
-``lazyscribe`` is a package for model experiment logging. It's lightweight and "lazy"; it won't
-log an experiment to the project until the code is completely finished (errors won't result in
-partially finished experiments in your project log). The project logging is human-readable and
-concise -- it produces only 1 output file to view.
+``lazyscribe`` is a lightweight package for model experiment logging. It creates a single JSON
+file per project, and an experiment is only added to the file when code finishes (errors won't
+result in partially finished experiments in your project log).
 
 ``lazyscribe`` also has functionality to allow for multiple people to work on a single project.
 You can merge projects together and update the list of experiments to create a single, authoritative
@@ -23,7 +24,7 @@ an experiment:
 ```python
 from lazyscribe import Project
 
-project = Project()
+project = Project(fpath="project.json")
 with project.log(name="My experiment") as exp:
     exp.log_metric("auroc", 0.5)
     exp.log_parameter("algorithm", "lightgbm")
@@ -32,12 +33,13 @@ with project.log(name="My experiment") as exp:
 You've created an experiment! To view the experimental data, call ``to_dict``:
 
 ```python
-project.experiments[-1].to_dict()
+project["my-experiment"].to_dict()
 ```
 
 ```json
 {"name": "My experiment",
  "author": "<AUTHOR>",
+ "last_updated_by": "<AUTHOR>",
  "metrics": {"auroc": 0.5},
  "parameters": {"algorithm": "lightgbm"},
  "created_at": "<CREATED_AT>",
@@ -45,4 +47,19 @@ project.experiments[-1].to_dict()
  "dependencies": [],
  "short_slug": "my-experiment",
  "slug": "my-experiment-<CREATED_AT>"}
+```
+
+Once you've finished, save the project to ``project.json``:
+
+```python
+project.save()
+```
+
+Later on, you can read the project back in read-only mode ("r"), append mode ("a"),
+or editable mode ("w+"):
+
+```python
+project = Project("project.json", mode="r")
+with project.log(name="New experiment") as exp:  # Raises a RuntimeError
+    ...
 ```
