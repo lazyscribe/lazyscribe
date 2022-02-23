@@ -1,4 +1,4 @@
-[![codecov](https://codecov.io/github/lazyscribe/lazyscribe/branch/main/graph/badge.svg?token=M5BHYS2SSU)](https://codecov.io/github/lazyscribe/lazyscribe)
+[![codecov](https://codecov.io/github/lazyscribe/lazyscribe/branch/main/graph/badge.svg?token=M5BHYS2SSU)](https://codecov.io/github/lazyscribe/lazyscribe) ![PyPI](https://img.shields.io/pypi/v/lazyscribe) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/lazyscribe)
 
 # Lightweight, lazy experiment logging
 
