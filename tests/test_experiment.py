@@ -43,6 +43,7 @@ def test_experiment_serialization():
     assert exp.to_dict() == {
         "name": "My experiment",
         "author": "root",
+        "last_updated_by": "root",
         "metrics": {"name": 0.5},
         "parameters": {},
         "created_at": today.strftime("%Y-%m-%dT%H:%M:%S"),
@@ -69,12 +70,13 @@ def test_experiment_serialization_dependencies():
     assert exp.to_dict() == {
         "name": "My downstream experiment",
         "author": "root",
+        "last_updated_by": "root",
         "metrics": {},
         "parameters": {},
         "created_at": today.strftime("%Y-%m-%dT%H:%M:%S"),
         "last_updated": today.strftime("%Y-%m-%dT%H:%M:%S"),
         "dependencies": [
-            f"other-project.json/my-experiment-{today.strftime('%Y%m%d%H%M%S')}"
+            f"other-project.json|my-experiment-{today.strftime('%Y%m%d%H%M%S')}"
         ],
         "short_slug": "my-downstream-experiment",
         "slug": f"my-downstream-experiment-{today.strftime('%Y%m%d%H%M%S')}"

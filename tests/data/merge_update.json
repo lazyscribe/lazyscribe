@@ -1,0 +1,25 @@
+[
+    {
+        "name": "My experiment",
+        "author": "root",
+        "last_updated_by": "friend",
+        "metrics": {"name": 0.5},
+        "parameters": {"features": ["col1", "col2", "col3"]},
+        "created_at": "2022-01-01T09:30:00",
+        "last_updated": "2022-01-10T09:30:00",
+        "dependencies": [],
+        "short_slug": "my-experiment",
+        "slug": "my-experiment-20220101093000"
+    },
+    {
+        "name": "My second experiment",
+        "author": "root",
+        "metrics": {},
+        "parameters": {"features": ["col1", "col2"]},
+        "created_at": "2022-01-01T10:30:00",
+        "last_updated": "2022-01-01T10:30:00",
+        "dependencies": [],
+        "short_slug": "my-second-experiment",
+        "slug": "my-second-experiment-20220101103000"
+    }
+]

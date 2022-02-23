@@ -1,0 +1,15 @@
+[
+    {
+        "name": "My downstream experiment",
+        "author": "root",
+        "metrics": {},
+        "parameters": {},
+        "created_at": "2022-01-15T09:30:00",
+        "last_updated": "2022-01-15T09:30:00",
+        "dependencies": [
+            "project.json|my-experiment-20220101093000"
+        ],
+        "short_slug": "my-downstream-experiment",
+        "slug": "my-downstream-experiment-20220115093000"
+    }
+]

@@ -13,7 +13,7 @@ LOG = logging.getLogger(__name__)
 
 
 def serializer(inst, field, value):
-    """Custom serializer for :meth:`attrs.asdict`.
+    """Datetime and dependencies converter for :meth:`attrs.asdict`.
 
     Parameters
     ----------
@@ -32,7 +32,7 @@ def serializer(inst, field, value):
     if isinstance(value, datetime):
         return value.isoformat(timespec="seconds")
     if field is not None and field.name == "dependencies":
-        new = [f"{exp.project}/{exp.slug}" for exp in value.values()]
+        new = [f"{exp.project}|{exp.slug}" for exp in value.values()]
         return new
 
     return value
@@ -71,6 +71,7 @@ class Experiment:
     project: Path = field(eq=False)
     dir: Path = field(eq=False)
     author: str = Factory(getpass.getuser)
+    last_updated_by: str = field()
     metrics: Dict = Factory(lambda: {})
     parameters: Dict = Factory(lambda: {})
     created_at: datetime = Factory(datetime.now)
@@ -89,6 +90,11 @@ class Experiment:
             Absolute path to the directory.
         """
         return self.project.parent
+
+    @last_updated_by.default
+    def _last_updated_by_factory(self) -> str:
+        """Last editor."""
+        return self.author
 
     @short_slug.default
     def _short_slug_factory(self) -> str:
@@ -114,7 +120,7 @@ class Experiment:
 
     @property
     def path(self) -> Path:
-        """The path to an experiment folder.
+        """Path to an experiment folder.
 
         This folder can be used to store any plots or artifacts that you want to associate
         with the experiment.
@@ -125,7 +131,6 @@ class Experiment:
             The path for the experiment.
         """
         return self.dir / self.slug
-
 
     def log_metric(self, name: str, value: Union[float, int]):
         """Log a metric to the experiment.
@@ -161,8 +166,6 @@ class Experiment:
             The parameter itself.
         """
         self.last_updated = datetime.now()
-        if name in self.parameters:
-            LOG.warning(f"Overwriting existing value for {name}")
         self.parameters[name] = value
 
     def to_dict(self) -> Dict:
@@ -190,6 +193,36 @@ class Experiment:
             return self.last_updated > other.last_updated
         else:
             return self.created_at > other.created_at
+
+    def __lt__(self, other):
+        """Determine whether this experiment is older than another experiment.
+
+        If the experiments have the same ``slug``, this function will compare using the
+        ``last_updated`` attribute. If the ``slug`` is different, this function will use
+        the ``created_at`` value.
+        """
+        if self.slug == other.slug:
+            return self.last_updated < other.last_updated
+        else:
+            return self.created_at < other.created_at
+
+    def __ge__(self, other):
+        """Determine whether this experiment is newer than another experiment.
+
+        If the experiments have the same ``slug``, this function will compare using the
+        ``last_updated`` attribute. If the ``slug`` is different, this function will use
+        the ``created_at`` value.
+        """
+        return bool(self == other or self > other)
+
+    def __le__(self, other):
+        """Determine whether this experiment is older than another experiment.
+
+        If the experiments have the same ``slug``, this function will compare using the
+        ``last_updated`` attribute. If the ``slug`` is different, this function will use
+        the ``created_at`` value.
+        """
+        return bool(self == other or self < other)
 
 
 @frozen
