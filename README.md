@@ -1,4 +1,4 @@
-[![codecov](https://codecov.io/github/lazyscribe/lazyscribe/branch/main/graph/badge.svg?token=M5BHYS2SSU)](https://codecov.io/github/lazyscribe/lazyscribe) ![PyPI](https://img.shields.io/pypi/v/lazyscribe) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/lazyscribe)
+[![codecov](https://codecov.io/github/lazyscribe/lazyscribe/branch/main/graph/badge.svg?token=M5BHYS2SSU)](https://codecov.io/github/lazyscribe/lazyscribe) ![PyPI](https://img.shields.io/pypi/v/lazyscribe) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/lazyscribe) [![Documentation Status](https://readthedocs.org/projects/lazyscribe/badge/?version=latest)](https://lazyscribe.readthedocs.io/en/latest/?badge=latest)
 
 # Lightweight, lazy experiment logging
 
@@ -13,10 +13,10 @@ view of all executed experiments.
 # Installation
 
 ```console
-$ python -m pip install lazyscribe@git+https://github.com/lazyscribe/lazyscribe
+$ python -m pip install lazyscribe
 ```
 
-# Usage
+# Basic Usage
 
 The basic usage involves instantiating a ``Project`` and using the context manager to log
 an experiment:
@@ -30,23 +30,29 @@ with project.log(name="My experiment") as exp:
     exp.log_parameter("algorithm", "lightgbm")
 ```
 
-You've created an experiment! To view the experimental data, call ``to_dict``:
+You've created an experiment! You can view the experimental data by using ``list``:
 
 ```python
-project["my-experiment"].to_dict()
+from pprint import pprint
+
+pprint(list(project))
 ```
 
 ```json
-{"name": "My experiment",
- "author": "<AUTHOR>",
- "last_updated_by": "<AUTHOR>",
- "metrics": {"auroc": 0.5},
- "parameters": {"algorithm": "lightgbm"},
- "created_at": "<CREATED_AT>",
- "last_updated": "<LAST_UPDATED>",
- "dependencies": [],
- "short_slug": "my-experiment",
- "slug": "my-experiment-<CREATED_AT>"}
+[
+    {
+        "name": "My experiment",
+        "author": "<AUTHOR>",
+        "last_updated_by": "<AUTHOR>",
+        "metrics": {"auroc": 0.5},
+        "parameters": {"algorithm": "lightgbm"},
+        "created_at": "<CREATED_AT>",
+        "last_updated": "<LAST_UPDATED>",
+        "dependencies": [],
+        "short_slug": "my-experiment",
+        "slug": "my-experiment-<CREATED_AT>"
+    }
+]
 ```
 
 Once you've finished, save the project to ``project.json``:
