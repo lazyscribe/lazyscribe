@@ -26,12 +26,11 @@ def test_experiment_logging():
     exp = Experiment(name="My experiment", project=Path("project.json"))
     exp.log_metric("name", 0.5)
     exp.log_metric("name-cv", 0.4)
-    exp.log_metric("name-cv", 0.6)
     exp.log_parameter("features", ["col1", "col2"])
     with exp.log_test(name="My test") as test:
         test.log_metric("name-subpop", 0.3)
 
-    assert exp.metrics == {"name": 0.5, "name-cv": [0.4, 0.6]}
+    assert exp.metrics == {"name": 0.5, "name-cv": 0.4}
     assert exp.parameters == {"features": ["col1", "col2"]}
     assert exp.tests == [Test(name="My test", metrics={"name-subpop": 0.3})]
 

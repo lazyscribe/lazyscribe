@@ -28,4 +28,4 @@ to the ``Project.experiments`` list.
     exp = Experiment(name="My experiment", project=project.fpath, author=project.author)
     exp.log_metric(...)
     exp.log_parameter(...)
-    project.experiments.append(exp)
+    project.append(exp)

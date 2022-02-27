@@ -142,8 +142,7 @@ class Experiment:
     def log_metric(self, name: str, value: Union[float, int]):
         """Log a metric to the experiment.
 
-        If the ``name`` exists in the ``metrics`` dictionary, the value will be
-        appended to a list.
+        This method will overwrite existing keys.
 
         Parameters
         ----------
@@ -153,12 +152,7 @@ class Experiment:
             Value of the metric.
         """
         self.last_updated = datetime.now()
-        if name in self.metrics:
-            if not isinstance(self.metrics[name], list):
-                self.metrics[name] = [self.metrics[name]]
-            self.metrics[name].append(value)
-        else:
-            self.metrics[name] = value
+        self.metrics[name] = value
 
     def log_parameter(self, name: str, value: Any):
         """Log a parameter to the experiment.

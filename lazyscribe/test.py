@@ -30,8 +30,7 @@ class Test:
     def log_metric(self, name: str, value: Union[float, int]):
         """Log a metric to the test.
 
-        If the ``name`` exists in the ``metrics`` dictionary, the value will be
-        appended to a list.
+        This method will overwrite existing keys.
 
         Parameters
         ----------
@@ -40,12 +39,7 @@ class Test:
         value : int or float
             Value of the metric.
         """
-        if name in self.metrics:
-            if not isinstance(self.metrics[name], list):
-                self.metrics[name] = [self.metrics[name]]
-            self.metrics[name].append(value)
-        else:
-            self.metrics[name] = value
+        self.metrics[name] = value
 
 
 @frozen
