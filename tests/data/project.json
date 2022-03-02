@@ -8,6 +8,15 @@
         "last_updated": "2022-01-01T09:30:00",
         "dependencies": [],
         "short_slug": "my-experiment",
-        "slug": "my-experiment-20220101093000"
+        "slug": "my-experiment-20220101093000",
+        "tests": [
+            {
+                "name": "My test",
+                "description": null,
+                "metrics": {
+                    "name-subpop": 0.3
+                }
+            }
+        ]
     }
 ]

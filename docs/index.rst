@@ -33,6 +33,7 @@ Contents
     :caption: How-to...
 
     how-to/basic
+    how-to/tests
     how-to/artifact
     how-to/dependencies
     how-to/readonly

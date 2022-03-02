@@ -1,13 +1,16 @@
 """Experiment dataclass."""
 
+from contextlib import contextmanager
 from datetime import datetime
 import getpass
 import logging
 from pathlib import Path
-from typing import Any, Dict, Union
+from typing import Any, Dict, Iterator, List, Union
 
 from attrs import asdict, define, field, frozen, Factory
 from slugify import slugify
+
+from .test import Test
 
 LOG = logging.getLogger(__name__)
 
@@ -33,6 +36,9 @@ def serializer(inst, field, value):
         return value.isoformat(timespec="seconds")
     if field is not None and field.name == "dependencies":
         new = [f"{exp.project}|{exp.slug}" for exp in value.values()]
+        return new
+    if field is not None and field.name == "tests":
+        new = [asdict(test) for test in value]
         return new
 
     return value
@@ -79,6 +85,7 @@ class Experiment:
     dependencies: Dict = field(eq=False, factory=lambda: {})
     short_slug: str = field()
     slug: str = field()
+    tests: List = Factory(lambda: [])
 
     @dir.default
     def _dir_factory(self) -> Path:
@@ -135,8 +142,7 @@ class Experiment:
     def log_metric(self, name: str, value: Union[float, int]):
         """Log a metric to the experiment.
 
-        If the ``name`` exists in the ``metrics`` dictionary, the value will be
-        appended to a list.
+        This method will overwrite existing keys.
 
         Parameters
         ----------
@@ -146,12 +152,7 @@ class Experiment:
             Value of the metric.
         """
         self.last_updated = datetime.now()
-        if name in self.metrics:
-            if not isinstance(self.metrics[name], list):
-                self.metrics[name] = [self.metrics[name]]
-            self.metrics[name].append(value)
-        else:
-            self.metrics[name] = value
+        self.metrics[name] = value
 
     def log_parameter(self, name: str, value: Any):
         """Log a parameter to the experiment.
@@ -167,6 +168,32 @@ class Experiment:
         """
         self.last_updated = datetime.now()
         self.parameters[name] = value
+
+    @contextmanager
+    def log_test(self, name: str, description: str = None) -> Iterator[Test]:
+        """Add a test to the experiment using a context handler.
+
+        A test is a specific location for non-global metrics.
+
+        Parameters
+        ----------
+        name : str
+            Name of the test.
+        description : str, optional (default None)
+            An optional description for the test.
+
+        Yields
+        ------
+        Test
+            The :py:class:`lazyscribe.test.Test` dataclass.
+        """
+        test = Test(name=name, description=description)
+        try:
+            yield test
+
+            self.tests.append(test)
+        except Exception as exc:
+            raise exc
 
     def to_dict(self) -> Dict:
         """Serialize the experiment to a dictionary.

@@ -11,6 +11,7 @@ from typing import Dict, Iterator, List, Optional, Union
 
 from .experiment import Experiment, ReadOnlyExperiment
 from .linked import LinkedList, merge
+from .test import Test, ReadOnlyTest
 
 
 class Project:
@@ -90,15 +91,32 @@ class Project:
                     depexp = project[dep.split("|")[1]]
                     dependencies[depexp.short_slug] = depexp
 
+            tests = []
+            if "tests" in exp:
+                testlist = exp.pop("tests")
+                for test in testlist:
+                    if self.mode in ("r", "a"):
+                        tests.append(ReadOnlyTest(**test))
+                    else:
+                        tests.append(Test(**test))
+
             if self.mode in ("r", "a"):
                 self.experiments.append(
                     ReadOnlyExperiment(
-                        **exp, project=self.fpath, dependencies=dependencies
+                        **exp,
+                        project=self.fpath,
+                        dependencies=dependencies,
+                        tests=tests,
                     )
                 )
             else:
                 self.experiments.append(
-                    Experiment(**exp, project=self.fpath, dependencies=dependencies)
+                    Experiment(
+                        **exp,
+                        project=self.fpath,
+                        dependencies=dependencies,
+                        tests=tests,
+                    )
                 )
             self.snapshot[self.experiments[-1].slug] = self.experiments[-1].last_updated
 
@@ -143,6 +161,24 @@ class Project:
 
         return new
 
+    def append(self, other: Experiment):
+        """Append an experiment to the project.
+
+        Parameters
+        ----------
+        other : Experiment
+            The experiment to add.
+
+        Raises
+        ------
+        RuntimeError
+            Raised when trying to log a new experiment when the project is in
+            read-only mode.
+        """
+        if self.mode == "r":
+            raise RuntimeError("Project is in read-only mode.")
+        self.experiments.append(other)
+
     @contextmanager
     def log(self, name: str) -> Iterator[Experiment]:
         """Log an experiment to the project.
@@ -170,7 +206,7 @@ class Project:
         try:
             yield experiment
 
-            self.experiments.append(experiment)
+            self.append(experiment)
         except Exception as exc:
             raise exc
 

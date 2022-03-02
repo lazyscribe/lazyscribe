@@ -7,6 +7,7 @@ from attrs.exceptions import FrozenInstanceError
 import pytest
 
 from lazyscribe.experiment import Experiment, ReadOnlyExperiment
+from lazyscribe.test import Test
 
 
 def test_attrs_default():
@@ -25,11 +26,13 @@ def test_experiment_logging():
     exp = Experiment(name="My experiment", project=Path("project.json"))
     exp.log_metric("name", 0.5)
     exp.log_metric("name-cv", 0.4)
-    exp.log_metric("name-cv", 0.6)
     exp.log_parameter("features", ["col1", "col2"])
+    with exp.log_test(name="My test") as test:
+        test.log_metric("name-subpop", 0.3)
 
-    assert exp.metrics == {"name": 0.5, "name-cv": [0.4, 0.6]}
+    assert exp.metrics == {"name": 0.5, "name-cv": 0.4}
     assert exp.parameters == {"features": ["col1", "col2"]}
+    assert exp.tests == [Test(name="My test", metrics={"name-subpop": 0.3})]
 
 
 def test_experiment_serialization():
@@ -39,6 +42,8 @@ def test_experiment_serialization():
         name="My experiment", project=Path("project.json"), author="root"
     )
     exp.log_metric("name", 0.5)
+    with exp.log_test(name="My test") as test:
+        test.log_metric("name-subpop", 0.3)
 
     assert exp.to_dict() == {
         "name": "My experiment",
@@ -51,6 +56,13 @@ def test_experiment_serialization():
         "dependencies": [],
         "short_slug": "my-experiment",
         "slug": f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}",
+        "tests": [
+            {
+                "name": "My test",
+                "description": None,
+                "metrics": {"name-subpop": 0.3}
+            }
+        ]
     }
 
 
@@ -79,7 +91,8 @@ def test_experiment_serialization_dependencies():
             f"other-project.json|my-experiment-{today.strftime('%Y%m%d%H%M%S')}"
         ],
         "short_slug": "my-downstream-experiment",
-        "slug": f"my-downstream-experiment-{today.strftime('%Y%m%d%H%M%S')}"
+        "slug": f"my-downstream-experiment-{today.strftime('%Y%m%d%H%M%S')}",
+        "tests": []
     }
 
 
