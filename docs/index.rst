@@ -34,6 +34,7 @@ Contents
 
     how-to/basic
     how-to/tests
+    how-to/tabular
     how-to/artifact
     how-to/dependencies
     how-to/readonly
