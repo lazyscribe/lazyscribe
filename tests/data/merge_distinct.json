@@ -8,6 +8,7 @@
         "last_updated": "2022-01-01T10:30:00",
         "dependencies": [],
         "short_slug": "my-second-experiment",
-        "slug": "my-second-experiment-20220101103000"
+        "slug": "my-second-experiment-20220101103000",
+        "tests": []
     }
 ]

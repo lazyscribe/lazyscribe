@@ -7,10 +7,11 @@ from datetime import datetime
 import getpass
 import json
 from pathlib import Path
-from typing import Dict, Iterator, List, Optional, Union
+from typing import Dict, Iterator, List, Optional, Tuple, Union
 
 from .experiment import Experiment, ReadOnlyExperiment
 from .linked import LinkedList, merge
+from .test import Test, ReadOnlyTest
 
 
 class Project:
@@ -90,15 +91,32 @@ class Project:
                     depexp = project[dep.split("|")[1]]
                     dependencies[depexp.short_slug] = depexp
 
+            tests = []
+            if "tests" in exp:
+                testlist = exp.pop("tests")
+                for test in testlist:
+                    if self.mode in ("r", "a"):
+                        tests.append(ReadOnlyTest(**test))
+                    else:
+                        tests.append(Test(**test))
+
             if self.mode in ("r", "a"):
                 self.experiments.append(
                     ReadOnlyExperiment(
-                        **exp, project=self.fpath, dependencies=dependencies
+                        **exp,
+                        project=self.fpath,
+                        dependencies=dependencies,
+                        tests=tests,
                     )
                 )
             else:
                 self.experiments.append(
-                    Experiment(**exp, project=self.fpath, dependencies=dependencies)
+                    Experiment(
+                        **exp,
+                        project=self.fpath,
+                        dependencies=dependencies,
+                        tests=tests,
+                    )
                 )
             self.snapshot[self.experiments[-1].slug] = self.experiments[-1].last_updated
 
@@ -143,6 +161,24 @@ class Project:
 
         return new
 
+    def append(self, other: Experiment):
+        """Append an experiment to the project.
+
+        Parameters
+        ----------
+        other : Experiment
+            The experiment to add.
+
+        Raises
+        ------
+        RuntimeError
+            Raised when trying to log a new experiment when the project is in
+            read-only mode.
+        """
+        if self.mode == "r":
+            raise RuntimeError("Project is in read-only mode.")
+        self.experiments.append(other)
+
     @contextmanager
     def log(self, name: str) -> Iterator[Experiment]:
         """Log an experiment to the project.
@@ -170,9 +206,105 @@ class Project:
         try:
             yield experiment
 
-            self.experiments.append(experiment)
+            self.append(experiment)
         except Exception as exc:
             raise exc
+
+    def to_tabular(self) -> Tuple[List, List]:
+        """Create a dictionary that can be fed into ``pandas``.
+
+        This method depends on the user consistently logging
+        the same metrics and parameters to each experiment in the
+        project.
+
+        Returns
+        -------
+        List
+            A global project list, with one entry per experiment. Each dictionary
+            will have the following keys:
+
+            +--------------------------+-------------------------------+
+            | Field                    | Description                   |
+            |                          |                               |
+            +==========================+===============================+
+            | ``("name",)``            | Name of the experiment        |
+            +--------------------------+-------------------------------+
+            | ``("short_slug",)``      | Short slug for the experiment |
+            +--------------------------+-------------------------------+
+            | ``("slug",)``            | Full slug for the experiment  |
+            +--------------------------+-------------------------------+
+            | ``("author",)``          | Experiment author             |
+            +--------------------------+-------------------------------+
+            | ``("last_updated_by",)`` | Last author                   |
+            +--------------------------+-------------------------------+
+            | ``("created_at",)``      | Created timestamp             |
+            +--------------------------+-------------------------------+
+            | ``("last_updated",)``    | Last update timestammp        |
+            +--------------------------+-------------------------------+
+
+            as well as one key per metric in the ``metrics`` dictionary
+            for each experiment, with the format ``("metrics", <metric_name>)``.
+        Dict
+            A ``tests`` level list. Each entry will represent a test, with the
+            following keys:
+
+            +--------------------------+-------------------------------+
+            | Field                    | Description                   |
+            |                          |                               |
+            +==========================+===============================+
+            | ``("name",)``            | Name of the experiment        |
+            +--------------------------+-------------------------------+
+            | ``("short_slug",)``      | Short slug for the experiment |
+            +--------------------------+-------------------------------+
+            | ``("slug",)``            | Full slug for the experiment  |
+            +--------------------------+-------------------------------+
+            | ``("test",)``            | Test name                     |
+            +--------------------------+-------------------------------+
+            | ``("description",)``     | Test description              |
+            +--------------------------+-------------------------------+
+
+            as well as one key per metric in the ``metrics`` dictionary for each
+            test, with the format ``("metrics", <metric_name>)``.
+        """
+        exp_output: List = []
+        test_output: List = []
+
+        for exp in self:
+            exp_output.append(
+                {
+                    ("name", ""): exp["name"],
+                    ("short_slug", ""): exp["short_slug"],
+                    ("slug", ""): exp["slug"],
+                    ("author", ""): exp["author"],
+                    ("last_updated_by", ""): exp["last_updated_by"],
+                    ("created_at", ""): exp["created_at"],
+                    ("last_updated", ""): exp["last_updated"],
+                    **{
+                        ("metrics", key): value for key, value in exp["metrics"].items()
+                    },
+                    **{
+                        ("parameters", key): value
+                        for key, value in exp["parameters"].items()
+                        if not isinstance(value, (tuple, list, dict))
+                    },
+                }
+            )
+            for test in exp["tests"]:
+                test_output.append(
+                    {
+                        ("name", ""): exp["name"],
+                        ("short_slug", ""): exp["short_slug"],
+                        ("slug", ""): exp["slug"],
+                        ("test", ""): test["name"],
+                        ("description", ""): test["description"],
+                        **{
+                            ("metrics", key): value
+                            for key, value in test["metrics"].items()
+                        },
+                    }
+                )
+
+        return exp_output, test_output
 
     def __contains__(self, item: str) -> bool:
         """Check if the project contains an experiment with the given slug or short slug."""

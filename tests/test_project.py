@@ -6,6 +6,7 @@ from pathlib import Path
 
 from lazyscribe import Project
 from lazyscribe.experiment import Experiment, ReadOnlyExperiment
+from lazyscribe.test import ReadOnlyTest, Test
 import pytest
 
 CURR_DIR = Path(__file__).resolve().parent
@@ -32,6 +33,7 @@ def test_logging_experiment():
         "dependencies": [],
         "short_slug": "my-experiment",
         "slug": f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}",
+        "tests": []
     }
     assert project["my-experiment"] == project.experiments[0]
     assert project[f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}"] == project.experiments[0]
@@ -69,6 +71,8 @@ def test_save_project(tmpdir):
     project = Project(fpath=project_location, author="root")
     with project.log(name="My experiment") as exp:
         exp.log_metric("name", 0.5)
+        with exp.log_test("My test") as test:
+            test.log_metric("name-subpop", 0.3)
 
     project.save()
     assert project_location.is_file()
@@ -87,7 +91,10 @@ def test_save_project(tmpdir):
             "last_updated": today.strftime("%Y-%m-%dT%H:%M:%S"),
             "dependencies": [],
             "short_slug": "my-experiment",
-            "slug": f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}"
+            "slug": f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}",
+            "tests": [
+                {"name": "My test", "description": None, "metrics": {"name-subpop": 0.3}}
+            ]
         }
     ]
 
@@ -101,7 +108,8 @@ def test_load_project():
         author="root",
         metrics={"name": 0.5},
         created_at=datetime(2022, 1, 1, 9, 30, 0),
-        last_updated=datetime(2022, 1, 1, 9, 30, 0)
+        last_updated=datetime(2022, 1, 1, 9, 30, 0),
+        tests=[Test(name="My test", metrics={"name-subpop": 0.3})]
     )
 
     assert project.experiments == [expected]
@@ -136,7 +144,8 @@ def test_load_project_readonly():
         author="root",
         metrics={"name": 0.5},
         created_at=datetime(2022, 1, 1, 9, 30, 0),
-        last_updated=datetime(2022, 1, 1, 9, 30, 0)
+        last_updated=datetime(2022, 1, 1, 9, 30, 0),
+        tests=[ReadOnlyTest(name="My test", metrics={"name-subpop": 0.3})]
     )
 
     assert project.experiments == [expected]
@@ -183,6 +192,7 @@ def test_merge_append():
             metrics={"name": 0.5},
             created_at=datetime(2022, 1, 1, 9, 30, 0),
             last_updated=datetime(2022, 1, 1, 9, 30, 0),
+            tests=[ReadOnlyTest(name="My test", metrics={"name-subpop": 0.3})]
         ),
         ReadOnlyExperiment(
             name="My second experiment",
@@ -209,6 +219,7 @@ def test_merge_distinct():
             metrics={"name": 0.5},
             created_at=datetime(2022, 1, 1, 9, 30, 0),
             last_updated=datetime(2022, 1, 1, 9, 30, 0),
+            tests=[ReadOnlyTest(name="My test", metrics={"name-subpop": 0.3})]
         ),
         ReadOnlyExperiment(
             name="My second experiment",
@@ -237,6 +248,7 @@ def test_merge_update():
             parameters={"features": ["col1", "col2", "col3"]},
             created_at=datetime(2022, 1, 1, 9, 30, 0),
             last_updated=datetime(2022, 1, 10, 9, 30, 0),
+            tests=[ReadOnlyTest(name="My test", metrics={"name-subpop": 0.3})]
         ),
         ReadOnlyExperiment(
             name="My second experiment",
@@ -246,4 +258,42 @@ def test_merge_update():
             created_at=datetime(2022, 1, 1, 10, 30, 0),
             last_updated=datetime(2022, 1, 1, 10, 30, 0)
         )
+    ]
+
+def test_to_tabular():
+    """Test converting a project to a pandas-ready list."""
+    project = Project(fpath=DATA_DIR / "merge_update.json", mode="r")
+    experiments, tests = project.to_tabular()
+
+    assert experiments == [
+        {
+            ("name", ""): "My experiment",
+            ("author", ""): "root",
+            ("last_updated_by", ""): "friend",
+            ("metrics", "name"): 0.5,
+            ("created_at", ""): "2022-01-01T09:30:00",
+            ("last_updated", ""): "2022-01-10T09:30:00",
+            ("short_slug", ""): "my-experiment",
+            ("slug", ""): "my-experiment-20220101093000",
+        },
+        {
+            ("name", ""): "My second experiment",
+            ("author", ""): "root",
+            ("last_updated_by", ""): "root",
+            ("created_at", ""): "2022-01-01T10:30:00",
+            ("last_updated", ""): "2022-01-01T10:30:00",
+            ("short_slug", ""): "my-second-experiment",
+            ("slug", ""): "my-second-experiment-20220101103000"
+        }
+    ]
+
+    assert tests == [
+        {
+            ("name", ""): "My experiment",
+            ("short_slug", ""): "my-experiment",
+            ("slug", ""): "my-experiment-20220101093000",
+            ("test", ""): "My test",
+            ("description", ""): None,
+            ("metrics", "name-subpop"): 0.3
+        }
     ]
