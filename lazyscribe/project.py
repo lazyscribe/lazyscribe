@@ -282,6 +282,11 @@ class Project:
                     **{
                         ("metrics", key): value for key, value in exp["metrics"].items()
                     },
+                    **{
+                        ("parameters", key): value
+                        for key, value in exp["parameters"].items()
+                        if not isinstance(value, (tuple, list, dict))
+                    },
                 }
             )
             for test in exp["tests"]:
@@ -289,6 +294,7 @@ class Project:
                     {
                         ("name", ""): exp["name"],
                         ("short_slug", ""): exp["short_slug"],
+                        ("slug", ""): exp["slug"],
                         ("test", ""): test["name"],
                         ("description", ""): test["description"],
                         **{
