@@ -259,3 +259,41 @@ def test_merge_update():
             last_updated=datetime(2022, 1, 1, 10, 30, 0)
         )
     ]
+
+def test_to_tabular():
+    """Test converting a project to a pandas-ready list."""
+    project = Project(fpath=DATA_DIR / "merge_update.json", mode="r")
+    experiments, tests = project.to_tabular()
+
+    assert experiments == [
+        {
+            ("name", ""): "My experiment",
+            ("author", ""): "root",
+            ("last_updated_by", ""): "friend",
+            ("metrics", "name"): 0.5,
+            ("created_at", ""): "2022-01-01T09:30:00",
+            ("last_updated", ""): "2022-01-10T09:30:00",
+            ("short_slug", ""): "my-experiment",
+            ("slug", ""): "my-experiment-20220101093000",
+        },
+        {
+            ("name", ""): "My second experiment",
+            ("author", ""): "root",
+            ("last_updated_by", ""): "root",
+            ("created_at", ""): "2022-01-01T10:30:00",
+            ("last_updated", ""): "2022-01-01T10:30:00",
+            ("short_slug", ""): "my-second-experiment",
+            ("slug", ""): "my-second-experiment-20220101103000"
+        }
+    ]
+
+    assert tests == [
+        {
+            ("name", ""): "My experiment",
+            ("short_slug", ""): "my-experiment",
+            ("slug", ""): "my-experiment-20220101093000",
+            ("test", ""): "My test",
+            ("description", ""): None,
+            ("metrics", "name-subpop"): 0.3
+        }
+    ]
