@@ -152,15 +152,28 @@ class LazyProject(Task):
 
         save_project(self, upstream_tasks=flow.get_tasks(name="Append experiment"))
 
-    def merge(self, other: Project):
+    def merge(self, other: Project, flow: Optional[Flow] = None):
         """Add a ``merge_projects`` task to the flow.
 
         Parameters
         ----------
         other : Project
             The other project.
+        flow : Flow, optional (default None)
+            A :py:class:`prefect.Flow` object. If not supplied, this function will
+            retrieve a flow from ``prefect.context``.
+
+        Returns
+        -------
+        Task
+            The bound :py:meth:`lazyscribe.prefect.merge_projects` task.
         """
-        merge_projects(self, other)
+        # Find all instances of ``append_experiment`` and bind as upstream tasks
+        flow = flow or prefect.context.get("flow")
+        if not flow:
+            raise ValueError("Could not infer an active flow context.")
+
+        return merge_projects(self, other, upstream_tasks=flow.get_tasks(name="Append experiment"))
 
     def append(self, other: Experiment, **kwargs):
         """Add an ``append_experiment`` task to the flow.

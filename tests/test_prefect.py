@@ -7,6 +7,8 @@ from prefect import Flow
 
 from lazyscribe.prefect import LazyExperiment, LazyProject
 
+CURR_DIR = Path(__file__).resolve().parent
+DATA_DIR = CURR_DIR / "data"
 
 def test_prefect_experiment():
     """Test creating an experiment and logging basic parameters."""
@@ -137,3 +139,48 @@ def test_prefect_project(tmpdir):
         output.result[test_data].result,
     )
     assert project_location.exists()
+
+
+def test_prefect_project_merge():
+    """Test merging projects with prefect."""
+    init_base = LazyProject(fpath=DATA_DIR / "project.json", mode="r")
+    init_new = LazyProject(fpath=DATA_DIR / "merge_append.json", mode="r")
+
+    with Flow(name="Merge projects") as flow:
+        base = init_base()
+        new = init_new()
+        updated = base.merge(new)
+
+    output = flow.run()
+    assert output.is_successful()
+
+    assert list(output.result[updated].result) == [
+        {
+            "name": "My experiment",
+            "author": "root",
+            "last_updated_by": "root",
+            "metrics": {"name": 0.5},
+            "parameters": {},
+            "created_at": "2022-01-01T09:30:00",
+            "last_updated": "2022-01-01T09:30:00",
+            "dependencies": [],
+            "short_slug": "my-experiment",
+            "slug": "my-experiment-20220101093000",
+            "tests": [
+                {"name": "My test", "description": None, "metrics": {"name-subpop": 0.3}}
+            ]
+        },
+        {
+            "name": "My second experiment",
+            "author": "root",
+            "last_updated_by": "root",
+            "metrics": {},
+            "parameters": {"features": ["col1", "col2"]},
+            "created_at": "2022-01-01T10:30:00",
+            "last_updated": "2022-01-01T10:30:00",
+            "dependencies": [],
+            "short_slug": "my-second-experiment",
+            "slug": "my-second-experiment-20220101103000",
+            "tests": []
+        },
+    ]
