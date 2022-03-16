@@ -134,9 +134,21 @@ class LazyProject(Task):
 
         return Project(fpath=fpath, mode=mode, author=author)
 
-    def save(self):
-        """Add a ``save_project`` task to the flow."""
-        save_project(self)
+    def save(self, flow: Optional[Flow] = None):
+        """Add a ``save_project`` task to the flow.
+
+        Parameters
+        ----------
+        flow : Flow, optional (default None)
+            A :py:class:`prefect.Flow` object. If not supplied, this function will
+            retrieve a flow from ``prefect.context``.
+        """
+        # Find all instances of ``append_experiment`` and bind as upstream tasks
+        flow = flow or prefect.context.get("flow")
+        if not flow:
+            raise ValueError("Could not infer an active flow context.")
+
+        save_project(self, upstream_tasks=flow.get_tasks(name="Append experiment"))
 
     def merge(self, other: Project):
         """Add a ``merge_projects`` task to the flow.
@@ -148,18 +160,28 @@ class LazyProject(Task):
         """
         merge_projects(self, other)
 
-    def append(self, other: Experiment):
+    def append(
+        self, other: Experiment, **kwargs
+    ):
         """Add an ``append_experiment`` task to the flow.
 
         Parameters
         ----------
         other : Experiment
             The new experiment to add.
+        **kwargs
+            Keyword arguments for :py:meth:`prefect.task`.
         """
-        append_experiment(self, other)
+        append_experiment(self, other, **kwargs)
 
-    def to_tabular(self) -> Tuple[Task, Task]:
+    def to_tabular(self, flow: Optional[Flow] = None) -> Tuple[Task, Task]:
         """Add a ``project_to_tabular`` task to the flow.
+
+        Parameters
+        ----------
+        flow : Flow, optional (default None)
+            A :py:class:`prefect.Flow` object. If not supplied, this function will
+            retrieve a flow from ``prefect.context``.
 
         Returns
         -------
@@ -168,7 +190,12 @@ class LazyProject(Task):
         Task
             The test-level list.
         """
-        return project_to_tabular(self)
+        # Find all instances of ``append_experiment`` and bind as upstream tasks
+        flow = flow or prefect.context.get("flow")
+        if not flow:
+            raise ValueError("Could not infer an active flow context.")
+
+        return project_to_tabular(self, upstream_tasks=flow.get_tasks(name="Append experiment"))
 
     @contextmanager
     def log(
@@ -205,10 +232,12 @@ class LazyProject(Task):
         """
         # Convert string to Path, if necessary
         project = project or self.fpath
-        if not isinstance(project, Path):
+        if isinstance(project, str):
             project = Path(project)
         experiment = LazyExperiment(name=name)(
-            project=project, author=author or self.author
+            project=project,
+            author=author or self.author,
+            upstream_tasks=[self]
         )
 
         try:
@@ -218,4 +247,4 @@ class LazyProject(Task):
             if not flow:
                 raise ValueError("Could not infer an active flow context.")
 
-            append_experiment(self, experiment, upstream_tasks=flow.downstream_tasks(experiment))
+            self.append(experiment, upstream_tasks=flow.downstream_tasks(experiment))
