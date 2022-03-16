@@ -57,6 +57,7 @@ def merge_projects(base: Project, other: Project) -> Project:
     """
     return base.merge(other)
 
+
 @task(name="Create tabular data", nout=2)
 def project_to_tabular(project: Project) -> Tuple[List, List]:
     """Create tabular representations of the project.
@@ -74,6 +75,7 @@ def project_to_tabular(project: Project) -> Tuple[List, List]:
         A tests level list.
     """
     return project.to_tabular()
+
 
 class LazyProject(Task):
     """Prefect integration for logging ``lazyscribe`` projects.
@@ -160,9 +162,7 @@ class LazyProject(Task):
         """
         merge_projects(self, other)
 
-    def append(
-        self, other: Experiment, **kwargs
-    ):
+    def append(self, other: Experiment, **kwargs):
         """Add an ``append_experiment`` task to the flow.
 
         Parameters
@@ -195,7 +195,9 @@ class LazyProject(Task):
         if not flow:
             raise ValueError("Could not infer an active flow context.")
 
-        return project_to_tabular(self, upstream_tasks=flow.get_tasks(name="Append experiment"))
+        return project_to_tabular(
+            self, upstream_tasks=flow.get_tasks(name="Append experiment")
+        )
 
     @contextmanager
     def log(
@@ -235,9 +237,7 @@ class LazyProject(Task):
         if isinstance(project, str):
             project = Path(project)
         experiment = LazyExperiment(name=name)(
-            project=project,
-            author=author or self.author,
-            upstream_tasks=[self]
+            project=project, author=author or self.author, upstream_tasks=[self]
         )
 
         try:

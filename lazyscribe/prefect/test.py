@@ -44,7 +44,9 @@ class LazyTest(Task):
         super().__init__(**kwargs)
 
     @defaults_from_attrs("name", "description")
-    def run(self, name: Optional[str] = None, description: Optional[str] = None) -> Test:
+    def run(
+        self, name: Optional[str] = None, description: Optional[str] = None
+    ) -> Test:
         """Instantiate a new :py:class:`lazyscribe.test.Test` object.
 
         Parameters

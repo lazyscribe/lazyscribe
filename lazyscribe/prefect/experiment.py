@@ -76,7 +76,10 @@ class LazyExperiment(Task):
     """
 
     def __init__(
-        self, project: Optional[Path] = None, author: Optional[str] = getpass.getuser(), **kwargs
+        self,
+        project: Optional[Path] = None,
+        author: Optional[str] = getpass.getuser(),
+        **kwargs
     ):
         """Init method."""
         self.project = project
@@ -89,7 +92,7 @@ class LazyExperiment(Task):
         self,
         name: Optional[str] = None,
         project: Optional[Path] = None,
-        author: Optional[str] = None
+        author: Optional[str] = None,
     ) -> Experiment:
         """Instantiate a new experiment.
 

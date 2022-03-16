@@ -21,15 +21,21 @@ def test_prefect_experiment():
             test.log_metric("subpop", 0.7)
 
     assert {tsk.name for tsk in flow.downstream_tasks(experiment)} == {
-        "Log experiment metric", "Log parameter", "Append test"
+        "Log experiment metric",
+        "Log parameter",
+        "Append test",
     }
-    assert flow.downstream_tasks(flow.get_tasks(name="Log experiment metric")[0]) == set()
+    assert (
+        flow.downstream_tasks(flow.get_tasks(name="Log experiment metric")[0]) == set()
+    )
     assert flow.downstream_tasks(flow.get_tasks(name="Log parameter")[0]) == set()
     assert {tsk.name for tsk in flow.downstream_tasks(test)} == {
-        "Log test metric", "Append test"
+        "Log test metric",
+        "Append test",
     }
     assert {
-        tsk.name for tsk in flow.downstream_tasks(flow.get_tasks(name="Log test metric")[0])
+        tsk.name
+        for tsk in flow.downstream_tasks(flow.get_tasks(name="Log test metric")[0])
     } == {"Append test"}
 
     output = flow.run()
@@ -47,13 +53,7 @@ def test_prefect_experiment():
         "dependencies": [],
         "short_slug": "my-experiment",
         "slug": f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}",
-        "tests": [
-            {
-                "name": "My test",
-                "description": None,
-                "metrics": {"subpop": 0.7}
-            }
-        ]
+        "tests": [{"name": "My test", "description": None, "metrics": {"subpop": 0.7}}],
     }
 
 
@@ -75,26 +75,41 @@ def test_prefect_project(tmpdir):
         project.save()
 
     assert {tsk.name for tsk in flow.downstream_tasks(project)} == {
-        "My experiment", "Append experiment", "Create tabular data", "Save project"
+        "My experiment",
+        "Append experiment",
+        "Create tabular data",
+        "Save project",
     }
     assert {tsk.name for tsk in flow.downstream_tasks(experiment)} == {
-        "Log experiment metric", "Log parameter", "Append test", "Append experiment"
-    }
-    assert {tsk.name for tsk in flow.downstream_tasks(flow.get_tasks(name="Append experiment")[0])} == {
-        "Create tabular data", "Save project"
-    }
-    assert {tsk.name for tsk in flow.downstream_tasks(flow.get_tasks(name="Log experiment metric")[0])} == {
+        "Log experiment metric",
+        "Log parameter",
+        "Append test",
         "Append experiment",
     }
-    assert {tsk.name for tsk in flow.downstream_tasks(flow.get_tasks(name="Log parameter")[0])} == {
-        "Append experiment"
+    assert {
+        tsk.name
+        for tsk in flow.downstream_tasks(flow.get_tasks(name="Append experiment")[0])
+    } == {"Create tabular data", "Save project"}
+    assert {
+        tsk.name
+        for tsk in flow.downstream_tasks(
+            flow.get_tasks(name="Log experiment metric")[0]
+        )
+    } == {
+        "Append experiment",
     }
+    assert {
+        tsk.name
+        for tsk in flow.downstream_tasks(flow.get_tasks(name="Log parameter")[0])
+    } == {"Append experiment"}
     assert {tsk.name for tsk in flow.downstream_tasks(test)} == {
-        "Log test metric", "Append test"
+        "Log test metric",
+        "Append test",
     }
-    assert {tsk.name for tsk in flow.downstream_tasks(flow.get_tasks(name="Log test metric")[0])} == {
-        "Append test"
-    }
+    assert {
+        tsk.name
+        for tsk in flow.downstream_tasks(flow.get_tasks(name="Log test metric")[0])
+    } == {"Append test"}
 
     output = flow.run()
     today = datetime.now()
@@ -113,15 +128,12 @@ def test_prefect_project(tmpdir):
             "short_slug": "my-experiment",
             "slug": f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}",
             "tests": [
-                {
-                    "name": "My test",
-                    "description": None,
-                    "metrics": {"subpop": 0.7}
-                }
-            ]
+                {"name": "My test", "description": None, "metrics": {"subpop": 0.7}}
+            ],
         }
     ]
     assert output.result[project].result.to_tabular() == (
-        output.result[exp_data].result, output.result[test_data].result
+        output.result[exp_data].result,
+        output.result[test_data].result,
     )
     assert project_location.exists()
