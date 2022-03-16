@@ -173,7 +173,9 @@ class LazyProject(Task):
         if not flow:
             raise ValueError("Could not infer an active flow context.")
 
-        return merge_projects(self, other, upstream_tasks=flow.get_tasks(name="Append experiment"))
+        return merge_projects(
+            self, other, upstream_tasks=flow.get_tasks(name="Append experiment")
+        )
 
     def append(self, other: Experiment, **kwargs):
         """Add an ``append_experiment`` task to the flow.
