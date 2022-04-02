@@ -3,7 +3,7 @@
 from contextlib import contextmanager
 import getpass
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any, Iterator, Optional, Union
 
 import prefect
 from prefect import task, Flow, Task
@@ -110,6 +110,13 @@ class LazyExperiment(Task):
         Experiment
             The :py:class:`lazyscribe.Experiment` class.
         """
+        if name is None:
+            raise ValueError("Please supply a valid name value.")
+        if not isinstance(project, Path):
+            raise ValueError("Please supply a valid project path.")
+        if author is None:
+            raise ValueError("Please supply a valid author.")
+
         return Experiment(name=name, project=project, author=author)
 
     def log_metric(self, name: str, value: Union[float, int]):
@@ -139,7 +146,7 @@ class LazyExperiment(Task):
     @contextmanager
     def log_test(
         self, name: str, description: Optional[str] = None, flow: Optional[Flow] = None
-    ) -> LazyTest:
+    ) -> Iterator[Task]:
         """Add a :py:class:`lazyscribe.prefect.LazyTest` task to the flow.
 
         On exit from the context handler, an additional task will be added to append

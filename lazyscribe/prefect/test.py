@@ -61,6 +61,9 @@ class LazyTest(Task):
         Test
             Instantiated :py:class:`lazyscribe.test.Test` object.
         """
+        if name is None:
+            raise ValueError("Please supply a valid name.")
+
         return Test(name=name, description=description)
 
     def log_metric(self, name: str, value: Union[float, int]):

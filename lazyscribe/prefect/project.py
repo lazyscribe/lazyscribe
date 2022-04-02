@@ -2,7 +2,7 @@
 
 from contextlib import contextmanager
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Iterator, Optional, Tuple
 
 import prefect
 from prefect import task, Flow, Task
@@ -131,10 +131,16 @@ class LazyProject(Task):
             The instantiated project.
         """
         # Convert string to Path, if necessary
-        if not isinstance(fpath, Path):
-            fpath = Path(fpath)
+        if isinstance(fpath, str):
+            project = Path(fpath)
+        elif isinstance(fpath, Path):
+            project = fpath
+        elif fpath is None:
+            raise ValueError("Please supply a valid fpath value.")
+        if mode is None:
+            raise ValueError("Please supply a valid mode value.")
 
-        return Project(fpath=fpath, mode=mode, author=author)
+        return Project(fpath=project, mode=mode, author=author)
 
     def save(self, flow: Optional[Flow] = None):
         """Add a ``save_project`` task to the flow.
@@ -177,19 +183,19 @@ class LazyProject(Task):
             self, other, upstream_tasks=flow.get_tasks(name="Append experiment")
         )
 
-    def append(self, other: Experiment, **kwargs):
+    def append(self, other: Task, **kwargs):
         """Add an ``append_experiment`` task to the flow.
 
         Parameters
         ----------
-        other : Experiment
+        other : Task
             The new experiment to add.
         **kwargs
             Keyword arguments for :py:meth:`prefect.task`.
         """
         append_experiment(self, other, **kwargs)
 
-    def to_tabular(self, flow: Optional[Flow] = None) -> Tuple[Task, Task]:
+    def to_tabular(self, flow: Optional[Flow] = None) -> Task:
         """Add a ``project_to_tabular`` task to the flow.
 
         Parameters
@@ -221,7 +227,7 @@ class LazyProject(Task):
         project: Optional[str] = None,
         author: Optional[str] = None,
         flow: Optional[Flow] = None,
-    ) -> LazyExperiment:
+    ) -> Iterator[Task]:
         """Add a :py:class:`lazyscribe.prefect.LazyExperiment` to the flow.
 
         On exit from the context handler, an additional task will be added to
@@ -248,11 +254,20 @@ class LazyProject(Task):
             This task has already been added to the flow.
         """
         # Convert string to Path, if necessary
-        project = project or self.fpath
-        if isinstance(project, str):
-            project = Path(project)
+        if project is None:
+            if isinstance(self.fpath, str):
+                fpath = Path(self.fpath)
+            else:
+                fpath = self.fpath
+        elif isinstance(project, str):
+            fpath = Path(project)
+        elif isinstance(project, Path):
+            fpath = project
+        else:
+            raise ValueError("Please supply a valid project value.")
+
         experiment = LazyExperiment(name=name)(
-            project=project, author=author or self.author, upstream_tasks=[self]
+            project=fpath, author=author or self.author, upstream_tasks=[self]
         )
 
         try:
