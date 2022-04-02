@@ -244,7 +244,7 @@ class Project:
 
             as well as one key per metric in the ``metrics`` dictionary
             for each experiment, with the format ``("metrics", <metric_name>)``.
-        Dict
+        List
             A ``tests`` level list. Each entry will represent a test, with the
             following keys:
 
