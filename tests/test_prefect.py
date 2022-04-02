@@ -41,22 +41,21 @@ def test_prefect_experiment():
     } == {"Append test"}
 
     output = flow.run()
+    exp_dict = output.result[experiment].result.to_dict()
     today = datetime.now()
 
     assert output.is_successful()
-    assert output.result[experiment].result.to_dict() == {
-        "name": "My experiment",
-        "author": "root",
-        "last_updated_by": "root",
-        "metrics": {"name": 0.5},
-        "parameters": {"param": "value"},
-        "created_at": today.strftime("%Y-%m-%dT%H:%M:%S"),
-        "last_updated": today.strftime("%Y-%m-%dT%H:%M:%S"),
-        "dependencies": [],
-        "short_slug": "my-experiment",
-        "slug": f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}",
-        "tests": [{"name": "My test", "description": None, "metrics": {"subpop": 0.7}}],
-    }
+    assert exp_dict["name"] == "My experiment"
+    assert exp_dict["author"] == "root"
+    assert exp_dict["last_updated_by"] == "root"
+    assert exp_dict["metrics"] == {"name": 0.5}
+    assert exp_dict["parameters"] == {"param": "value"}
+    assert exp_dict["created_at"].startswith(today.strftime("%Y-%m-%dT%H:%M"))
+    assert exp_dict["last_updated"].startswith(today.strftime("%Y-%m-%dT%H:%M"))
+    assert exp_dict["dependencies"] == []
+    assert exp_dict["short_slug"] == "my-experiment"
+    assert exp_dict["slug"].startswith(f"my-experiment-{today.strftime('%Y%m%d%H%M')}")
+    assert exp_dict["tests"] == [{"name": "My test", "description": None, "metrics": {"subpop": 0.7}}]
 
 
 def test_prefect_project(tmpdir):
@@ -114,26 +113,23 @@ def test_prefect_project(tmpdir):
     } == {"Append test"}
 
     output = flow.run()
+    proj_list = list(output.result[project].result)
     today = datetime.now()
 
     assert output.is_successful()
-    assert list(output.result[project].result) == [
-        {
-            "name": "My experiment",
-            "author": "root",
-            "last_updated_by": "root",
-            "metrics": {"name": 0.5},
-            "parameters": {"param": "value"},
-            "created_at": today.strftime("%Y-%m-%dT%H:%M:%S"),
-            "last_updated": today.strftime("%Y-%m-%dT%H:%M:%S"),
-            "dependencies": [],
-            "short_slug": "my-experiment",
-            "slug": f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}",
-            "tests": [
-                {"name": "My test", "description": None, "metrics": {"subpop": 0.7}}
-            ],
-        }
-    ]
+    assert len(proj_list) == 1
+    assert proj_list[0]["name"] == "My experiment"
+    assert proj_list[0]["author"] == "root"
+    assert proj_list[0]["last_updated_by"] == "root"
+    assert proj_list[0]["metrics"] == {"name": 0.5}
+    assert proj_list[0]["parameters"] == {"param": "value"}
+    assert proj_list[0]["created_at"].startswith(today.strftime("%Y-%m-%dT%H:%M"))
+    assert proj_list[0]["last_updated"].startswith(today.strftime("%Y-%m-%dT%H:%M"))
+    assert proj_list[0]["dependencies"] == []
+    assert proj_list[0]["short_slug"] == "my-experiment"
+    assert proj_list[0]["slug"].startswith(f"my-experiment-{today.strftime('%Y%m%d%H%M')}")
+    assert proj_list[0]["tests"] == [{"name": "My test", "description": None, "metrics": {"subpop": 0.7}}]
+
     assert output.result[project].result.to_tabular() == (
         output.result[exp_data].result,
         output.result[test_data].result,
