@@ -39,6 +39,7 @@ Contents
     how-to/dependencies
     how-to/readonly
     how-to/merge
+    how-to/prefect
 
 .. toctree::
     :maxdepth: 2
