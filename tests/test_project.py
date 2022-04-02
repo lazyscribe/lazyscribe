@@ -33,10 +33,13 @@ def test_logging_experiment():
         "dependencies": [],
         "short_slug": "my-experiment",
         "slug": f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}",
-        "tests": []
+        "tests": [],
     }
     assert project["my-experiment"] == project.experiments[0]
-    assert project[f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}"] == project.experiments[0]
+    assert (
+        project[f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}"]
+        == project.experiments[0]
+    )
     with pytest.raises(KeyError):
         project["not a real experiment"]
 
@@ -93,10 +96,15 @@ def test_save_project(tmpdir):
             "short_slug": "my-experiment",
             "slug": f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}",
             "tests": [
-                {"name": "My test", "description": None, "metrics": {"name-subpop": 0.3}}
-            ]
+                {
+                    "name": "My test",
+                    "description": None,
+                    "metrics": {"name-subpop": 0.3},
+                }
+            ],
         }
     ]
+
 
 def test_load_project():
     """Test loading a project back into python."""
@@ -109,10 +117,11 @@ def test_load_project():
         metrics={"name": 0.5},
         created_at=datetime(2022, 1, 1, 9, 30, 0),
         last_updated=datetime(2022, 1, 1, 9, 30, 0),
-        tests=[Test(name="My test", metrics={"name-subpop": 0.3})]
+        tests=[Test(name="My test", metrics={"name-subpop": 0.3})],
     )
 
     assert project.experiments == [expected]
+
 
 def test_load_project_edit(tmpdir):
     """Test loading a project and editing an experiment."""
@@ -134,6 +143,7 @@ def test_load_project_edit(tmpdir):
     assert exp.last_updated > last_updated
     assert exp.last_updated_by == "friend"
 
+
 def test_load_project_readonly():
     """Test loading a project in read-only or append mode."""
     project = Project(fpath=DATA_DIR / "project.json", mode="r")
@@ -145,7 +155,7 @@ def test_load_project_readonly():
         metrics={"name": 0.5},
         created_at=datetime(2022, 1, 1, 9, 30, 0),
         last_updated=datetime(2022, 1, 1, 9, 30, 0),
-        tests=[ReadOnlyTest(name="My test", metrics={"name-subpop": 0.3})]
+        tests=[ReadOnlyTest(name="My test", metrics={"name-subpop": 0.3})],
     )
 
     assert project.experiments == [expected]
@@ -170,12 +180,13 @@ def test_load_project_dependencies():
                 author="root",
                 metrics={"name": 0.5},
                 created_at=datetime(2022, 1, 1, 9, 30, 0),
-                last_updated=datetime(2022, 1, 1, 9, 30, 0)
+                last_updated=datetime(2022, 1, 1, 9, 30, 0),
             )
-        }
+        },
     )
 
     assert project.experiments == [expected]
+
 
 def test_merge_append():
     """Test merging a project with one that has an extra experiment."""
@@ -192,7 +203,7 @@ def test_merge_append():
             metrics={"name": 0.5},
             created_at=datetime(2022, 1, 1, 9, 30, 0),
             last_updated=datetime(2022, 1, 1, 9, 30, 0),
-            tests=[ReadOnlyTest(name="My test", metrics={"name-subpop": 0.3})]
+            tests=[ReadOnlyTest(name="My test", metrics={"name-subpop": 0.3})],
         ),
         ReadOnlyExperiment(
             name="My second experiment",
@@ -200,9 +211,10 @@ def test_merge_append():
             author="root",
             parameters={"features": ["col1", "col2"]},
             created_at=datetime(2022, 1, 1, 10, 30, 0),
-            last_updated=datetime(2022, 1, 1, 10, 30, 0)
-        )
+            last_updated=datetime(2022, 1, 1, 10, 30, 0),
+        ),
     ]
+
 
 def test_merge_distinct():
     """Test merging two projects with the no overlapping data."""
@@ -219,7 +231,7 @@ def test_merge_distinct():
             metrics={"name": 0.5},
             created_at=datetime(2022, 1, 1, 9, 30, 0),
             last_updated=datetime(2022, 1, 1, 9, 30, 0),
-            tests=[ReadOnlyTest(name="My test", metrics={"name-subpop": 0.3})]
+            tests=[ReadOnlyTest(name="My test", metrics={"name-subpop": 0.3})],
         ),
         ReadOnlyExperiment(
             name="My second experiment",
@@ -227,9 +239,10 @@ def test_merge_distinct():
             author="root",
             parameters={"features": ["col1", "col2"]},
             created_at=datetime(2022, 1, 1, 10, 30, 0),
-            last_updated=datetime(2022, 1, 1, 10, 30, 0)
-        )
+            last_updated=datetime(2022, 1, 1, 10, 30, 0),
+        ),
     ]
+
 
 def test_merge_update():
     """Test merging projects with an updated experiment."""
@@ -248,7 +261,7 @@ def test_merge_update():
             parameters={"features": ["col1", "col2", "col3"]},
             created_at=datetime(2022, 1, 1, 9, 30, 0),
             last_updated=datetime(2022, 1, 10, 9, 30, 0),
-            tests=[ReadOnlyTest(name="My test", metrics={"name-subpop": 0.3})]
+            tests=[ReadOnlyTest(name="My test", metrics={"name-subpop": 0.3})],
         ),
         ReadOnlyExperiment(
             name="My second experiment",
@@ -256,9 +269,10 @@ def test_merge_update():
             author="root",
             parameters={"features": ["col1", "col2"]},
             created_at=datetime(2022, 1, 1, 10, 30, 0),
-            last_updated=datetime(2022, 1, 1, 10, 30, 0)
-        )
+            last_updated=datetime(2022, 1, 1, 10, 30, 0),
+        ),
     ]
+
 
 def test_to_tabular():
     """Test converting a project to a pandas-ready list."""
@@ -283,8 +297,8 @@ def test_to_tabular():
             ("created_at", ""): "2022-01-01T10:30:00",
             ("last_updated", ""): "2022-01-01T10:30:00",
             ("short_slug", ""): "my-second-experiment",
-            ("slug", ""): "my-second-experiment-20220101103000"
-        }
+            ("slug", ""): "my-second-experiment-20220101103000",
+        },
     ]
 
     assert tests == [
@@ -294,6 +308,6 @@ def test_to_tabular():
             ("slug", ""): "my-experiment-20220101093000",
             ("test", ""): "My test",
             ("description", ""): None,
-            ("metrics", "name-subpop"): 0.3
+            ("metrics", "name-subpop"): 0.3,
         }
     ]

@@ -38,9 +38,7 @@ def test_experiment_logging():
 def test_experiment_serialization():
     """Test serializing the experiment to a dictionary."""
     today = datetime.now()
-    exp = Experiment(
-        name="My experiment", project=Path("project.json"), author="root"
-    )
+    exp = Experiment(name="My experiment", project=Path("project.json"), author="root")
     exp.log_metric("name", 0.5)
     with exp.log_test(name="My test") as test:
         test.log_metric("name-subpop", 0.3)
@@ -57,12 +55,8 @@ def test_experiment_serialization():
         "short_slug": "my-experiment",
         "slug": f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}",
         "tests": [
-            {
-                "name": "My test",
-                "description": None,
-                "metrics": {"name-subpop": 0.3}
-            }
-        ]
+            {"name": "My test", "description": None, "metrics": {"name-subpop": 0.3}}
+        ],
     }
 
 
@@ -76,7 +70,7 @@ def test_experiment_serialization_dependencies():
         name="My downstream experiment",
         project=Path("project.json"),
         author="root",
-        dependencies={"my-experiment": upstream}
+        dependencies={"my-experiment": upstream},
     )
 
     assert exp.to_dict() == {
@@ -92,7 +86,7 @@ def test_experiment_serialization_dependencies():
         ],
         "short_slug": "my-downstream-experiment",
         "slug": f"my-downstream-experiment-{today.strftime('%Y%m%d%H%M%S')}",
-        "tests": []
+        "tests": [],
     }
 
 
@@ -104,7 +98,7 @@ def test_experiment_comparison():
         name="My experiment",
         project=Path("project.json"),
         slug=exp.slug,
-        created_at=exp.created_at
+        created_at=exp.created_at,
     )
 
     assert exp_new > exp
@@ -117,6 +111,7 @@ def test_experiment_comparison():
     )
 
     assert exp_diff > exp
+
 
 def test_frozen_experiment():
     """Test raising errors with a read-only experiment."""
