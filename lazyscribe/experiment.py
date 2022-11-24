@@ -5,7 +5,7 @@ from datetime import datetime
 import getpass
 import logging
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Union
+from typing import Any, Dict, Iterator, List, Optional, Union
 
 from attrs import asdict, define, field, frozen, Factory
 from slugify import slugify
@@ -170,7 +170,7 @@ class Experiment:
         self.parameters[name] = value
 
     @contextmanager
-    def log_test(self, name: str, description: str = None) -> Iterator[Test]:
+    def log_test(self, name: str, description: Optional[str] = None) -> Iterator[Test]:
         """Add a test to the experiment using a context handler.
 
         A test is a specific location for non-global metrics.
