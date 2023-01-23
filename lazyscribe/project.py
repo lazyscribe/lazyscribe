@@ -9,6 +9,9 @@ import json
 from pathlib import Path
 from typing import Dict, Iterator, List, Optional, Tuple, Union
 
+from urllib.parse import urlparse
+import fsspec
+
 from .experiment import Experiment, ReadOnlyExperiment
 from .linked import LinkedList, merge
 from .test import Test, ReadOnlyTest
@@ -35,6 +38,9 @@ class Project:
     author : str, optional (default None)
         The project author. This author will be used for any new experiments or modifications to
         existing experiments. If not supplied, ``getpass.getuser()`` will be used.
+    storage_options : Dict, optional (default None)
+        Storage options to pass to the filesystem initialization. Will be passed to
+        fsspec.filesystem.
 
     Attributes
     ----------
@@ -51,18 +57,24 @@ class Project:
         fpath: Union[str, Path] = "project.json",
         mode: str = "w",
         author: Optional[str] = None,
+        **storage_options,
     ):
         """Init method."""
         if isinstance(fpath, str):
-            self.fpath = Path(fpath)
+            parsed = urlparse(fpath)
+            self.fpath = Path(parsed.netloc + parsed.path)
+            self.protocol = parsed.scheme or "file"
         else:
             self.fpath = fpath
+            self.protocol = "file"
+        self.storage_options = storage_options
 
         # If in ``r``, ``a``, or ``w+`` mode, read in the existing project.
         self.experiments: List[Union[Experiment, ReadOnlyExperiment]] = []
         self.snapshot: Dict = {}
+        self.fs = fsspec.filesystem(self.protocol, **storage_options)
         self.mode = mode
-        if mode in ("r", "a", "w+") and self.fpath.is_file():
+        if mode in ("r", "a", "w+") and self.fs.is_file(self.fpath):
             self.load()
 
         self.author = getpass.getuser() if author is None else author
@@ -74,7 +86,7 @@ class Project:
         be loaded in read-only mode. If opened in editable mode, existing experiments
         will be loaded in editable mode.
         """
-        with open(self.fpath, "r") as infile:
+        with self.fs.open(self.fpath, "r") as infile:
             data = json.load(infile)
         for idx, entry in enumerate(data):
             data[idx]["created_at"] = datetime.fromisoformat(entry["created_at"])
@@ -86,7 +98,11 @@ class Project:
             if "dependencies" in exp:
                 deplist = exp.pop("dependencies")
                 for dep in deplist:
-                    project = Project(fpath=parent / dep.split("|")[0], mode="r")
+                    project = Project(f
+                        path=parent / dep.split("|")[0],
+                        mode="r",
+                        **self.storage_options,
+                    )
                     project.load()
                     depexp = project[dep.split("|")[1]]
                     dependencies[depexp.short_slug] = depexp
@@ -154,7 +170,12 @@ class Project:
         # De-dupe the merged list based on slug
         slugs = [exp.slug for exp in merged]
 
-        new = Project(fpath=self.fpath, mode=self.mode, author=self.author)
+        new = Project(
+            fpath=self.fpath,
+            mode=self.mode,
+            author=self.author,
+            **self.storage_options,
+        )
         new.experiments = [
             val for idx, val in enumerate(merged) if val.slug not in slugs[idx + 1 :]
         ]
