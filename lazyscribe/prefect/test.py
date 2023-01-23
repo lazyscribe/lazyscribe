@@ -2,7 +2,7 @@
 
 from typing import Optional, Union
 
-from prefect import task, Task
+from prefect import Task, task
 from prefect.utilities.tasks import defaults_from_attrs
 
 from ..test import Test

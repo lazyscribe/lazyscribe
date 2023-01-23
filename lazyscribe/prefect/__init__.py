@@ -3,13 +3,13 @@
 from typing import List
 
 from .experiment import (
+    LazyExperiment,
+    append_test,
     log_experiment_metric,
     log_parameter,
-    append_test,
-    LazyExperiment,
 )
-from .project import append_experiment, save_project, merge_projects, LazyProject
-from .test import log_test_metric, LazyTest
+from .project import LazyProject, append_experiment, merge_projects, save_project
+from .test import LazyTest, log_test_metric
 
 __all__: List[str] = [
     "log_experiment_metric",

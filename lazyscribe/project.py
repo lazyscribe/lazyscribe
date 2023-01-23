@@ -2,19 +2,19 @@
 
 from __future__ import annotations
 
-from contextlib import contextmanager
-from datetime import datetime
 import getpass
 import json
+from contextlib import contextmanager
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, Iterator, List, Optional, Tuple, Union
-
 from urllib.parse import urlparse
+
 import fsspec
 
 from .experiment import Experiment, ReadOnlyExperiment
 from .linked import LinkedList, merge
-from .test import Test, ReadOnlyTest
+from .test import ReadOnlyTest, Test
 
 
 class Project:
