@@ -74,7 +74,7 @@ class Project:
         self.snapshot: Dict = {}
         self.fs = fsspec.filesystem(self.protocol, **storage_options)
         self.mode = mode
-        if mode in ("r", "a", "w+") and self.fs.is_file(self.fpath):
+        if mode in ("r", "a", "w+") and self.fs.isfile(self.fpath):
             self.load()
 
         self.author = getpass.getuser() if author is None else author
@@ -98,8 +98,8 @@ class Project:
             if "dependencies" in exp:
                 deplist = exp.pop("dependencies")
                 for dep in deplist:
-                    project = Project(f
-                        path=parent / dep.split("|")[0],
+                    project = Project(
+                        fpath=parent / dep.split("|")[0],
                         mode="r",
                         **self.storage_options,
                     )

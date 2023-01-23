@@ -144,12 +144,7 @@ class LazyProject(Task):
         if mode is None:
             raise ValueError("Please supply a valid mode value.")
 
-        return Project(
-            fpath=fpath,
-            mode=mode,
-            author=author,
-            **storage_options or {}
-        )
+        return Project(fpath=fpath, mode=mode, author=author, **storage_options or {})
 
     def save(self, flow: Optional[Flow] = None):
         """Add a ``save_project`` task to the flow.
