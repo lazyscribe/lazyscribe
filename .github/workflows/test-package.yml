@@ -28,6 +28,10 @@ jobs:
               uses: actions/setup-python@v2
               with:
                 python-version: ${{ matrix.python-version }}
+            - name: DEBUG -- Check pip version
+              run: python -m pip --version
+            - name: DEBUG -- Check setuptools version
+              run: python -m pip freeze | grep setuptools
             - name: Install dependencies
               run: python -m pip install -r requirements.txt .[dev]
             - name: Check docstrings
