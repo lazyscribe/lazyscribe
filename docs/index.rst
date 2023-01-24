@@ -37,6 +37,7 @@ Contents
     how-to/tabular
     how-to/artifact
     how-to/dependencies
+    how-to/external-fs
     how-to/readonly
     how-to/merge
     how-to/prefect

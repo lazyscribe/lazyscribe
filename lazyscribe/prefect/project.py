@@ -2,15 +2,16 @@
 
 from contextlib import contextmanager
 from pathlib import Path
-from typing import List, Iterator, Optional, Tuple
+from typing import Dict, Iterator, List, Optional, Tuple
+from urllib.parse import urlparse
 
 import prefect
-from prefect import task, Flow, Task
+from prefect import Flow, Task, task
 from prefect.utilities.tasks import defaults_from_attrs
 
-from .experiment import LazyExperiment
 from ..experiment import Experiment
 from ..project import Project
+from .experiment import LazyExperiment
 
 
 @task(name="Append experiment")
@@ -89,6 +90,8 @@ class LazyProject(Task):
         The mode for opening the project. See :py:class:`lazyscribe.Project` for reference.
     author : str, optional (default None)
         The project author.
+    storage_options : Dict, optional (default None)
+        Storage options to pass to the filesystem initialization.
     **kwargs
         Keyword arguments for :py:class:`prefect.Task`.
     """
@@ -98,21 +101,24 @@ class LazyProject(Task):
         fpath: str = "project.json",
         mode: str = "w",
         author: Optional[str] = None,
+        storage_options: Optional[Dict] = None,
         **kwargs
     ):
         """Init method."""
         self.fpath = fpath
         self.mode = mode
         self.author = author
+        self.storage_options = storage_options
 
         super().__init__(**kwargs)
 
-    @defaults_from_attrs("fpath", "mode", "author")
+    @defaults_from_attrs("fpath", "mode", "author", "storage_options")
     def run(
         self,
         fpath: Optional[str] = None,
         mode: Optional[str] = None,
         author: Optional[str] = None,
+        storage_options: Optional[Dict] = None,
     ) -> Project:
         """Instantiate a :py:class:`lazyscribe.Project`.
 
@@ -124,23 +130,21 @@ class LazyProject(Task):
             The mode for opening the project.
         author : str, optional (default None)
             The author for the project.
+        storage_options : Dict, optional (default None)
+            Storage options to pass to the filesystem initialization.
 
         Returns
         -------
         Project
             The instantiated project.
         """
-        # Convert string to Path, if necessary
-        if isinstance(fpath, str):
-            project = Path(fpath)
-        elif isinstance(fpath, Path):
-            project = fpath
-        elif fpath is None:
+        # Keep fpath in passed form so Project can parse the fs scheme
+        if fpath is None:
             raise ValueError("Please supply a valid fpath value.")
         if mode is None:
             raise ValueError("Please supply a valid mode value.")
 
-        return Project(fpath=project, mode=mode, author=author)
+        return Project(fpath=fpath, mode=mode, author=author, **storage_options or {})
 
     def save(self, flow: Optional[Flow] = None):
         """Add a ``save_project`` task to the flow.
@@ -256,11 +260,13 @@ class LazyProject(Task):
         # Convert string to Path, if necessary
         if project is None:
             if isinstance(self.fpath, str):
-                fpath = Path(self.fpath)
+                parsed = urlparse(self.fpath)
+                fpath = Path(parsed.netloc + parsed.path)
             else:
                 fpath = self.fpath
         elif isinstance(project, str):
-            fpath = Path(project)
+            parsed = urlparse(project)
+            fpath = Path(parsed.netloc + parsed.path)
         elif isinstance(project, Path):
             fpath = project
         else:

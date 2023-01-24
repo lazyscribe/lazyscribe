@@ -1,17 +1,17 @@
 """Prefect experiment tasks."""
 
-from contextlib import contextmanager
 import getpass
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Iterator, Optional, Union
 
 import prefect
-from prefect import task, Flow, Task
+from prefect import Flow, Task, task
 from prefect.utilities.tasks import defaults_from_attrs
 
-from .test import LazyTest
 from ..experiment import Experiment
 from ..test import Test
+from .test import LazyTest
 
 
 @task(name="Log experiment metric")

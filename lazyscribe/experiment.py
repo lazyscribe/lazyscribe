@@ -1,13 +1,13 @@
 """Experiment dataclass."""
 
-from contextlib import contextmanager
-from datetime import datetime
 import getpass
 import logging
+from contextlib import contextmanager
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Union
 
-from attrs import asdict, define, field, frozen, Factory
+from attrs import Factory, asdict, define, field, frozen
 from slugify import slugify
 
 from .test import Test

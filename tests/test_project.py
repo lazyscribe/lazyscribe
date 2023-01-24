@@ -12,10 +12,19 @@ import pytest
 CURR_DIR = Path(__file__).resolve().parent
 DATA_DIR = CURR_DIR / "data"
 
-
-def test_logging_experiment():
+@pytest.mark.parametrize(
+    "project_kwargs",
+    [
+        {"author": "root"},
+        {
+            "author": "root",
+            "fpath": "file://" + (DATA_DIR / "external_fs_project.json").as_posix()
+        }
+    ]
+)
+def test_logging_experiment(project_kwargs):
     """Test logging an experiment to a project."""
-    project = Project(author="root")
+    project = Project(**project_kwargs)
     today = datetime.now()
     with project.log(name="My experiment") as exp:
         exp.log_metric("name", 0.5)
