@@ -2,7 +2,7 @@
 
 from typing import Dict, Optional, Union
 
-from attrs import define, frozen, Factory
+from attrs import Factory, define, frozen
 
 
 @define

@@ -1,0 +1,139 @@
+[project]
+name = "lazyscribe"
+requires-python = ">=3.7.0"
+description = "Lightweight and lazy experiment logging"
+authors = [
+    {name = "Akshay Gupta", email="akgcodes@gmail.com"}
+]
+license = {text = "MIT license"}
+classifiers = [
+	"Development Status :: 3 - Alpha",
+	"License :: OSI Approved :: MIT License",
+	"Natural Language :: English",
+	"Programming Language :: Python :: 3",
+	"Programming Language :: Python :: 3 :: Only",
+	"Programming Language :: Python :: 3.7",
+	"Programming Language :: Python :: 3.8",
+	"Programming Language :: Python :: 3.9",
+	"Programming Language :: Python :: 3.10",
+]
+dependencies = [
+	"attrs<=22.2.0,>=21.2.0",
+	"python-slugify<=7.0.0,>=5.0.0",
+	"fsspec<=2023.1.0,>=0.4.0",
+]
+
+dynamic = ["readme", "version"]
+
+[project.optional-dependencies]
+build = [
+	"build",
+	"bumpver",
+	"twine",
+	"wheel",
+]
+docs = [
+	"furo",
+	"matplotlib",
+	"pandas",
+	"pillow",
+	"prefect<=1.1.0,>=0.5.0",
+	"scikit-learn",
+	"sphinx",
+	"sphinx-gallery",
+	"sphinx-inline-tabs",
+]
+qa = [
+	"black",
+    "edgetest",
+	"flake8",
+    "isort",
+	"mypy",
+	"pip-tools",
+	"pydocstyle",
+	"types-python-slugify",
+]
+tests = [
+	"prefect<=1.1.0,>=0.5.0",
+	"pytest",
+	"pytest-cov",
+]
+dev = [
+    "lazyscribe[build]",
+    "lazyscribe[docs]",
+    "lazyscribe[qa]",
+    "lazyscribe[tests]",
+]
+
+[project.urls]
+documentation = "https://lazyscribe.readthedocs.io/en/latest/"
+repository = "https://github.com/lazyscribe/lazyscribe"
+
+# Build system
+[build-system]
+requires = ["setuptools>=64.0.0"]
+build-backend = "setuptools.build_meta"
+
+##############################################################################
+# Setuptools configuration
+##############################################################################
+
+[tool.setuptools]
+include-package-data = true
+zip-safe = false
+packages = ["lazyscribe"]
+
+[tool.setuptools.dynamic]
+version = {attr = "lazyscribe._meta.__version__"}
+readme = {file = ["README.md"]}
+
+##############################################################################
+# Tooling
+##############################################################################
+
+# BUMPVER --------------------------------------------------------------------
+
+[bumpver]
+current_version = "0.3.2"
+version_pattern = "MAJOR.MINOR.PATCH"
+
+[bumpver.file_patterns]
+"pyproject.toml" = [
+	'current_version = "{version}"',
+]
+"lazyscribe/_meta.py" = [
+	'__version__ = "{version}"',
+]
+"docs/conf.py" = [
+	'version = "{version}"',
+]
+
+# EDGETEST -------------------------------------------------------------------
+
+[edgetest]
+python_version = 3.9
+extras = [
+    "tests",
+]
+command = "pytest tests"
+
+[edgetest.envs.core]
+upgrade = [
+    "attrs",
+    "python-slugify",
+    "fsspec",
+]
+
+# ISORT ----------------------------------------------------------------------
+
+[tool.isort]
+profile = "black"
+
+# MYPY -----------------------------------------------------------------------
+
+[tool.mypy]
+python_version = 3.9
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+allow_redefinition = true

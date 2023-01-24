@@ -2,16 +2,16 @@
 
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Dict, Iterator, List, Optional, Tuple
 from urllib.parse import urlparse
-from typing import List, Iterator, Optional, Tuple, Dict
 
 import prefect
-from prefect import task, Flow, Task
+from prefect import Flow, Task, task
 from prefect.utilities.tasks import defaults_from_attrs
 
-from .experiment import LazyExperiment
 from ..experiment import Experiment
 from ..project import Project
+from .experiment import LazyExperiment
 
 
 @task(name="Append experiment")
