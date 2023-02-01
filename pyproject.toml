@@ -85,7 +85,7 @@ packages = ["lazyscribe"]
 
 [tool.setuptools.dynamic]
 version = {attr = "lazyscribe._meta.__version__"}
-readme = {file = ["README.md"]}
+readme = {file = ["README.md"], content-type = "text/markdown"}
 
 ##############################################################################
 # Tooling
