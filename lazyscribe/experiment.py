@@ -184,13 +184,16 @@ class Experiment:
         self.last_updated = datetime.now()
         self.parameters[name] = value
 
-    def log_artifact(self, name: str, value: Any, handler: str):
+    def log_artifact(self, fname: str, value: Any, handler: str):
         """Log an artifact to the filesystem.
+
+        The artifact will be saved to the ``self.path`` directory.
 
         Parameters
         ----------
-        name : str
-            The name of the artifact.
+        fname : str
+            The filename for the artifact. The stem of the filename will be the key value
+            for the artifact in the dictionary.
         value : Any
             The object to persist to the filesystem.
         handler : str
