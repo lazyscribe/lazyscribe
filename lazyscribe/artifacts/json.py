@@ -1,7 +1,6 @@
 """Artifact handler for JSON-serializable objects."""
 
 from json import dump, load
-from typing import Dict
 
 from attrs import define
 
@@ -21,14 +20,14 @@ class JSONArtifact(Artifact):
         return cls()
 
     @classmethod
-    def read(cls, buf, **kwargs: Dict):
+    def read(cls, buf, **kwargs):
         """Read in the JSON file.
 
         Parameters
         ----------
         buf : file-like object
             The buffer from a ``fsspec`` filesystem.
-        **kwargs : Dict
+        **kwargs : dict
             Keyword arguments for :py:meth:`json.load`
 
         Returns
@@ -39,7 +38,7 @@ class JSONArtifact(Artifact):
         return load(buf, **kwargs)
 
     @classmethod
-    def write(cls, obj, buf, **kwargs: Dict):
+    def write(cls, obj, buf, **kwargs):
         """Write the content to a JSON file.
 
         Parameters
@@ -48,7 +47,7 @@ class JSONArtifact(Artifact):
             The JSON-serializable object.
         buf : file-like object
             The buffer from a ``fsspec`` filesystem.
-        **kwargs : Dict
+        **kwargs : dict
             Keyword arguments for :py:meth:`json.dump`.
         """
         dump(obj, buf, **kwargs)
