@@ -214,7 +214,7 @@ class Experiment:
         ...
 
     def load_artifacts(
-        self, name: Optional[Union[str, List[str]]] = None
+        self, name: Optional[Union[str, List[str]]] = None, validate: bool = True
     ) -> Union[Any, Dict]:
         """Load the artifacts for the experiment.
 
@@ -225,6 +225,8 @@ class Experiment:
             itself is returned. If a list of names is provided, a dictionary is returned
             with only the listed names as keys. If ``None``, all artifacts are returned
             in the dictionary.
+        validate : bool, optional (default True)
+            Whether or not to validate the runtime environment against the artifact metadata.
 
         Returns
         -------
