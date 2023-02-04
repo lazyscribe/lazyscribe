@@ -1,7 +1,7 @@
 """Base class for new artifact handlers."""
 
 from abc import ABCMeta, abstractclassmethod
-from typing import Dict
+
 
 class Artifact(metaclass=ABCMeta):
     """Generic artifact handler that defines the expected interface."""
@@ -16,14 +16,14 @@ class Artifact(metaclass=ABCMeta):
         pass
 
     @abstractclassmethod
-    def read(cls, buf, **kwargs: Dict):
+    def read(cls, buf, **kwargs):
         """Method for reading in the artifact.
 
         Parameters
         ----------
         buf : file-like object
             The buffer from a ``fsspec`` filesystem.
-        **kwargs : Dict
+        **kwargs : dict
             Keyword arguments for the read method.
 
         Returns
@@ -33,7 +33,7 @@ class Artifact(metaclass=ABCMeta):
         """
 
     @abstractclassmethod
-    def write(cls, obj, buf, **kwargs: Dict):
+    def write(cls, obj, buf, **kwargs):
         """Method for writing the artifact to the filesystem.
 
         Parameters
@@ -42,6 +42,6 @@ class Artifact(metaclass=ABCMeta):
             The object to write to the buffer.
         buf : file-like object
             The buffer from a ``fsspec`` filesystem.
-        **kwargs : Dict
+        **kwargs : dict
             Keyword arguments for the write method.
         """

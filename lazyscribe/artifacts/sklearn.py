@@ -1,7 +1,5 @@
 """Joblib-based handler for scikit-learn objects."""
 
-from typing import Dict
-
 from attrs import define
 
 from .base import Artifact
@@ -21,6 +19,7 @@ class SklearnArtifact(Artifact):
     joblib_version : str
         The version of ``joblib`` installed.
     """
+
     sklearn_version: str
     joblib_version: str
 
@@ -28,27 +27,26 @@ class SklearnArtifact(Artifact):
     def construct(cls):
         """Construct the class with the version information."""
         try:
-            import sklearn
             import joblib
+            import sklearn
         except ImportError:
             raise RuntimeError(
                 "Please install ``scikit-learn`` and ``joblib`` to use this handler."
             )
 
         return cls(
-            sklearn_version=sklearn.__version__,
-            joblib_version=joblib.__version__
+            sklearn_version=sklearn.__version__, joblib_version=joblib.__version__
         )
 
     @classmethod
-    def read(cls, buf, **kwargs: Dict):
+    def read(cls, buf, **kwargs):
         """Read the ``scikit-learn`` object.
 
         Parameters
         ----------
         buf : file-like object
             The buffer from the ``fsspec`` filesystem.
-        **kwargs : Dict
+        **kwargs : dict
             Keyword arguments for ``joblib.load``.
 
         Returns
@@ -61,7 +59,7 @@ class SklearnArtifact(Artifact):
         return load(buf, **kwargs)
 
     @classmethod
-    def write(cls, obj, buf, **kwargs: Dict):
+    def write(cls, obj, buf, **kwargs):
         """Write the ``scikit-learn`` object to the filesystem.
 
         Parameters
@@ -70,7 +68,7 @@ class SklearnArtifact(Artifact):
             The ``scikit-learn`` object to write.
         buf : file-like object
             The buffer from the ``fsspec`` filesystem.
-        **kwargs : Dict
+        **kwargs : dict
             Keyword arguments for :py:meth:`joblib.load`.
         """
         from joblib import dump

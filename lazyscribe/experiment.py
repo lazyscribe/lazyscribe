@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any, Dict, Iterator, List, Literal, Optional, Union, overload
 
 from attrs import Factory, asdict, define, field, frozen
+from fsspec.implementations.local import LocalFileSystem
 from fsspec.spec import AbstractFileSystem
 from slugify import slugify
 
@@ -101,6 +102,17 @@ class Experiment:
         """
         return self.project.parent
 
+    @fs.default
+    def _fs_default(self) -> AbstractFileSystem:
+        """Define a default local filesystem implementation.
+
+        Returns
+        -------
+        LocalFileSystem
+            A standard local filesystem through ``fsspec``.
+        """
+        return LocalFileSystem()
+
     @last_updated_by.default
     def _last_updated_by_factory(self) -> str:
         """Last editor."""
@@ -192,7 +204,7 @@ class Experiment:
     @overload
     def load_artifacts(self, name: Literal[None]) -> Dict:
         ...
-    
+
     @overload
     def load_artifacts(self, name: str) -> Any:
         ...
@@ -201,7 +213,7 @@ class Experiment:
     def load_artifacts(self, name: List[str]) -> Dict:
         ...
 
-    def load_artifacts(self, name: Optional[str | List[str]] = None) -> Any | Dict:
+    def load_artifacts(self, name: Optional[Union[str, List[str]]] = None) -> Union[Any, Dict]:
         """Load the artifacts for the experiment.
 
         Parameters
