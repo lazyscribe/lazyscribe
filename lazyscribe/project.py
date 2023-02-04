@@ -126,6 +126,7 @@ class Project:
                     ReadOnlyExperiment(
                         **exp,
                         project=self.fpath,
+                        fs=self.fs,
                         dependencies=dependencies,
                         tests=tests,
                     )
@@ -135,6 +136,7 @@ class Project:
                     Experiment(
                         **exp,
                         project=self.fpath,
+                        fs=self.fs,
                         dependencies=dependencies,
                         tests=tests,
                     )
@@ -227,7 +229,9 @@ class Project:
         """
         if self.mode == "r":
             raise RuntimeError("Project is in read-only mode.")
-        experiment = Experiment(name=name, project=self.fpath, author=self.author)
+        experiment = Experiment(
+            name=name, project=self.fpath, fs=self.fs, author=self.author
+        )
 
         try:
             yield experiment

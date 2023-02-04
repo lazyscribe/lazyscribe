@@ -5,9 +5,10 @@ import logging
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Union
+from typing import Any, Dict, Iterator, List, Literal, Optional, Union, overload
 
 from attrs import Factory, asdict, define, field, frozen
+from fsspec.spec import AbstractFileSystem
 from slugify import slugify
 
 from .test import Test
@@ -76,6 +77,7 @@ class Experiment:
     name: str
     project: Path = field(eq=False)
     dir: Path = field(eq=False)
+    fs: AbstractFileSystem = field(eq=False)
     author: str = Factory(getpass.getuser)
     last_updated_by: str = field()
     metrics: Dict = Factory(lambda: {})
@@ -86,6 +88,7 @@ class Experiment:
     short_slug: str = field()
     slug: str = field()
     tests: List = Factory(lambda: [])
+    artifacts: Dict = Factory(factory=lambda: {})
 
     @dir.default
     def _dir_factory(self) -> Path:
@@ -169,6 +172,57 @@ class Experiment:
         self.last_updated = datetime.now()
         self.parameters[name] = value
 
+    def log_artifact(self, name: str, value: Any, handler: str):
+        """Log an artifact to the filesystem.
+
+        Parameters
+        ----------
+        name : str
+            The name of the artifact.
+        value : Any
+            The object to persist to the filesystem.
+        handler : str
+            The name of the handler to use for the object.
+        """
+        # Retrieve the handler
+        # Construct the handler
+        # Write the filename using the ``path`` attribute and ``fs``
+        # Save the metadata about the handler along with the filename
+
+    @overload
+    def load_artifacts(self, name: Literal[None]) -> Dict:
+        ...
+    
+    @overload
+    def load_artifacts(self, name: str) -> Any:
+        ...
+
+    @overload
+    def load_artifacts(self, name: List[str]) -> Dict:
+        ...
+
+    def load_artifacts(self, name: Optional[str | List[str]] = None) -> Any | Dict:
+        """Load the artifacts for the experiment.
+
+        Parameters
+        ----------
+        name : str or list, optional (default None)
+            The name(s) of artifacts to load. If a single value is given, the artifact
+            itself is returned. If a list of names is provided, a dictionary is returned
+            with only the listed names as keys. If ``None``, all artifacts are returned
+            in the dictionary.
+
+        Returns
+        -------
+        object
+            Either a single artifact or a dictionary, where each key is the name of the
+            artifact and the value is the artifact itself.
+        """
+        # Retrieve the handler based on the artifact metadata
+        # Construct the handler
+        # Compare the handler to one constructed from the metadata
+        # Read in the artifacts
+
     @contextmanager
     def log_test(self, name: str, description: Optional[str] = None) -> Iterator[Test]:
         """Add a test to the experiment using a context handler.
@@ -206,7 +260,7 @@ class Experiment:
         return asdict(
             self,
             value_serializer=serializer,
-            filter=lambda attr, _: attr.name not in ["dir", "project"],
+            filter=lambda attr, _: attr.name not in ["dir", "project", "fs"],
         )
 
     def __gt__(self, other):
