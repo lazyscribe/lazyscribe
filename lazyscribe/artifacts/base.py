@@ -17,7 +17,7 @@ class Artifact(metaclass=ABCMeta):
 
     @abstractclassmethod
     def read(cls, buf, **kwargs):
-        """Method for reading in the artifact.
+        """Read in the artifact.
 
         Parameters
         ----------
@@ -34,7 +34,7 @@ class Artifact(metaclass=ABCMeta):
 
     @abstractclassmethod
     def write(cls, obj, buf, **kwargs):
-        """Method for writing the artifact to the filesystem.
+        """Write the artifact to the filesystem.
 
         Parameters
         ----------

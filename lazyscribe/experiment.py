@@ -213,7 +213,9 @@ class Experiment:
     def load_artifacts(self, name: List[str]) -> Dict:
         ...
 
-    def load_artifacts(self, name: Optional[Union[str, List[str]]] = None) -> Union[Any, Dict]:
+    def load_artifacts(
+        self, name: Optional[Union[str, List[str]]] = None
+    ) -> Union[Any, Dict]:
         """Load the artifacts for the experiment.
 
         Parameters
