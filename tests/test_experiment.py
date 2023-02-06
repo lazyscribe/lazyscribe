@@ -54,6 +54,7 @@ def test_experiment_serialization():
         "dependencies": [],
         "short_slug": "my-experiment",
         "slug": f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}",
+        "artifacts": {},
         "tests": [
             {"name": "My test", "description": None, "metrics": {"name-subpop": 0.3}}
         ],
@@ -86,6 +87,7 @@ def test_experiment_serialization_dependencies():
         ],
         "short_slug": "my-downstream-experiment",
         "slug": f"my-downstream-experiment-{today.strftime('%Y%m%d%H%M%S')}",
+        "artifacts": {},
         "tests": [],
     }
 
