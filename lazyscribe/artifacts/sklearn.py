@@ -1,11 +1,13 @@
 """Joblib-based handler for scikit-learn objects."""
 
+from typing import ClassVar
+
 from attrs import define
 
 from .base import Artifact
 
 
-@define
+@define(auto_attribs=True)
 class SklearnArtifact(Artifact):
     """Joblib-based handler for scikit-learn objects.
 
@@ -20,6 +22,7 @@ class SklearnArtifact(Artifact):
         The version of ``joblib`` installed.
     """
 
+    alias: ClassVar[str] = "scikit-learn"
     sklearn_version: str
     joblib_version: str
 

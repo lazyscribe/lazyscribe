@@ -1,15 +1,18 @@
 """Artifact handler for JSON-serializable objects."""
 
 from json import dump, load
+from typing import ClassVar
 
 from attrs import define
 
 from .base import Artifact
 
 
-@define
+@define(auto_attribs=True)
 class JSONArtifact(Artifact):
     """Handler for JSON-serializable objects."""
+
+    alias: ClassVar[str] = "json"
 
     @classmethod
     def construct(cls):

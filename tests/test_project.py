@@ -42,6 +42,7 @@ def test_logging_experiment(project_kwargs):
         "dependencies": [],
         "short_slug": "my-experiment",
         "slug": f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}",
+        "artifacts": {},
         "tests": [],
     }
     assert project["my-experiment"] == project.experiments[0]
@@ -104,6 +105,7 @@ def test_save_project(tmpdir):
             "dependencies": [],
             "short_slug": "my-experiment",
             "slug": f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}",
+            "artifacts": {},
             "tests": [
                 {
                     "name": "My test",

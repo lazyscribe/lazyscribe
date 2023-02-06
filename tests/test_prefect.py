@@ -162,6 +162,7 @@ def test_prefect_project_merge():
             "dependencies": [],
             "short_slug": "my-experiment",
             "slug": "my-experiment-20220101093000",
+            "artifacts": {},
             "tests": [
                 {"name": "My test", "description": None, "metrics": {"name-subpop": 0.3}}
             ]
@@ -177,6 +178,7 @@ def test_prefect_project_merge():
             "dependencies": [],
             "short_slug": "my-second-experiment",
             "slug": "my-second-experiment-20220101103000",
+            "artifacts": {},
             "tests": []
         },
     ]
