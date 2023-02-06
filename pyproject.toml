@@ -81,7 +81,7 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools]
 include-package-data = true
 zip-safe = false
-packages = ["lazyscribe"]
+packages = ["lazyscribe", "lazyscribe.prefect", "lazyscribe.artifacts"]
 
 [tool.setuptools.dynamic]
 version = {attr = "lazyscribe._meta.__version__"}
