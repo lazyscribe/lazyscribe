@@ -23,6 +23,7 @@ class SklearnArtifact(Artifact):
     """
 
     alias: ClassVar[str] = "scikit-learn"
+    binary: ClassVar[bool] = True
     sklearn_version: str
     joblib_version: str
 

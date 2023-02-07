@@ -13,6 +13,7 @@ class JSONArtifact(Artifact):
     """Handler for JSON-serializable objects."""
 
     alias: ClassVar[str] = "json"
+    binary: ClassVar[bool] = False
 
     @classmethod
     def construct(cls):

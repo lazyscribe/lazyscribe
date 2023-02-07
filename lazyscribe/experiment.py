@@ -1,6 +1,7 @@
 """Experiment dataclass."""
 
 import getpass
+import json
 import logging
 from contextlib import contextmanager
 from datetime import datetime
@@ -12,6 +13,7 @@ from fsspec.implementations.local import LocalFileSystem
 from fsspec.spec import AbstractFileSystem
 from slugify import slugify
 
+from .artifacts import _get_handler
 from .test import Test
 
 LOG = logging.getLogger(__name__)
@@ -184,7 +186,7 @@ class Experiment:
         self.last_updated = datetime.now()
         self.parameters[name] = value
 
-    def log_artifact(self, fname: str, value: Any, handler: str):
+    def log_artifact(self, fname: str, value: Any, handler: str, **kwargs):
         """Log an artifact to the filesystem.
 
         The artifact will be saved to the ``self.path`` directory.
@@ -198,11 +200,62 @@ class Experiment:
             The object to persist to the filesystem.
         handler : str
             The name of the handler to use for the object.
+        **kwargs : dict
+            Keyword arguments for the write function of the handler.
         """
-        # Retrieve the handler
-        # Construct the handler
+        # Retrieve and construct the handler
+        artifact_handler = _get_handler(handler).construct()
         # Write the filename using the ``path`` attribute and ``fs``
+        mode = "wb" if artifact_handler.binary else "w"
+        fpath = self.dir / self.path / fname
+        self.fs.makedirs(self.dir / self.path, exist_ok=True)
+        with self.fs.open(fpath, mode) as buf:
+            artifact_handler.write(value, buf, **kwargs)
         # Save the metadata about the handler along with the filename
+        self.last_updated = datetime.now()
+        self.artifacts[fpath.stem] = {
+            "fpath": fname,
+            "handler": handler,
+            "parameters": asdict(artifact_handler)
+        }
+
+    def _load_single_artifact(self, name: str, validate: bool) -> Any:
+        """Load a single artifact.
+
+        Parameters
+        ----------
+        name : str
+            The name of the artifact to load.
+        validate : bool
+            Whether or not to validate the runtime environment against the artifact
+            metadata.
+
+        Returns
+        -------
+        object
+            The artifact.
+        """
+        try:
+            handler = _get_handler(self.artifact[name])
+        except KeyError:
+            raise ValueError(f"No artifact with the name {name}")
+        # Construct the handler and validate
+        curr_handler = handler.construct()
+        if validate and curr_handler != handler(**self.artifact[name]["parameters"]):
+            raise RuntimeError(
+                "Runtime environments do not match. Artifact parameters:\n\n"
+                f"{json.dumps(self.artifact[name]['parameters'])}"
+                "\n\nCurrent parameters:\n\n"
+                f"{json.dumps(asdict(curr_handler))}"
+            )
+        # Read in the artifat
+        mode = "wb" if curr_handler.binary else "w"
+        with self.fs.open(
+            self.dir / self.path / self.artifact[name]["fpath"], mode
+        ) as buf:
+            out = curr_handler.read(buf)
+
+        return out
 
     @overload
     def load_artifacts(self, name: Literal[None]) -> Dict:
@@ -217,7 +270,7 @@ class Experiment:
         ...
 
     def load_artifacts(
-        self, name: Optional[Union[str, List[str]]] = None, validate: bool = True
+        self, name: Optional[Union[str, List[str]]] = None, validate: bool = True,
     ) -> Union[Any, Dict]:
         """Load the artifacts for the experiment.
 
@@ -237,10 +290,18 @@ class Experiment:
             Either a single artifact or a dictionary, where each key is the name of the
             artifact and the value is the artifact itself.
         """
-        # Retrieve the handler based on the artifact metadata
-        # Construct the handler
-        # Compare the handler to one constructed from the metadata
-        # Read in the artifacts
+        if name is None:
+            to_load = list(self.artifacts.keys())
+        elif isinstance(name, list):
+            to_load = name
+        else:
+            return self._load_single_artifact(name=name, validate=validate)
+
+        out = {}
+        for art in to_load:
+            out[art] = self._load_single_artifact(name=art, validate=validate)
+
+        return out
 
     @contextmanager
     def log_test(self, name: str, description: Optional[str] = None) -> Iterator[Test]:
