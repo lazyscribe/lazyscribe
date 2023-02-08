@@ -8,6 +8,7 @@ class Artifact(metaclass=ABCMeta):
     """Generic artifact handler that defines the expected interface."""
 
     alias: ClassVar[str]
+    binary: ClassVar[bool]
 
     @abstractclassmethod
     def construct(cls):
