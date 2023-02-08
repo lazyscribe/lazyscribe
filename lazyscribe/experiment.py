@@ -219,14 +219,14 @@ class Experiment:
             "parameters": asdict(artifact_handler),
         }
 
-    def load_artifact(self, name: str, validate: bool) -> Any:
+    def load_artifact(self, name: str, validate: bool = True) -> Any:
         """Load a single artifact.
 
         Parameters
         ----------
         name : str
             The name of the artifact to load.
-        validate : bool
+        validate : bool, optional (default True)
             Whether or not to validate the runtime environment against the artifact
             metadata.
 
