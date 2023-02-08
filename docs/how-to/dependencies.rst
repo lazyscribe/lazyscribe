@@ -5,47 +5,23 @@ In this guide, we will walk through specifying cross-project experiment dependen
 This feature can be useful if you have multiple linked projects.
 
 To specify an upstream experiment dependency, you can add an entry to the ``dependencies``
-list in your experiment:
-
-.. code-block:: json
-    :emphasize-lines: 5
-
-    [
-        {
-            "author": "<AUTHOR>",
-            "created_at": "<TIMESTAMP>",
-            "dependencies": [],
-            "last_updated": "<TIMESTAMP>",
-            "last_updated_by": "<AUTHOR>",
-            "metrics": {},
-            "name": "Base performance",
-            "parameters": {},
-            "short_slug": "base-performance",
-            "slug": "base-performance-<TIMESTAMP>"
-        }
-    ]
-
-In the dependencies list, add an experiment with the format ``<PATH_TO_PROJECT_JSON>|<SLUG>``.
-So, if you created an experiment in ``other-project.json`` at 9:30 AM on Jan 1, 2022 with the name
-"My experiment", you would have
+list in your experiment. Add an experiment with the format ``<PATH_TO_PROJECT_JSON>|<SLUG>``.
+So, if you created an experiment in ``other-project.json`` at 9:30 AM on Jan 1, 2022 with the
+name "My experiment", you would have
 
 .. code-block:: json
     :emphasize-lines: 5-7
 
     [
         {
-            "author": "<AUTHOR>",
-            "created_at": "<TIMESTAMP>",
+            ...,
             "dependencies": [
                 "other-project.json|my-experiment-20220101093000"
             ],
-            "last_updated": "<TIMESTAMP>",
-            "last_updated_by": "<AUTHOR>",
-            "metrics": {},
             "name": "Base performance",
-            "parameters": {},
             "short_slug": "base-performance",
-            "slug": "base-performance-<TIMESTAMP>"
+            "slug": "base-performance-<TIMESTAMP>",
+            ...
         }
     ]
 
