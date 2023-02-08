@@ -219,7 +219,7 @@ class Experiment:
             "parameters": asdict(artifact_handler),
         }
 
-    def load_artifact(self, name: str, validate: bool = True) -> Any:
+    def load_artifact(self, name: str, validate: bool = True, **kwargs) -> Any:
         """Load a single artifact.
 
         Parameters
@@ -229,6 +229,8 @@ class Experiment:
         validate : bool, optional (default True)
             Whether or not to validate the runtime environment against the artifact
             metadata.
+        **kwargs : dict
+            Keyword arguments for the handler read function.
 
         Returns
         -------
@@ -253,7 +255,7 @@ class Experiment:
         with self.fs.open(
             self.dir / self.path / self.artifacts[name]["fpath"], mode
         ) as buf:
-            out = curr_handler.read(buf)
+            out = curr_handler.read(buf, **kwargs)
 
         return out
 
