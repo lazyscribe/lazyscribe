@@ -1,10 +1,13 @@
 """Base class for new artifact handlers."""
 
 from abc import ABCMeta, abstractclassmethod
+from typing import ClassVar
 
 
 class Artifact(metaclass=ABCMeta):
     """Generic artifact handler that defines the expected interface."""
+
+    alias: ClassVar[str]
 
     @abstractclassmethod
     def construct(cls):
