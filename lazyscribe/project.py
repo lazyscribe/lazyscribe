@@ -155,7 +155,7 @@ class Project:
                     self[slug].last_updated_by = self.author
 
         data = list(self)
-        with open(self.fpath, "w") as outfile:
+        with self.fs.open(self.fpath, "w") as outfile:
             json.dump(data, outfile, sort_keys=True, indent=4)
 
     def merge(self, other: Project) -> Project:
