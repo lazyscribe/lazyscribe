@@ -6,7 +6,7 @@ import logging
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Literal, Optional, Union, overload
+from typing import Any, Dict, Iterator, List, Optional, Union
 
 from attrs import Factory, asdict, define, field, frozen
 from fsspec.implementations.local import LocalFileSystem
@@ -216,10 +216,10 @@ class Experiment:
         self.artifacts[fpath.stem] = {
             "fpath": fname,
             "handler": handler,
-            "parameters": asdict(artifact_handler)
+            "parameters": asdict(artifact_handler),
         }
 
-    def _load_single_artifact(self, name: str, validate: bool) -> Any:
+    def load_artifact(self, name: str, validate: bool) -> Any:
         """Load a single artifact.
 
         Parameters
@@ -236,70 +236,24 @@ class Experiment:
             The artifact.
         """
         try:
-            handler = _get_handler(self.artifact[name])
+            handler = _get_handler(self.artifacts[name])
         except KeyError:
             raise ValueError(f"No artifact with the name {name}")
         # Construct the handler and validate
         curr_handler = handler.construct()
-        if validate and curr_handler != handler(**self.artifact[name]["parameters"]):
+        if validate and curr_handler != handler(**self.artifacts[name]["parameters"]):
             raise RuntimeError(
                 "Runtime environments do not match. Artifact parameters:\n\n"
-                f"{json.dumps(self.artifact[name]['parameters'])}"
+                f"{json.dumps(self.artifacts[name]['parameters'])}"
                 "\n\nCurrent parameters:\n\n"
                 f"{json.dumps(asdict(curr_handler))}"
             )
         # Read in the artifat
         mode = "wb" if curr_handler.binary else "w"
         with self.fs.open(
-            self.dir / self.path / self.artifact[name]["fpath"], mode
+            self.dir / self.path / self.artifacts[name]["fpath"], mode
         ) as buf:
             out = curr_handler.read(buf)
-
-        return out
-
-    @overload
-    def load_artifacts(self, name: Literal[None]) -> Dict:
-        ...
-
-    @overload
-    def load_artifacts(self, name: str) -> Any:
-        ...
-
-    @overload
-    def load_artifacts(self, name: List[str]) -> Dict:
-        ...
-
-    def load_artifacts(
-        self, name: Optional[Union[str, List[str]]] = None, validate: bool = True,
-    ) -> Union[Any, Dict]:
-        """Load the artifacts for the experiment.
-
-        Parameters
-        ----------
-        name : str or list, optional (default None)
-            The name(s) of artifacts to load. If a single value is given, the artifact
-            itself is returned. If a list of names is provided, a dictionary is returned
-            with only the listed names as keys. If ``None``, all artifacts are returned
-            in the dictionary.
-        validate : bool, optional (default True)
-            Whether or not to validate the runtime environment against the artifact metadata.
-
-        Returns
-        -------
-        object
-            Either a single artifact or a dictionary, where each key is the name of the
-            artifact and the value is the artifact itself.
-        """
-        if name is None:
-            to_load = list(self.artifacts.keys())
-        elif isinstance(name, list):
-            to_load = name
-        else:
-            return self._load_single_artifact(name=name, validate=validate)
-
-        out = {}
-        for art in to_load:
-            out[art] = self._load_single_artifact(name=art, validate=validate)
 
         return out
 
