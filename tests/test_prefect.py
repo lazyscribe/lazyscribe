@@ -10,6 +10,7 @@ from lazyscribe.prefect import LazyExperiment, LazyProject
 CURR_DIR = Path(__file__).resolve().parent
 DATA_DIR = CURR_DIR / "data"
 
+
 def test_prefect_experiment():
     """Test creating an experiment and logging basic parameters."""
     init_experiment = LazyExperiment()
@@ -55,7 +56,9 @@ def test_prefect_experiment():
     assert exp_dict["dependencies"] == []
     assert exp_dict["short_slug"] == "my-experiment"
     assert exp_dict["slug"].startswith(f"my-experiment-{today.strftime('%Y%m%d%H%M')}")
-    assert exp_dict["tests"] == [{"name": "My test", "description": None, "metrics": {"subpop": 0.7}}]
+    assert exp_dict["tests"] == [
+        {"name": "My test", "description": None, "metrics": {"subpop": 0.7}}
+    ]
 
 
 def test_prefect_project(tmp_path):
@@ -128,8 +131,12 @@ def test_prefect_project(tmp_path):
     assert proj_list[0]["last_updated"].startswith(today.strftime("%Y-%m-%dT%H:%M"))
     assert proj_list[0]["dependencies"] == []
     assert proj_list[0]["short_slug"] == "my-experiment"
-    assert proj_list[0]["slug"].startswith(f"my-experiment-{today.strftime('%Y%m%d%H%M')}")
-    assert proj_list[0]["tests"] == [{"name": "My test", "description": None, "metrics": {"subpop": 0.7}}]
+    assert proj_list[0]["slug"].startswith(
+        f"my-experiment-{today.strftime('%Y%m%d%H%M')}"
+    )
+    assert proj_list[0]["tests"] == [
+        {"name": "My test", "description": None, "metrics": {"subpop": 0.7}}
+    ]
 
     assert output.result[project].result.to_tabular() == (
         output.result[exp_data].result,
@@ -165,8 +172,12 @@ def test_prefect_project_merge():
             "slug": "my-experiment-20220101093000",
             "artifacts": {},
             "tests": [
-                {"name": "My test", "description": None, "metrics": {"name-subpop": 0.3}}
-            ]
+                {
+                    "name": "My test",
+                    "description": None,
+                    "metrics": {"name-subpop": 0.3},
+                }
+            ],
         },
         {
             "name": "My second experiment",
@@ -180,6 +191,6 @@ def test_prefect_project_merge():
             "short_slug": "my-second-experiment",
             "slug": "my-second-experiment-20220101103000",
             "artifacts": {},
-            "tests": []
+            "tests": [],
         },
     ]
