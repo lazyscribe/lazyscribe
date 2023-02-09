@@ -58,10 +58,11 @@ def test_prefect_experiment():
     assert exp_dict["tests"] == [{"name": "My test", "description": None, "metrics": {"subpop": 0.7}}]
 
 
-def test_prefect_project(tmpdir):
+def test_prefect_project(tmp_path):
     """Test lazyscribe project integration with projects."""
-    location = tmpdir.mkdir("my-project")
-    project_location = Path(str(location)) / "project.json"
+    location = tmp_path / "my-project"
+    location.mkdir()
+    project_location = location / "project.json"
 
     init_project = LazyProject(fpath=project_location, author="root")
     with Flow(name="Create project") as flow:
