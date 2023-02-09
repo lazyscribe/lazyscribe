@@ -11,21 +11,26 @@ CURR_DIR = Path(__file__).resolve().parent
 DATA_DIR = CURR_DIR / "data"
 
 
-def test_prefect_experiment():
+def test_prefect_experiment(tmp_path):
     """Test creating an experiment and logging basic parameters."""
+    location = tmp_path / "my-location"
+    location.mkdir()
+
     init_experiment = LazyExperiment()
     with Flow(name="Create experiment") as flow:
         experiment = init_experiment(
-            project=Path("project.json"), name="My experiment", author="root"
+            project=location / "project.json", name="My experiment", author="root"
         )
         experiment.log_metric("name", 0.5)
         experiment.log_parameter("param", "value")
+        experiment.log_artifact(fname="features.json", value=[0, 1, 2], handler="json")
         with experiment.log_test(name="My test") as test:
             test.log_metric("subpop", 0.7)
 
     assert {tsk.name for tsk in flow.downstream_tasks(experiment)} == {
         "Log experiment metric",
         "Log parameter",
+        "Log artifact",
         "Append test",
     }
     assert (
@@ -59,6 +64,12 @@ def test_prefect_experiment():
     assert exp_dict["tests"] == [
         {"name": "My test", "description": None, "metrics": {"subpop": 0.7}}
     ]
+    assert exp_dict["artifacts"] == {
+        "features": {"fpath": "features.json", "handler": "json", "parameters": {}}
+    }
+    assert (
+        location / output.result[experiment].result.path / "features.json"
+    ).is_file()
 
 
 def test_prefect_project(tmp_path):
