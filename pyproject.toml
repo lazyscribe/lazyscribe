@@ -37,7 +37,7 @@ docs = [
 	"matplotlib",
 	"pandas",
 	"pillow",
-	"prefect<=1.1.0,>=0.5.0",
+	"prefect<2,>=1.0",
 	"scikit-learn",
 	"sphinx",
 	"sphinx-gallery",
@@ -54,7 +54,8 @@ qa = [
 	"types-python-slugify",
 ]
 tests = [
-	"prefect<=1.1.0,>=0.5.0",
+	"scikit-learn",
+	"prefect<2,>=1.0",
 	"pytest",
 	"pytest-cov",
 ]
