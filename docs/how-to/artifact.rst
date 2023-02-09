@@ -19,13 +19,18 @@ to a unique folder based on experiment slug:
         exp.path
 
 This will return ``Path("./my-experiment-YYYYMMDDHHMMSS")``, where the datetime
-corresponds to the ``created_at`` attribute. To save an artifact to this directory,
-use :py:meth:`lazyscribe.Experiment.log_artifact`. Serialization is delegated to
-a subclass of :py:class:`lazyscribe.artifacts.Artifact`. For example, suppose
-you have a ``scikit-learn`` estimator:
+corresponds to the ``created_at`` attribute.
+
+.. important::
+
+  Unless you log an artifact, this directory will not be created automatically.
+
+To save an artifact to this directory, use :py:meth:`lazyscribe.Experiment.log_artifact`.
+Serialization is delegated to a subclass of :py:class:`lazyscribe.artifacts.Artifact`.
+For example, you can persist a ``scikit-learn`` estimator using ``joblib``:
 
 .. code-block:: python
-    :emphasize-lines: 9
+    :emphasize-lines: 8-9
 
     from lazyscribe import Project
     from sklearn.svm import SVC
@@ -37,8 +42,7 @@ you have a ``scikit-learn`` estimator:
         model.fit(X, y)
         exp.log_artifact(fname="estimator.joblib", value=model, handler="scikit-learn")
 
-In this case, the estimator will be persisted using ``joblib``. Below, we have included
-a list of currently supported artifact handlers and their aliases:
+Below, we have included a list of currently supported artifact handlers and their aliases:
 
 .. list-table:: Builtin artifact handlers
     :header-rows: 1
@@ -72,7 +76,7 @@ When an artifact is persisted to the filesystem, the handler may save environmen
 parameters to use for validation when attempting to load the artifact into python.
 For example, :py:class:`lazyscribe.artifacts.SklearnArtifact` will include the ``scikit-learn``
 and ``joblib`` versions in the artifact metadata. If the metadata doesn't match with a handler constructed
-in the current runtime environment, an error will be raised. However, you can disable validation using
+in the current runtime environment, ``lazyscribe`` with raise an error. You can disable validation using
 ``validate=False``:
 
 .. code-block:: python
