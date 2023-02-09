@@ -238,7 +238,7 @@ class Experiment:
             The artifact.
         """
         try:
-            handler = _get_handler(self.artifacts[name])
+            handler = _get_handler(self.artifacts[name]["handler"])
         except KeyError:
             raise ValueError(f"No artifact with the name {name}")
         # Construct the handler and validate

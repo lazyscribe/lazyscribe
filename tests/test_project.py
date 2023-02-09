@@ -4,13 +4,15 @@ import json
 from datetime import datetime
 from pathlib import Path
 
+import pytest
+
 from lazyscribe import Project
 from lazyscribe.experiment import Experiment, ReadOnlyExperiment
 from lazyscribe.test import ReadOnlyTest, Test
-import pytest
 
 CURR_DIR = Path(__file__).resolve().parent
 DATA_DIR = CURR_DIR / "data"
+
 
 @pytest.mark.parametrize(
     "project_kwargs",
@@ -18,9 +20,9 @@ DATA_DIR = CURR_DIR / "data"
         {"author": "root"},
         {
             "author": "root",
-            "fpath": "file://" + (DATA_DIR / "external_fs_project.json").as_posix()
-        }
-    ]
+            "fpath": "file://" + (DATA_DIR / "external_fs_project.json").as_posix(),
+        },
+    ],
 )
 def test_logging_experiment(project_kwargs):
     """Test logging an experiment to a project."""

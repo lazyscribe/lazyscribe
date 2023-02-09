@@ -1,8 +1,8 @@
 """Test the artifact handlers."""
 
 import pytest
-
 from attrs import asdict
+
 from lazyscribe.artifacts import JSONArtifact, SklearnArtifact, _get_handler
 
 
@@ -33,7 +33,7 @@ def test_sklearn_handler(tmp_path):
 
     # Fit a basic estimator
     X, y = datasets.make_classification(n_samples=100, n_features=10)
-    estimator = sklearn.svm.SVC(kernel="linear")
+    estimator = svm.SVC(kernel="linear")
     estimator.fit(X, y)
 
     # Construct the handler and write the estimator
