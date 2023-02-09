@@ -251,7 +251,7 @@ class Experiment:
                 f"{json.dumps(asdict(curr_handler))}"
             )
         # Read in the artifat
-        mode = "wb" if curr_handler.binary else "w"
+        mode = "rb" if curr_handler.binary else "r"
         with self.fs.open(
             self.dir / self.path / self.artifacts[name]["fpath"], mode
         ) as buf:

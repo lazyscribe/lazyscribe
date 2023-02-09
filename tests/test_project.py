@@ -76,10 +76,11 @@ def test_not_logging_experiment_readonly():
         assert len(project.experiments) == 0
 
 
-def test_save_project(tmpdir):
+def test_save_project(tmp_path):
     """Test saving a project to an output JSON."""
-    location = tmpdir.mkdir("my-project")
-    project_location = Path(str(location)) / "project.json"
+    location = tmp_path / "my-project"
+    location.mkdir()
+    project_location = location / "project.json"
     today = datetime.now()
     project = Project(fpath=project_location, author="root")
     with project.log(name="My experiment") as exp:
@@ -134,10 +135,11 @@ def test_load_project():
     assert project.experiments == [expected]
 
 
-def test_load_project_edit(tmpdir):
+def test_load_project_edit(tmp_path):
     """Test loading a project and editing an experiment."""
-    location = tmpdir.mkdir("my-location")
-    project_location = Path(str(location)) / "project.json"
+    location = tmp_path / "my-location"
+    location.mkdir()
+    project_location = location / "project.json"
     project = Project(fpath=project_location, author="root")
     with project.log(name="My experiment") as exp:
         exp.log_metric("name", 0.5)
