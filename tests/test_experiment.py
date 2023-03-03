@@ -1,5 +1,6 @@
 """Test the experiment dataclass."""
 
+import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -85,7 +86,11 @@ def test_experiment_artifact_logging_basic(tmp_path):
         "short_slug": "my-experiment",
         "slug": f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}",
         "artifacts": {
-            "features": {"fpath": "features.json", "handler": "json", "parameters": {}}
+            "features": {
+                "fpath": "features.json",
+                "handler": "json",
+                "parameters": {"python_version": ".".join(str(i) for i in sys.version_info[:2])}
+            }
         },
         "tests": [],
     }
@@ -96,7 +101,6 @@ def test_experiment_artifact_load(tmp_path):
     location = tmp_path / "my-location"
     location.mkdir()
 
-    today = datetime.now()
     exp = Experiment(
         name="My experiment", project=location / "project.json", author="root"
     )
@@ -112,7 +116,6 @@ def test_experiment_artifact_load_keyerror(tmp_path):
     location = tmp_path / "my-location"
     location.mkdir()
 
-    today = datetime.now()
     exp = Experiment(
         name="My experiment", project=location / "project.json", author="root"
     )
