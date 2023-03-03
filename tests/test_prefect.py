@@ -1,5 +1,6 @@
 """Test the prefect integration."""
 
+import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -65,7 +66,11 @@ def test_prefect_experiment(tmp_path):
         {"name": "My test", "description": None, "metrics": {"subpop": 0.7}}
     ]
     assert exp_dict["artifacts"] == {
-        "features": {"fpath": "features.json", "handler": "json", "parameters": {}}
+        "features": {
+            "fpath": "features.json",
+            "handler": "json",
+            "parameters": {"python_version": ".".join(str(i) for i in sys.version_info[:2])}
+        }
     }
     assert (
         location / output.result[experiment].result.path / "features.json"

@@ -1,5 +1,6 @@
 """Artifact handler for JSON-serializable objects."""
 
+import sys
 from json import dump, load
 from typing import ClassVar
 
@@ -14,6 +15,7 @@ class JSONArtifact(Artifact):
 
     alias: ClassVar[str] = "json"
     binary: ClassVar[bool] = False
+    python_version: str
 
     @classmethod
     def construct(cls):
@@ -21,7 +23,7 @@ class JSONArtifact(Artifact):
 
         Included for compatibility.
         """
-        return cls()
+        return cls(python_version=".".join(str(i) for i in sys.version_info[:2]))
 
     @classmethod
     def read(cls, buf, **kwargs):
