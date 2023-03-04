@@ -1,8 +1,9 @@
 """Joblib-based handler for scikit-learn objects."""
 
-from typing import ClassVar
+from typing import Any, ClassVar, Optional
 
 from attrs import define
+from slugify import slugify
 
 from .base import Artifact
 
@@ -14,6 +15,11 @@ class SklearnArtifact(Artifact):
     This handler will store the ``joblib`` and ``scikit-learn`` versions as attributes
     to ensure compatibility between the runtime environment and the artifacts.
 
+    .. important::
+
+        This class is not meant to be initialized directly. Please use the ``construct``
+        method.
+
     Parameters
     ----------
     sklearn_version : str
@@ -23,13 +29,31 @@ class SklearnArtifact(Artifact):
     """
 
     alias: ClassVar[str] = "scikit-learn"
+    suffix: ClassVar[str] = "joblib"
     binary: ClassVar[bool] = True
     sklearn_version: str
     joblib_version: str
 
     @classmethod
-    def construct(cls):
-        """Construct the class with the version information."""
+    def construct(
+        cls, name: str, value: Optional[Any] = None, fname: Optional[str] = None, **kwargs
+    ):
+        """Construct the class with the version information.
+
+        Parameters
+        ----------
+        name : str
+            The name of the artifact.
+        value : object, optional (default None)
+            The value for the artifact. The default value of ``None`` is used when
+            an experiment is loaded from the project JSON.
+        fname : str, optional (default None)
+            The filename of the artifact. If not provided, this value will be derived from
+            the name of the artifact and the suffix for the class.
+        **kwargs : Dict
+            Keyword arguments for writing an artifact to the filesystem. Provided when an artifact
+            is logged to an experiment
+        """
         try:
             import joblib
             import sklearn
@@ -39,7 +63,12 @@ class SklearnArtifact(Artifact):
             )
 
         return cls(
-            sklearn_version=sklearn.__version__, joblib_version=joblib.__version__
+            name=name,
+            value=value,
+            fname=fname or f"{slugify(name)}.{cls.suffix}",
+            writer_kwargs=kwargs,
+            sklearn_version=sklearn.__version__,
+            joblib_version=joblib.__version__,
         )
 
     @classmethod

@@ -44,7 +44,7 @@ def test_logging_experiment(project_kwargs):
         "dependencies": [],
         "short_slug": "my-experiment",
         "slug": f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}",
-        "artifacts": {},
+        "artifacts": [],
         "tests": [],
     }
     assert project["my-experiment"] == project.experiments[0]
@@ -108,7 +108,7 @@ def test_save_project(tmp_path):
             "dependencies": [],
             "short_slug": "my-experiment",
             "slug": f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}",
-            "artifacts": {},
+            "artifacts": [],
             "tests": [
                 {
                     "name": "My test",
@@ -118,6 +118,30 @@ def test_save_project(tmp_path):
             ],
         }
     ]
+
+
+def test_save_project_artifact(tmp_path):
+    """Test saving a project with an artifact."""
+    location = tmp_path / "my-project"
+    location.mkdir()
+    project_location = location / "project.json"
+    today = datetime.now()
+
+    project = Project(fpath=project_location, author="root")
+    with project.log(name="My experiment") as exp:
+        exp.log_artifact(name="features", value=[0, 1, 2], handler="json")
+
+    project.save()
+
+    assert project_location.is_file()
+    assert (
+        location / f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}" / "features.json"
+    ).is_file()
+
+    with open(location / exp.path / "features.json", "r") as infile:
+        artifact = json.load(infile)
+
+    assert artifact == [0, 1, 2]
 
 
 def test_load_project():

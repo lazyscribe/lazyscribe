@@ -4,16 +4,17 @@ import getpass
 import json
 import logging
 from contextlib import contextmanager
+from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Union
 
-from attrs import Factory, asdict, define, field, frozen
+from attrs import Factory, asdict, define, field, fields, filters, frozen
 from fsspec.implementations.local import LocalFileSystem
 from fsspec.spec import AbstractFileSystem
 from slugify import slugify
 
-from .artifacts import _get_handler
+from .artifacts import _get_handler, Artifact
 from .test import Test
 
 LOG = logging.getLogger(__name__)
@@ -43,6 +44,18 @@ def serializer(inst, field, value):
         return new
     if field is not None and field.name == "tests":
         new = [asdict(test) for test in value]
+        return new
+    if field is not None and field.name == "artifacts":
+        new = [
+            {
+                **asdict(
+                    artifact,
+                    filter=filters.exclude(fields(type(artifact)).value),
+                ),
+                "handler": artifact.alias
+            }
+            for artifact in value
+        ]
         return new
 
     return value
@@ -91,7 +104,7 @@ class Experiment:
     short_slug: str = field()
     slug: str = field()
     tests: List = Factory(lambda: [])
-    artifacts: Dict = Factory(factory=lambda: {})
+    artifacts: List[Artifact] = Factory(factory=lambda: [])
 
     @dir.default
     def _dir_factory(self) -> Path:
@@ -186,38 +199,35 @@ class Experiment:
         self.last_updated = datetime.now()
         self.parameters[name] = value
 
-    def log_artifact(self, fname: str, value: Any, handler: str, **kwargs):
-        """Log an artifact to the filesystem.
+    def log_artifact(
+        self, name: str, value: Any, handler: str, fname: Optional[str] = None, **kwargs
+    ):
+        """Log an artifact to the experiment.
 
-        The artifact will be saved to the ``self.path`` directory.
+        This method associates an artifact with the experiment, but the artifact will
+        not be written until :py:meth:`lazyscribe.Project.save` is called.
 
         Parameters
         ----------
-        fname : str
-            The filename for the artifact. The stem of the filename will be the key value
-            for the artifact in the dictionary.
+        name : str
+            The name of the artifact.
         value : Any
             The object to persist to the filesystem.
         handler : str
             The name of the handler to use for the object.
+        fname : str, optional (default None)
+            The filename for the artifact. If not provided, it will be derived from the
+            name of the artifact and the builtin suffix for each handler.
         **kwargs : dict
             Keyword arguments for the write function of the handler.
         """
         # Retrieve and construct the handler
-        artifact_handler = _get_handler(handler).construct()
-        # Write the filename using the ``path`` attribute and ``fs``
-        mode = "wb" if artifact_handler.binary else "w"
-        fpath = self.dir / self.path / fname
-        self.fs.makedirs(self.dir / self.path, exist_ok=True)
-        with self.fs.open(fpath, mode) as buf:
-            artifact_handler.write(value, buf, **kwargs)
-        # Save the metadata about the handler along with the filename
+        handler_cls = _get_handler(handler)
+        artifact_handler = handler_cls.construct(
+            name=name, value=value, fname=fname, **kwargs
+        )
         self.last_updated = datetime.now()
-        self.artifacts[fpath.stem] = {
-            "fpath": fname,
-            "handler": handler,
-            "parameters": asdict(artifact_handler),
-        }
+        self.artifacts.append(artifact_handler)
 
     def load_artifact(self, name: str, validate: bool = True, **kwargs) -> Any:
         """Load a single artifact.
@@ -237,25 +247,32 @@ class Experiment:
         object
             The artifact.
         """
-        try:
-            handler = _get_handler(self.artifacts[name]["handler"])
-        except KeyError:
-            raise ValueError(f"No artifact with the name {name}")
-        # Construct the handler and validate
-        curr_handler = handler.construct()
-        if validate and curr_handler != handler(**self.artifacts[name]["parameters"]):
-            raise RuntimeError(
-                "Runtime environments do not match. Artifact parameters:\n\n"
-                f"{json.dumps(self.artifacts[name]['parameters'])}"
-                "\n\nCurrent parameters:\n\n"
-                f"{json.dumps(asdict(curr_handler))}"
-            )
-        # Read in the artifat
-        mode = "rb" if curr_handler.binary else "r"
-        with self.fs.open(
-            self.dir / self.path / self.artifacts[name]["fpath"], mode
-        ) as buf:
-            out = curr_handler.read(buf, **kwargs)
+        for artifact in self.artifacts:
+            if artifact.name == name:
+                # Construct the handler and validate
+                curr_handler = type(artifact).construct(name=name)
+                if validate and curr_handler != artifact:
+                    field_filters = filters.exclude(
+                        fields(type(artifact)).name,
+                        fields(type(artifact)).fname,
+                        fields(type(artifact)).value,
+                    )
+                    raise RuntimeError(
+                        "Runtime environments do not match. Artifact parameters\n\n"
+                        f"{json.dumps(asdict(artifact, filter=field_filters))}"
+                        "\n\nCurrent parameters:\n\n"
+                        f"{json.dumps(asdict(curr_handler, filter=field_filters))}"
+                    )
+                # Read in the artifact
+                mode = "rb" if curr_handler.binary else "r"
+                with self.fs.open(
+                    self.dir / self.path / artifact.fname, mode
+                ) as buf:
+                    out = curr_handler.read(buf, **kwargs)
+                break
+        else:
+            raise ValueError(f"No artifact with name {name}")
+
 
         return out
 
@@ -296,7 +313,11 @@ class Experiment:
         return asdict(
             self,
             value_serializer=serializer,
-            filter=lambda attr, _: attr.name not in ["dir", "project", "fs"],
+            filter=filters.exclude(
+                fields(Experiment).dir,
+                fields(Experiment).project,
+                fields(Experiment).fs
+            )
         )
 
     def __gt__(self, other):
