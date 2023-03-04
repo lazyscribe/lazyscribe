@@ -36,7 +36,11 @@ class SklearnArtifact(Artifact):
 
     @classmethod
     def construct(
-        cls, name: str, value: Optional[Any] = None, fname: Optional[str] = None, **kwargs
+        cls,
+        name: str,
+        value: Optional[Any] = None,
+        fname: Optional[str] = None,
+        **kwargs,
     ):
         """Construct the class with the version information.
 

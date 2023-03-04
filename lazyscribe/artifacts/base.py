@@ -5,6 +5,7 @@ from typing import Any, ClassVar, Dict, Optional
 
 from attrs import define, field
 
+
 @define
 class Artifact(metaclass=ABCMeta):
     """Generic artifact handler that defines the expected interface.
@@ -36,7 +37,7 @@ class Artifact(metaclass=ABCMeta):
     name : str
         The name of the artifact.
     fname : str
-        The filename for the artifact. 
+        The filename for the artifact.
     value : object
         The value for the artifact.
     """
@@ -51,7 +52,11 @@ class Artifact(metaclass=ABCMeta):
 
     @abstractclassmethod
     def construct(
-        cls, name: str, value: Optional[Any] = None, fname: Optional[str] = None, **kwargs
+        cls,
+        name: str,
+        value: Optional[Any] = None,
+        fname: Optional[str] = None,
+        **kwargs
     ):
         """Construct the artifact handler.
 

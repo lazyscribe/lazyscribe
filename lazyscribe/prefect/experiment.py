@@ -48,7 +48,12 @@ def log_parameter(experiment: Experiment, name: str, value: Any):
 
 @task(name="Log artifact")
 def log_artifact(
-    experiment: Experiment, fname: str, value: Any, handler: str, **kwargs
+    experiment: Experiment,
+    name: str,
+    value: Any,
+    handler: str,
+    fname: Optional[str] = None,
+    **kwargs
 ):
     """Log an artifact.
 
@@ -56,16 +61,19 @@ def log_artifact(
     ----------
     experiment : Experiment
         The experiment.
-    fname : str
-        The filename for the artifact.
+    name : str
+        The name of the artifact.
     value : Any
         The object to persist.
     handler : str
         The name of the handler to use for the object.
+    fname: str, optional (default None)
+        The filename for the artifact. If not provided, it will be derived from the
+        name of the artifact and the builtin suffix for each handler.
     **kwargs : dict
         Keyword arguments to use for the write function.
     """
-    experiment.log_artifact(fname, value, handler, **kwargs)
+    experiment.log_artifact(name, value, handler, fname, **kwargs)
 
 
 @task(name="Load artifact")
@@ -188,22 +196,26 @@ class LazyExperiment(Task):
         """
         log_parameter(self, name, value)
 
-    def log_artifact(self, fname: str, value: Any, handler: str, **kwargs):
+    def log_artifact(
+        self, name: str, value: Any, handler: str, fname: Optional[str] = None, **kwargs
+    ):
         """Add a ``log_artifact`` task.
 
         Parameters
         ----------
-        fname : str
-            The filename for the artifact. The stem of the filename will be the key value
-            for the artifact in the dictionary.
+        name : str
+            The name of the artifact.
         value : Any
             The object to persist to the filesystem.
         handler : str
             The name of the handler to use for the object.
+        fname : str, optional (default None)
+            The filename for the artifact. If not provided, it will be derived from the
+            name of the artifact and the builtin suffix for each handler.
         **kwargs : dict
             Keyword arguments for the write function of the handler.
         """
-        log_artifact(self, fname, value, handler, **kwargs)
+        log_artifact(self, name, value, handler, fname, **kwargs)
 
     def load_artifact(self, name: str, validate: bool = True, **kwargs):
         """Add a ``load_artifact`` task.
