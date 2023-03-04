@@ -93,18 +93,23 @@ class Project:
             data[idx]["last_updated"] = datetime.fromisoformat(entry["last_updated"])
 
         parent = self.fpath.parent
+        upstream_projects = {}
         for exp in data:
             dependencies = {}
             if "dependencies" in exp:
                 deplist = exp.pop("dependencies")
                 for dep in deplist:
-                    project = Project(
-                        fpath=parent / dep.split("|")[0],
-                        mode="r",
-                        **self.storage_options,
-                    )
-                    project.load()
-                    depexp = project[dep.split("|")[1]]
+                    project_name, exp_name = dep.split("|")
+                    project = upstream_projects.get(project_name)
+                    if not project:
+                        project = Project(
+                            fpath=parent / project_name,
+                            mode="r",
+                            **self.storage_options,
+                        )
+                        project.load()
+                        upstream_projects[project_name] = project
+                    depexp = project[exp_name]
                     dependencies[depexp.short_slug] = depexp
 
             tests = []
