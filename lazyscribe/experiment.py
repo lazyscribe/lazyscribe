@@ -4,7 +4,6 @@ import getpass
 import json
 import logging
 from contextlib import contextmanager
-from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Union
@@ -14,7 +13,7 @@ from fsspec.implementations.local import LocalFileSystem
 from fsspec.spec import AbstractFileSystem
 from slugify import slugify
 
-from .artifacts import _get_handler, Artifact
+from .artifacts import Artifact, _get_handler
 from .test import Test
 
 LOG = logging.getLogger(__name__)
@@ -52,7 +51,7 @@ def serializer(inst, field, value):
                     artifact,
                     filter=filters.exclude(fields(type(artifact)).value),
                 ),
-                "handler": artifact.alias
+                "handler": artifact.alias,
             }
             for artifact in value
         ]
@@ -265,14 +264,11 @@ class Experiment:
                     )
                 # Read in the artifact
                 mode = "rb" if curr_handler.binary else "r"
-                with self.fs.open(
-                    self.dir / self.path / artifact.fname, mode
-                ) as buf:
+                with self.fs.open(self.dir / self.path / artifact.fname, mode) as buf:
                     out = curr_handler.read(buf, **kwargs)
                 break
         else:
             raise ValueError(f"No artifact with name {name}")
-
 
         return out
 
@@ -316,8 +312,8 @@ class Experiment:
             filter=filters.exclude(
                 fields(Experiment).dir,
                 fields(Experiment).project,
-                fields(Experiment).fs
-            )
+                fields(Experiment).fs,
+            ),
         )
 
     def __gt__(self, other):

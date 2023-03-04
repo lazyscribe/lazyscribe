@@ -24,7 +24,7 @@ def test_prefect_experiment(tmp_path):
         )
         experiment.log_metric("name", 0.5)
         experiment.log_parameter("param", "value")
-        experiment.log_artifact(fname="features.json", value=[0, 1, 2], handler="json")
+        experiment.log_artifact(name="features", value=[0, 1, 2], handler="json")
         with experiment.log_test(name="My test") as test:
             test.log_metric("subpop", 0.7)
 
@@ -65,16 +65,15 @@ def test_prefect_experiment(tmp_path):
     assert exp_dict["tests"] == [
         {"name": "My test", "description": None, "metrics": {"subpop": 0.7}}
     ]
-    assert exp_dict["artifacts"] == {
-        "features": {
-            "fpath": "features.json",
+    assert exp_dict["artifacts"] == [
+        {
+            "name": "features",
+            "fname": "features.json",
             "handler": "json",
-            "parameters": {"python_version": ".".join(str(i) for i in sys.version_info[:2])}
+            "writer_kwargs": {},
+            "python_version": ".".join(str(i) for i in sys.version_info[:2])
         }
-    }
-    assert (
-        location / output.result[experiment].result.path / "features.json"
-    ).is_file()
+    ]
 
 
 def test_prefect_project(tmp_path):
@@ -186,7 +185,7 @@ def test_prefect_project_merge():
             "dependencies": [],
             "short_slug": "my-experiment",
             "slug": "my-experiment-20220101093000",
-            "artifacts": {},
+            "artifacts": [],
             "tests": [
                 {
                     "name": "My test",
@@ -206,7 +205,7 @@ def test_prefect_project_merge():
             "dependencies": [],
             "short_slug": "my-second-experiment",
             "slug": "my-second-experiment-20220101103000",
-            "artifacts": {},
+            "artifacts": [],
             "tests": [],
         },
     ]

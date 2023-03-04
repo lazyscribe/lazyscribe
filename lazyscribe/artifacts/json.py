@@ -27,7 +27,11 @@ class JSONArtifact(Artifact):
 
     @classmethod
     def construct(
-        cls, name: str, value: Optional[Any] = None, fname: Optional[str] = None, **kwargs
+        cls,
+        name: str,
+        value: Optional[Any] = None,
+        fname: Optional[str] = None,
+        **kwargs,
     ):
         """Construct the handler class.
 
@@ -50,7 +54,7 @@ class JSONArtifact(Artifact):
             value=value,
             writer_kwargs=kwargs,
             fname=fname or f"{slugify(name)}.{cls.suffix}",
-            python_version=".".join(str(i) for i in sys.version_info[:2])
+            python_version=".".join(str(i) for i in sys.version_info[:2]),
         )
 
     @classmethod

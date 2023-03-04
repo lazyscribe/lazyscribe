@@ -19,6 +19,7 @@ from .test import ReadOnlyTest, Test
 
 LOG = logging.getLogger(__name__)
 
+
 class Project:
     """Project class.
 
@@ -159,10 +160,11 @@ class Project:
             json.dump(data, outfile, sort_keys=True, indent=4)
 
         for exp in self.experiments:
-            if (
-                isinstance(exp, ReadOnlyExperiment) or exp.last_updated < self.snapshot[exp.slug]
-            ):
-                # Experiment was opened in append mode or not updated recently
+            if isinstance(exp, ReadOnlyExperiment):
+                LOG.debug(f"{exp.slug} was opened in read-only mode. Skipping...")
+                continue
+            if exp.slug in self.snapshot and exp.last_updated < self.snapshot[exp.slug]:
+                LOG.debug(f"{exp.slug} has not been updated. Skipping...")
                 continue
             # Write the artifact data
             LOG.info(f"Saving artifacts for {exp.slug}")
