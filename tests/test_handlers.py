@@ -1,7 +1,6 @@
 """Test the artifact handlers."""
 
 import pytest
-from attrs import asdict
 
 from lazyscribe.artifacts import JSONArtifact, SklearnArtifact, _get_handler
 
@@ -12,13 +11,16 @@ def test_json_handler(tmp_path):
     location.mkdir()
 
     data = [{"key": "value"}]
-    handler = JSONArtifact.construct()
-    with open(location / "output.json", "w") as buf:
+    handler = JSONArtifact.construct(name="My output file")
+
+    assert handler.fname == "my-output-file.json"
+
+    with open(location / handler.fname, "w") as buf:
         handler.write(data, buf)
 
-    assert (location / "output.json").is_file()
+    assert (location / handler.fname).is_file()
 
-    with open(location / "output.json", "r") as buf:
+    with open(location / handler.fname, "r") as buf:
         out = handler.read(buf)
 
     assert data == out
@@ -39,14 +41,17 @@ def test_sklearn_handler(tmp_path):
     # Construct the handler and write the estimator
     location = tmp_path / "my-estimator-location"
     location.mkdir()
-    handler = SklearnArtifact.construct()
-    with open(location / "estimator.joblib", "wb") as buf:
+    handler = SklearnArtifact.construct(name="My estimator")
+
+    assert handler.fname == "my-estimator.joblib"
+
+    with open(location / handler.fname, "wb") as buf:
         handler.write(estimator, buf)
 
-    assert (location / "estimator.joblib").is_file()
+    assert (location / handler.fname).is_file()
 
     # Read the estimator back and ensure it's fitted
-    with open(location / "estimator.joblib", "rb") as buf:
+    with open(location / handler.fname, "rb") as buf:
         out = handler.read(buf)
 
     sklearn.utils.validation.check_is_fitted(out)
@@ -54,7 +59,12 @@ def test_sklearn_handler(tmp_path):
     # Check that the handler correctly captures the environment variables
     assert (
         SklearnArtifact(
-            sklearn_version=sklearn.__version__, joblib_version=joblib.__version__
+            name="EXCLUDED FROM COMPARISON",
+            fname="EXCLUDED FROM COMPARISON",
+            value=None,
+            writer_kwargs=None,
+            sklearn_version=sklearn.__version__,
+            joblib_version=joblib.__version__
         )
     ) == handler
 

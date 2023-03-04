@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import getpass
 import json
+import logging
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
@@ -16,6 +17,7 @@ from .experiment import Experiment, ReadOnlyExperiment
 from .linked import LinkedList, merge
 from .test import ReadOnlyTest, Test
 
+LOG = logging.getLogger(__name__)
 
 class Project:
     """Project class.
@@ -144,7 +146,10 @@ class Project:
             self.snapshot[self.experiments[-1].slug] = self.experiments[-1].last_updated
 
     def save(self):
-        """Save the project data."""
+        """Save the project data.
+
+        This includes saving any artifact data.
+        """
         if self.mode == "r":
             raise RuntimeError("Project is in read-only mode.")
         elif self.mode == "w+":
@@ -157,6 +162,22 @@ class Project:
         data = list(self)
         with self.fs.open(self.fpath, "w") as outfile:
             json.dump(data, outfile, sort_keys=True, indent=4)
+
+        for exp in self.experiments:
+            if (
+                isinstance(exp, ReadOnlyExperiment) or exp.last_updated < self.snapshot[exp.slug]
+            ):
+                # Experiment was opened in append mode or not updated recently
+                continue
+            # Write the artifact data
+            LOG.info(f"Saving artifacts for {exp.slug}")
+            for artifact in exp.artifacts:
+                fmode = "wb" if artifact.binary else "w"
+                fpath = exp.dir / exp.path / artifact.fname
+                self.fs.makedirs(exp.dir / exp.path, exist_ok=True)
+                LOG.debug(f"Saving '{artifact.name}' to {str(fpath)}...")
+                with self.fs.open(fpath, fmode) as buf:
+                    artifact.write(artifact.value, buf)  # TODO: Handler kwargs
 
     def merge(self, other: Project) -> Project:
         """Merge two projects.

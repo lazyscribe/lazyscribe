@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 from attrs.exceptions import FrozenInstanceError
 
+from lazyscribe.artifacts import JSONArtifact
 from lazyscribe.experiment import Experiment, ReadOnlyExperiment
 from lazyscribe.test import Test
 
@@ -55,7 +56,7 @@ def test_experiment_serialization():
         "dependencies": [],
         "short_slug": "my-experiment",
         "slug": f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}",
-        "artifacts": {},
+        "artifacts": [],
         "tests": [
             {"name": "My test", "description": None, "metrics": {"name-subpop": 0.3}}
         ],
@@ -71,9 +72,9 @@ def test_experiment_artifact_logging_basic(tmp_path):
     exp = Experiment(
         name="My experiment", project=location / "project.json", author="root"
     )
-    exp.log_artifact(fname="features.json", value=[0, 1, 2], handler="json")
+    exp.log_artifact(name="features", value=[0, 1, 2], handler="json")
 
-    assert (location / exp.path / "features.json").is_file()
+    assert isinstance(exp.artifacts[0], JSONArtifact)
     assert exp.to_dict() == {
         "name": "My experiment",
         "author": "root",
@@ -85,13 +86,15 @@ def test_experiment_artifact_logging_basic(tmp_path):
         "dependencies": [],
         "short_slug": "my-experiment",
         "slug": f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}",
-        "artifacts": {
-            "features": {
-                "fpath": "features.json",
+        "artifacts": [
+            {
+                "name": "features",
+                "fname": "features.json",
                 "handler": "json",
-                "parameters": {"python_version": ".".join(str(i) for i in sys.version_info[:2])}
+                "writer_kwargs": {},
+                "python_version": ".".join(str(i) for i in sys.version_info[:2])
             }
-        },
+        ],
         "tests": [],
     }
 
@@ -104,7 +107,14 @@ def test_experiment_artifact_load(tmp_path):
     exp = Experiment(
         name="My experiment", project=location / "project.json", author="root"
     )
-    exp.log_artifact(fname="features.json", value=[0, 1, 2], handler="json")
+    exp.log_artifact(name="features", value=[0, 1, 2], handler="json")
+    # Need to write the artifact to disk
+    fpath = exp.dir / exp.path / exp.artifacts[0].fname
+    exp.fs.makedirs(exp.dir / exp.path, exist_ok=True)
+    with exp.fs.open(fpath, "w") as buf:
+        exp.artifacts[0].write(exp.artifacts[0].value, buf)
+
+    assert (location / "my-location" / exp.path / "features.json").is_file()
 
     out = exp.load_artifact(name="features")
 
@@ -124,9 +134,8 @@ def test_experiment_artifact_load_keyerror(tmp_path):
         exp.load_artifact(name="features")
 
 
-def test_experiment_artifact_load_validation(tmp_path):
+def test_experiment_artifact_load_validation():
     """Test the handler validation."""
-    sklearn = pytest.importorskip("sklearn")
     datasets = pytest.importorskip("sklearn.datasets")
     svm = pytest.importorskip("sklearn.svm")
 
@@ -135,27 +144,16 @@ def test_experiment_artifact_load_validation(tmp_path):
     estimator = svm.SVC(kernel="linear")
     estimator.fit(X, y)
 
-    # Log the estimator to the artifact
-    location = tmp_path / "my-location"
-    location.mkdir()
-
-    today = datetime.now()
     exp = Experiment(
-        name="My experiment", project=location / "project.json", author="root"
+        name="My experiment", project=Path("project.json"), author="root"
     )
-    exp.log_artifact(fname="estimator.joblib", value=estimator, handler="scikit-learn")
-
-    assert (location / exp.path / "estimator.joblib").is_file()
+    exp.log_artifact(name="estimator", value=estimator, handler="scikit-learn")
 
     # Edit the experiment parameters to make sure the validation fails
-    exp.artifacts["estimator"]["parameters"]["sklearn_version"] = "0.0.0"
+    exp.artifacts[0].sklearn_version = "0.0.0"
 
     with pytest.raises(RuntimeError):
-        exp.load_artifact("estimator")
-
-    # Check that the handler works with no validation
-    out = exp.load_artifact("estimator", validate=False)
-    sklearn.utils.validation.check_is_fitted(out)
+        exp.load_artifact(name="estimator")
 
 
 def test_experiment_serialization_dependencies():
@@ -184,7 +182,7 @@ def test_experiment_serialization_dependencies():
         ],
         "short_slug": "my-downstream-experiment",
         "slug": f"my-downstream-experiment-{today.strftime('%Y%m%d%H%M%S')}",
-        "artifacts": {},
+        "artifacts": [],
         "tests": [],
     }
 
