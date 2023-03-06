@@ -56,7 +56,7 @@ print(json.dumps(list(project), indent=4))
         "short_slug": "my-experiment",
         "slug": "my-experiment-<CREATED_AT>",
         "tests": [],
-        "artifacts": {}
+        "artifacts": []
     }
 ]
 ```

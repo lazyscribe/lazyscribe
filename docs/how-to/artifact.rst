@@ -25,11 +25,11 @@ corresponds to the ``created_at`` attribute.
 
   Unless you log an artifact, this directory will not be created automatically.
 
-To save an artifact to this directory, use :py:meth:`lazyscribe.Experiment.log_artifact`.
+To associate an artifact with your experiment, use :py:meth:`lazyscribe.Experiment.log_artifact`.
 Serialization is delegated to a subclass of :py:class:`lazyscribe.artifacts.Artifact`.
-For example, you can persist a ``scikit-learn`` estimator using ``joblib``:
 
 .. code-block:: python
+    :caption: Persisting a ``scikit-learn`` estimator with ``joblib``.
     :emphasize-lines: 8-9
 
     from lazyscribe import Project
@@ -40,7 +40,12 @@ For example, you can persist a ``scikit-learn`` estimator using ``joblib``:
         X, y = ...
         model = SVC()
         model.fit(X, y)
-        exp.log_artifact(fname="estimator.joblib", value=model, handler="scikit-learn")
+        exp.log_artifact(name="estimator", value=model, handler="scikit-learn")
+
+In the case of code failures, we want to minimize the chance that you need to clean up orphaned
+experiment data. For this reason, artifacts are *not persisted to the filesystem* when you call
+:py:meth:`lazyscribe.Experiment.log_artifact`. Artifacts are **only** saved when you
+call :py:meth:`lazyscribe.Project.save`.
 
 Below, we have included a list of currently supported artifact handlers and their aliases:
 
@@ -50,18 +55,20 @@ Below, we have included a list of currently supported artifact handlers and thei
     * - Class
       - Alias
       - Description
+      - Additional requirements
     * - :py:class:`lazyscribe.artifacts.JSONArtifact`
       - json
       - Artifacts written using :py:meth:`json.dump` and read using :py:meth:`json.load`
+      - N/A
     * - :py:class:`lazyscribe.artifacts.SklearnArtifact`
       - scikit-learn
       - Artifacts written using :py:meth:`joblib.dump` and read using :py:meth:`joblib.load`
+      - ``scikit-learn``, ``joblib``
 
 Loading and validation
 ----------------------
 
-To load an artifact, use :py:meth:`lazyscribe.Experiment.load_artifact`. The name of the artifact
-is the stem of the filename (e.g. for the above ``estimator.joblib``, the name will be ``estimator``).
+To load an artifact, use :py:meth:`lazyscribe.Experiment.load_artifact`.
 
 .. code-block:: python
     :emphasize-lines: 5

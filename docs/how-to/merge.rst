@@ -50,7 +50,7 @@ new experiments assumes a unique ``slug`` value. Suppose you have the following 
                 "short_slug": "first-experiment",
                 "slug": "first-experiment-20220101093000",
                 "tests": [],
-                "artifacts": {}
+                "artifacts": []
             }
         ]
 
@@ -70,7 +70,7 @@ new experiments assumes a unique ``slug`` value. Suppose you have the following 
                 "short_slug": "first-experiment",
                 "slug": "first-experiment-20220101093000",
                 "tests": [],
-                "artifacts": {}
+                "artifacts": []
             },
             {
                 "author": "My Friend",
@@ -83,7 +83,7 @@ new experiments assumes a unique ``slug`` value. Suppose you have the following 
                 "short_slug": "second-experiment",
                 "slug": "second-experiment-20220105103000",
                 "tests": [],
-                "artifacts": {}
+                "artifacts": []
             }
         ]
 
@@ -112,7 +112,7 @@ Suppose you have the following projects:
                 "short_slug": "first-experiment",
                 "slug": "first-experiment-20220101093000",
                 "tests": [],
-                "artifacts": {}
+                "artifacts": []
             }
         ]
 
@@ -132,7 +132,7 @@ Suppose you have the following projects:
                 "short_slug": "first-experiment",
                 "slug": "first-experiment-20220101093000",
                 "tests": [],
-                "artifacts": {}
+                "artifacts": []
             },
             {
                 "author": "My Friend",
@@ -145,7 +145,7 @@ Suppose you have the following projects:
                 "short_slug": "second-experiment",
                 "slug": "second-experiment-20220105103000",
                 "tests": [],
-                "artifacts": {}
+                "artifacts": []
             }
         ]
 
@@ -168,7 +168,7 @@ representation of the experiment. When the projects are merged, the newer record
             "short_slug": "first-experiment",
             "slug": "first-experiment-20220101093000",
             "tests": [],
-            "artifacts": {}
+            "artifacts": []
         },
         {
             "author": "My Friend",
@@ -181,7 +181,7 @@ representation of the experiment. When the projects are merged, the newer record
             "short_slug": "second-experiment",
             "slug": "second-experiment-20220105103000",
             "tests": [],
-            "artifacts": {}
+            "artifacts": []
         }
     ]
 
