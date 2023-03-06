@@ -49,7 +49,15 @@ def serializer(inst, field, value):
             {
                 **asdict(
                     artifact,
-                    filter=filters.exclude(fields(type(artifact)).value),
+                    filter=filters.exclude(
+                        fields(type(artifact)).value,
+                        fields(type(artifact)).writer_kwargs,
+                    ),
+                    value_serializer=lambda _, __, value: value.isoformat(
+                        timespec="seconds"
+                    )
+                    if isinstance(value, datetime)
+                    else value,
                 ),
                 "handler": artifact.alias,
             }
@@ -199,7 +207,13 @@ class Experiment:
         self.parameters[name] = value
 
     def log_artifact(
-        self, name: str, value: Any, handler: str, fname: Optional[str] = None, **kwargs
+        self,
+        name: str,
+        value: Any,
+        handler: str,
+        fname: Optional[str] = None,
+        overwrite: bool = False,
+        **kwargs,
     ):
         """Log an artifact to the experiment.
 
@@ -217,16 +231,36 @@ class Experiment:
         fname : str, optional (default None)
             The filename for the artifact. If not provided, it will be derived from the
             name of the artifact and the builtin suffix for each handler.
+        overwrite : bool, optional (default False)
+            Whether or not to overwrite an existing artifact with the same name. If set to ``True``,
+            the previous artifact will be removed and overwritten with the current artifact.
         **kwargs : dict
             Keyword arguments for the write function of the handler.
+
+        Raises
+        ------
+        RuntimeError
+            Raised if an artifact is supplied with the same name as an existing artifact and ``overwrite``
+            is set to ``False``.
         """
         # Retrieve and construct the handler
+        self.last_updated = datetime.now()
         handler_cls = _get_handler(handler)
         artifact_handler = handler_cls.construct(
-            name=name, value=value, fname=fname, **kwargs
+            name=name, value=value, fname=fname, created_at=self.last_updated, **kwargs
         )
-        self.last_updated = datetime.now()
-        self.artifacts.append(artifact_handler)
+        for index, artifact in enumerate(self.artifacts):
+            if artifact.name == name:
+                if overwrite:
+                    self.artifacts[index] = artifact_handler
+                    break
+                else:
+                    raise RuntimeError(
+                        f"An artifact with name {name} already exists in the experiment. Please "
+                        "use another name or set ``overwrite=True`` to replace the artifact."
+                    )
+        else:
+            self.artifacts.append(artifact_handler)
 
     def load_artifact(self, name: str, validate: bool = True, **kwargs) -> Any:
         """Load a single artifact.
@@ -255,6 +289,7 @@ class Experiment:
                         fields(type(artifact)).name,
                         fields(type(artifact)).fname,
                         fields(type(artifact)).value,
+                        fields(type(artifact)).created_at,
                     )
                     raise RuntimeError(
                         "Runtime environments do not match. Artifact parameters\n\n"

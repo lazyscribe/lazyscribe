@@ -13,6 +13,7 @@ from urllib.parse import urlparse
 
 import fsspec
 
+from .artifacts import _get_handler
 from .experiment import Experiment, ReadOnlyExperiment
 from .linked import LinkedList, merge
 from .test import ReadOnlyTest, Test
@@ -124,6 +125,16 @@ class Project:
                     else:
                         tests.append(Test(**test))
 
+            artifacts = []
+            if "artifacts" in exp:
+                artifactlist = exp.pop("artifacts")
+                for artifact in artifactlist:
+                    handler_cls = _get_handler(artifact.pop("handler"))
+                    created_at = datetime.fromisoformat(artifact.pop("created_at"))
+                    artifacts.append(
+                        handler_cls.construct(**artifact, created_at=created_at)
+                    )
+
             if self.mode in ("r", "a"):
                 self.experiments.append(
                     ReadOnlyExperiment(
@@ -142,6 +153,7 @@ class Project:
                         fs=self.fs,
                         dependencies=dependencies,
                         tests=tests,
+                        artifacts=artifacts,
                     )
                 )
             self.snapshot[self.experiments[-1].slug] = self.experiments[-1].last_updated
@@ -168,7 +180,10 @@ class Project:
             if isinstance(exp, ReadOnlyExperiment):
                 LOG.debug(f"{exp.slug} was opened in read-only mode. Skipping...")
                 continue
-            if exp.slug in self.snapshot and exp.last_updated < self.snapshot[exp.slug]:
+            if (
+                exp.slug in self.snapshot
+                and exp.last_updated == self.snapshot[exp.slug]
+            ):
                 LOG.debug(f"{exp.slug} has not been updated. Skipping...")
                 continue
             # Write the artifact data
@@ -176,10 +191,18 @@ class Project:
             for artifact in exp.artifacts:
                 fmode = "wb" if artifact.binary else "w"
                 fpath = exp.dir / exp.path / artifact.fname
+                if self.fs.isfile(fpath) and artifact.created_at <= self.fs.created(
+                    fpath
+                ):
+                    LOG.debug(
+                        f"Artifact '{artifact.name}' already exists and has not been updated"
+                    )
+                    continue
+
                 self.fs.makedirs(exp.dir / exp.path, exist_ok=True)
                 LOG.debug(f"Saving '{artifact.name}' to {str(fpath)}...")
                 with self.fs.open(fpath, fmode) as buf:
-                    artifact.write(artifact.value, buf)  # TODO: Handler kwargs
+                    artifact.write(artifact.value, buf, **artifact.writer_kwargs)
 
     def merge(self, other: Project) -> Project:
         """Merge two projects.

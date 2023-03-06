@@ -63,15 +63,10 @@ def test_experiment_serialization():
     }
 
 
-def test_experiment_artifact_logging_basic(tmp_path):
+def test_experiment_artifact_logging_basic():
     """Test logging an artifact to the experiment."""
-    location = tmp_path / "my-location"
-    location.mkdir()
-
     today = datetime.now()
-    exp = Experiment(
-        name="My experiment", project=location / "project.json", author="root"
-    )
+    exp = Experiment(name="My experiment", project=Path("project.json"), author="root")
     exp.log_artifact(name="features", value=[0, 1, 2], handler="json")
 
     assert isinstance(exp.artifacts[0], JSONArtifact)
@@ -91,12 +86,29 @@ def test_experiment_artifact_logging_basic(tmp_path):
                 "name": "features",
                 "fname": "features.json",
                 "handler": "json",
-                "writer_kwargs": {},
-                "python_version": ".".join(str(i) for i in sys.version_info[:2])
+                "created_at": today.strftime("%Y-%m-%dT%H:%M:%S"),
+                "python_version": ".".join(str(i) for i in sys.version_info[:2]),
             }
         ],
         "tests": [],
     }
+
+
+def test_experiment_artifact_logging_overwrite():
+    """Test overwriting an artifact."""
+    exp = Experiment(name="My experiment", project=Path("project.json"), author="root")
+    exp.log_artifact(name="features", value=[0, 1, 2], handler="json")
+
+    assert isinstance(exp.artifacts[0], JSONArtifact)
+
+    with pytest.raises(RuntimeError):
+        exp.log_artifact(name="features", value=[3, 4, 5], handler="json")
+
+    assert exp.artifacts[0].value == [0, 1, 2]
+
+    exp.log_artifact(name="features", value=[3, 4, 5], handler="json", overwrite=True)
+
+    assert exp.artifacts[0].value == [3, 4, 5]
 
 
 def test_experiment_artifact_load(tmp_path):
@@ -144,9 +156,7 @@ def test_experiment_artifact_load_validation():
     estimator = svm.SVC(kernel="linear")
     estimator.fit(X, y)
 
-    exp = Experiment(
-        name="My experiment", project=Path("project.json"), author="root"
-    )
+    exp = Experiment(name="My experiment", project=Path("project.json"), author="root")
     exp.log_artifact(name="estimator", value=estimator, handler="scikit-learn")
 
     # Edit the experiment parameters to make sure the validation fails

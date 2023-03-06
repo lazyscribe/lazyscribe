@@ -1,5 +1,6 @@
 """Joblib-based handler for scikit-learn objects."""
 
+from datetime import datetime
 from typing import Any, ClassVar, Optional
 
 from attrs import define
@@ -40,6 +41,7 @@ class SklearnArtifact(Artifact):
         name: str,
         value: Optional[Any] = None,
         fname: Optional[str] = None,
+        created_at: Optional[datetime] = None,
         **kwargs,
     ):
         """Construct the class with the version information.
@@ -54,6 +56,8 @@ class SklearnArtifact(Artifact):
         fname : str, optional (default None)
             The filename of the artifact. If not provided, this value will be derived from
             the name of the artifact and the suffix for the class.
+        created_at : datetime, optional (default None)
+            When the artifact was created. If not supplied, :py:meth:`datetime.now` will be used.
         **kwargs : Dict
             Keyword arguments for writing an artifact to the filesystem. Provided when an artifact
             is logged to an experiment
@@ -70,6 +74,7 @@ class SklearnArtifact(Artifact):
             name=name,
             value=value,
             fname=fname or f"{slugify(name)}.{cls.suffix}",
+            created_at=created_at or datetime.now(),
             writer_kwargs=kwargs,
             sklearn_version=sklearn.__version__,
             joblib_version=joblib.__version__,

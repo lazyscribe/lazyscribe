@@ -70,8 +70,8 @@ def test_prefect_experiment(tmp_path):
             "name": "features",
             "fname": "features.json",
             "handler": "json",
-            "writer_kwargs": {},
-            "python_version": ".".join(str(i) for i in sys.version_info[:2])
+            "created_at": today.strftime("%Y-%m-%dT%H:%M:%S"),
+            "python_version": ".".join(str(i) for i in sys.version_info[:2]),
         }
     ]
 

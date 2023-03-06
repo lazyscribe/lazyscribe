@@ -1,6 +1,7 @@
 """Artifact handler for JSON-serializable objects."""
 
 import sys
+from datetime import datetime
 from json import dump, load
 from typing import Any, ClassVar, Optional
 
@@ -31,6 +32,7 @@ class JSONArtifact(Artifact):
         name: str,
         value: Optional[Any] = None,
         fname: Optional[str] = None,
+        created_at: Optional[datetime] = None,
         **kwargs,
     ):
         """Construct the handler class.
@@ -45,6 +47,8 @@ class JSONArtifact(Artifact):
         fname : str, optional (default None)
             The filename of the artifact. If not provided, this value will be derived from
             the name of the artifact and the suffix for the class.
+        created_at : datetime, optional (default None)
+            When the artifact was created. If not supplied, :py:meth:`datetime.now` will be used.
         **kwargs : Dict
             Keyword arguments for writing an artifact to the filesystem. Provided when an artifact
             is logged to an experiment
@@ -54,6 +58,7 @@ class JSONArtifact(Artifact):
             value=value,
             writer_kwargs=kwargs,
             fname=fname or f"{slugify(name)}.{cls.suffix}",
+            created_at=created_at or datetime.now(),
             python_version=".".join(str(i) for i in sys.version_info[:2]),
         )
 

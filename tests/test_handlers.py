@@ -62,9 +62,10 @@ def test_sklearn_handler(tmp_path):
             name="EXCLUDED FROM COMPARISON",
             fname="EXCLUDED FROM COMPARISON",
             value=None,
+            created_at=None,
             writer_kwargs=None,
             sklearn_version=sklearn.__version__,
-            joblib_version=joblib.__version__
+            joblib_version=joblib.__version__,
         )
     ) == handler
 

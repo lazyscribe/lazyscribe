@@ -1,6 +1,7 @@
 """Base class for new artifact handlers."""
 
-from abc import ABCMeta, abstractclassmethod
+from abc import ABCMeta, abstractmethod
+from datetime import datetime
 from typing import Any, ClassVar, Dict, Optional
 
 from attrs import define, field
@@ -49,13 +50,16 @@ class Artifact(metaclass=ABCMeta):
     fname: str = field(eq=False)
     value: Any = field(eq=False)
     writer_kwargs: Dict = field(eq=False)
+    created_at: datetime = field(eq=False)
 
-    @abstractclassmethod
+    @classmethod
+    @abstractmethod
     def construct(
         cls,
         name: str,
         value: Optional[Any] = None,
         fname: Optional[str] = None,
+        created_at: Optional[datetime] = None,
         **kwargs
     ):
         """Construct the artifact handler.
@@ -73,13 +77,16 @@ class Artifact(metaclass=ABCMeta):
         fname : str, optional (default None)
             The filename of the artifact. If not provided, this value will be derived from
             the name of the artifact and the suffix for the class.
+        created_at : datetime, optional (default None)
+            When the artifact was created. If not supplied, :py:meth:`datetime.now` will be used.
         **kwargs : Dict
             Keyword arguments for writing an artifact to the filesystem. Provided when an artifact
             is logged to an experiment
         """
         pass
 
-    @abstractclassmethod
+    @classmethod
+    @abstractmethod
     def read(cls, buf, **kwargs):
         """Read in the artifact.
 
@@ -96,7 +103,8 @@ class Artifact(metaclass=ABCMeta):
             The artifact.
         """
 
-    @abstractclassmethod
+    @classmethod
+    @abstractmethod
     def write(cls, obj, buf, **kwargs):
         """Write the artifact to the filesystem.
 

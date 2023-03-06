@@ -1,9 +1,11 @@
 """Test the project class."""
 
 import json
+import time
 from datetime import datetime
 from pathlib import Path
 
+import fsspec
 import pytest
 
 from lazyscribe import Project
@@ -142,6 +144,82 @@ def test_save_project_artifact(tmp_path):
         artifact = json.load(infile)
 
     assert artifact == [0, 1, 2]
+
+
+def test_save_project_artifact_multi_experiment(tmp_path):
+    """Test running save on a project twice with multiple experiments and artifacts.
+
+    The goal of this test is to ensure that an experiment opened in read-only mode or
+    one that has not been updated does not result in the file being overwritten on the filesystem.
+    """
+    location = tmp_path / "my-project"
+    location.mkdir()
+    project_location = location / "project.json"
+
+    project = Project(fpath=project_location, author="root")
+    with project.log(name="My first experiment") as exp:
+        exp.log_artifact(name="features", value=[0, 1, 2], handler="json")
+    project.save()
+
+    # Reload the project in append-mode and log another experiment
+    reload_project = Project(fpath=project_location, mode="a", author="root")
+    with reload_project.log(name="My second experiment") as exp:
+        exp.log_artifact(name="features", value=[3, 4, 5], handler="json")
+    reload_project.save()
+
+    # Check that the first experiment artifact was not overwritten
+    fs = fsspec.filesystem("file")
+    assert (
+        fs.created(location / project["my-first-experiment"].path / "features.json")
+        < reload_project["my-second-experiment"].created_at
+    )
+
+    # Reload the project in editable mode and add another experiment
+    final_project = Project(fpath=project_location, mode="w+", author="root")
+    with final_project.log(name="My third experiment") as exp:
+        exp.log_artifact(name="features", value=[6, 7, 8], handler="json")
+    final_project.save()
+
+    # Check that the first and second experiment artifacts were not overwritten
+    assert (
+        fs.created(location / project["my-first-experiment"].path / "features.json")
+        < reload_project["my-second-experiment"].created_at
+    )
+    assert (
+        fs.created(
+            location / reload_project["my-second-experiment"].path / "features.json"
+        )
+        < final_project["my-third-experiment"].created_at
+    )
+
+
+def test_save_project_artifact_updated(tmp_path):
+    """Test running save twice with an updated experiment.
+
+    The goal of this test is to ensure that an artifact is not overwritten unnecessarily.
+    """
+    location = tmp_path / "my-project"
+    location.mkdir()
+    project_location = location / "project.json"
+
+    project = Project(fpath=project_location, author="root")
+    with project.log(name="My experiment") as exp:
+        exp.log_artifact(name="features", value=[0, 1, 2], handler="json")
+
+    project.save()
+
+    # Re-open the project in editable mode
+    new_project = Project(fpath=project_location, mode="w+", author="root")
+    new_project["my-experiment"].log_artifact(
+        name="feature_names", value=["a", "b", "c"], handler="json"
+    )
+    new_project.save()
+
+    fs = fsspec.filesystem("file")
+    assert (
+        fs.created(location / project["my-experiment"].path / "features.json")
+        < new_project["my-experiment"].last_updated
+    )
 
 
 def test_load_project():
