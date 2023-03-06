@@ -240,8 +240,8 @@ class Experiment:
         Raises
         ------
         RuntimeError
-            Raised if an artifact is supplied with the same name as an existing artifact and ``overwrite``
-            is set to ``False``.
+            Raised if an artifact is supplied with the same name as an existing artifact and
+            ``overwrite`` is set to ``False``.
         """
         # Retrieve and construct the handler
         self.last_updated = datetime.now()
