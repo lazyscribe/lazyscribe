@@ -1,6 +1,7 @@
 """Experiment dataclass."""
 
 import getpass
+import inspect
 import json
 import logging
 from contextlib import contextmanager
@@ -282,8 +283,23 @@ class Experiment:
         """
         for artifact in self.artifacts:
             if artifact.name == name:
-                # Construct the handler and validate
-                curr_handler = type(artifact).construct(name=name)
+                # Construct the handler with relevant parameters.
+                artifact_attrs = artifact.__dict__.copy()
+                exclude_params = ["value", "fname", "created_at"]
+                construct_params = [
+                    param
+                    for param in inspect.signature(artifact.construct).parameters
+                    if param not in exclude_params
+                ]
+                artifact_attrs = {
+                    key: value
+                    for key, value in artifact_attrs.items()
+                    if key in construct_params
+                }
+
+                curr_handler = type(artifact).construct(**artifact_attrs)
+
+                # Validate the handler
                 if validate and curr_handler != artifact:
                     field_filters = filters.exclude(
                         fields(type(artifact)).name,
@@ -292,7 +308,7 @@ class Experiment:
                         fields(type(artifact)).created_at,
                     )
                     raise RuntimeError(
-                        "Runtime environments do not match. Artifact parameters\n\n"
+                        "Runtime environments do not match. Artifact parameters:\n\n"
                         f"{json.dumps(asdict(artifact, filter=field_filters))}"
                         "\n\nCurrent parameters:\n\n"
                         f"{json.dumps(asdict(curr_handler, filter=field_filters))}"
