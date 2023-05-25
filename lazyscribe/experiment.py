@@ -284,7 +284,11 @@ class Experiment:
         for artifact in self.artifacts:
             if artifact.name == name:
                 # Construct the handler with relevant parameters.
-                artifact_attrs = artifact.__dict__.copy()
+                artifact_attrs = {
+                    x: y
+                    for x, y in inspect.getmembers(artifact)
+                    if not x.startswith("_") and not inspect.ismethod(y)
+                }
                 exclude_params = ["value", "fname", "created_at"]
                 construct_params = [
                     param

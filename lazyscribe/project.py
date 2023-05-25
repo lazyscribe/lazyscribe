@@ -143,6 +143,7 @@ class Project:
                         fs=self.fs,
                         dependencies=dependencies,
                         tests=tests,
+                        artifacts=artifacts,
                     )
                 )
             else:
