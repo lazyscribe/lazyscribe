@@ -248,7 +248,7 @@ class Experiment:
         self.last_updated = datetime.now()
         handler_cls = _get_handler(handler)
         artifact_handler = handler_cls.construct(
-            name=name, value=value, fname=fname, created_at=self.last_updated, **kwargs
+            name=name, value=value, fname=fname, created_at=self.last_updated, writer_kwargs=kwargs
         )
         for index, artifact in enumerate(self.artifacts):
             if artifact.name == name:
