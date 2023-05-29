@@ -2,7 +2,7 @@
 
 import pytest
 
-from lazyscribe.artifacts import JSONArtifact, SklearnArtifact, _get_handler
+from lazyscribe.artifacts import JSONArtifact, JoblibArtifact, _get_handler
 
 
 def test_json_handler(tmp_path):
@@ -26,8 +26,8 @@ def test_json_handler(tmp_path):
     assert data == out
 
 
-def test_sklearn_handler(tmp_path):
-    """Test reading and writing scikit-learn estimators with the handler."""
+def test_joblib_handler(tmp_path):
+    """Test reading and writing scikit-learn estimators with the joblib handler."""
     joblib = pytest.importorskip("joblib")
     sklearn = pytest.importorskip("sklearn")
     datasets = pytest.importorskip("sklearn.datasets")
@@ -41,7 +41,7 @@ def test_sklearn_handler(tmp_path):
     # Construct the handler and write the estimator
     location = tmp_path / "my-estimator-location"
     location.mkdir()
-    handler = SklearnArtifact.construct(name="My estimator")
+    handler = JoblibArtifact.construct(name="My estimator", value=estimator)
 
     assert handler.fname == "my-estimator.joblib"
 
@@ -58,13 +58,14 @@ def test_sklearn_handler(tmp_path):
 
     # Check that the handler correctly captures the environment variables
     assert (
-        SklearnArtifact(
+        JoblibArtifact(
             name="EXCLUDED FROM COMPARISON",
             fname="EXCLUDED FROM COMPARISON",
             value=None,
             created_at=None,
             writer_kwargs=None,
-            sklearn_version=sklearn.__version__,
+            package="sklearn",
+            package_version=sklearn.__version__,
             joblib_version=joblib.__version__,
         )
     ) == handler
@@ -72,8 +73,8 @@ def test_sklearn_handler(tmp_path):
 
 def test_get_handler():
     """Test retrieving a handler."""
-    handler = _get_handler("scikit-learn")
-    assert handler == SklearnArtifact
+    handler = _get_handler("joblib")
+    assert handler == JoblibArtifact
 
     with pytest.raises(ValueError):
         _get_handler("fake-handler")

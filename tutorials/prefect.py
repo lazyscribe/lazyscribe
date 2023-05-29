@@ -17,8 +17,11 @@ from sklearn.svm import SVC
 # %%
 # First, let's make some tasks to generate fake data, train an estimator, and score the model.
 
+
 @task(name="Generate data", nout=2)
-def generate_data(n_samples: int = 1000, n_features: int = 10) -> Tuple[np.ndarray, np.ndarray]:
+def generate_data(
+    n_samples: int = 1000, n_features: int = 10
+) -> Tuple[np.ndarray, np.ndarray]:
     """Generate classification data.
 
     Parameters
@@ -56,6 +59,7 @@ def fit_model(X: np.ndarray, y: np.ndarray) -> SVC:
     """
     return SVC(kernel="linear").fit(X, y)
 
+
 @task(name="Score model")
 def score_model(estimator: SVC, X: np.ndarray, y: np.ndarray) -> float:
     """Score a model.
@@ -75,6 +79,7 @@ def score_model(estimator: SVC, X: np.ndarray, y: np.ndarray) -> float:
         The score.
     """
     return estimator.score(X, y)
+
 
 # %%
 # Next, let's create a flow that fits the model and logs output:
@@ -97,6 +102,4 @@ assert output.is_successful()
 # %%
 # We can print the experiment to look at the data.
 
-print(
-    json.dumps(list(output.result[project].result), indent=4, sort_keys=True)
-)
+print(json.dumps(list(output.result[project].result), indent=4, sort_keys=True))

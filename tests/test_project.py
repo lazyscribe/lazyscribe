@@ -7,6 +7,7 @@ from pathlib import Path
 
 import fsspec
 import pytest
+from unittest.mock import patch
 
 from lazyscribe import Project
 from lazyscribe.experiment import Experiment, ReadOnlyExperiment
@@ -146,6 +147,40 @@ def test_save_project_artifact(tmp_path):
     assert artifact == [0, 1, 2]
 
 
+@patch("lazyscribe.artifacts.joblib.version", side_effect=["1.2.2", "0.0.0"])
+def test_save_project_artifact_failed_validation(mock_version, tmp_path):
+    """Test saving and loading project with an artifact."""
+    location = tmp_path / "my-project"
+    location.mkdir()
+    project_location = location / "project.json"
+    today = datetime.now()
+
+    datasets = pytest.importorskip("sklearn.datasets")
+    svm = pytest.importorskip("sklearn.svm")
+
+    project = Project(fpath=project_location, author="root")
+    with project.log(name="My experiment") as exp:
+        # Fit a basic estimator
+        X, y = datasets.make_classification(n_samples=100, n_features=10)
+        estimator = svm.SVC(kernel="linear")
+        estimator.fit(X, y)
+        exp.log_artifact(name="estimator", value=estimator, handler="joblib")
+
+    project.save()
+
+    assert project_location.is_file()
+    assert (
+        location / f"my-experiment-{exp.last_updated.strftime('%Y%m%d%H%M%S')}" / "estimator.joblib"
+    ).is_file()
+
+    # Reload project and validate experiment
+    with pytest.raises(RuntimeError):
+        project2 = Project(project_location, mode="r")
+        exp2 = project2["my-experiment"]
+        model_load = exp2.load_artifact(name="estimator")
+
+
+
 def test_save_project_artifact_multi_experiment(tmp_path):
     """Test running save on a project twice with multiple experiments and artifacts.
 
@@ -169,8 +204,9 @@ def test_save_project_artifact_multi_experiment(tmp_path):
 
     # Check that the first experiment artifact was not overwritten
     fs = fsspec.filesystem("file")
+
     assert (
-        fs.created(location / project["my-first-experiment"].path / "features.json")
+        datetime.fromtimestamp(fs.info(location / project["my-first-experiment"].path / "features.json")["created"])
         < reload_project["my-second-experiment"].created_at
     )
 
@@ -182,13 +218,11 @@ def test_save_project_artifact_multi_experiment(tmp_path):
 
     # Check that the first and second experiment artifacts were not overwritten
     assert (
-        fs.created(location / project["my-first-experiment"].path / "features.json")
+        datetime.fromtimestamp(fs.info(location / project["my-first-experiment"].path / "features.json")["created"])
         < reload_project["my-second-experiment"].created_at
     )
     assert (
-        fs.created(
-            location / reload_project["my-second-experiment"].path / "features.json"
-        )
+        datetime.fromtimestamp(fs.info(location / reload_project["my-second-experiment"].path / "features.json")["created"])
         < final_project["my-third-experiment"].created_at
     )
 
@@ -216,8 +250,9 @@ def test_save_project_artifact_updated(tmp_path):
     new_project.save()
 
     fs = fsspec.filesystem("file")
+    
     assert (
-        fs.created(location / project["my-experiment"].path / "features.json")
+        datetime.fromtimestamp(fs.info(location / project["my-experiment"].path / "features.json")["created"])
         < new_project["my-experiment"].last_updated
     )
 

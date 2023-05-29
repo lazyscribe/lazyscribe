@@ -40,7 +40,7 @@ Serialization is delegated to a subclass of :py:class:`lazyscribe.artifacts.Arti
         X, y = ...
         model = SVC()
         model.fit(X, y)
-        exp.log_artifact(name="estimator", value=model, handler="scikit-learn")
+        exp.log_artifact(name="estimator", value=model, handler="joblib")
 
 In the case of code failures, we want to minimize the chance that you need to clean up orphaned
 experiment data. For this reason, artifacts are *not persisted to the filesystem* when you call
@@ -60,10 +60,10 @@ Below, we have included a list of currently supported artifact handlers and thei
       - json
       - Artifacts written using :py:meth:`json.dump` and read using :py:meth:`json.load`
       - N/A
-    * - :py:class:`lazyscribe.artifacts.SklearnArtifact`
-      - scikit-learn
+    * - :py:class:`lazyscribe.artifacts.JoblibArtifact`
+      - joblib
       - Artifacts written using :py:meth:`joblib.dump` and read using :py:meth:`joblib.load`
-      - ``scikit-learn``, ``joblib``
+      - ``joblib``
 
 Loading and validation
 ----------------------
@@ -81,9 +81,9 @@ To load an artifact, use :py:meth:`lazyscribe.Experiment.load_artifact`.
 
 When an artifact is persisted to the filesystem, the handler may save environment
 parameters to use for validation when attempting to load the artifact into python.
-For example, :py:class:`lazyscribe.artifacts.SklearnArtifact` will include the ``scikit-learn``
+For example, when persisting a ``scikit-learn`` model object with the :py:class:`lazyscribe.artifacts.JoblibArtifact`, it will include the ``scikit-learn``
 and ``joblib`` versions in the artifact metadata. If the metadata doesn't match with a handler constructed
-in the current runtime environment, ``lazyscribe`` with raise an error. You can disable validation using
+in the current runtime environment, ``lazyscribe`` will raise an error. You can disable validation using
 ``validate=False``:
 
 .. code-block:: python

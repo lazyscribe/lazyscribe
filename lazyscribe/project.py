@@ -143,6 +143,7 @@ class Project:
                         fs=self.fs,
                         dependencies=dependencies,
                         tests=tests,
+                        artifacts=artifacts,
                     )
                 )
             else:
@@ -191,8 +192,10 @@ class Project:
             for artifact in exp.artifacts:
                 fmode = "wb" if artifact.binary else "w"
                 fpath = exp.dir / exp.path / artifact.fname
-                if self.fs.isfile(fpath) and artifact.created_at <= self.fs.created(
+                if self.fs.isfile(
                     fpath
+                ) and artifact.created_at <= datetime.fromtimestamp(
+                    self.fs.info(fpath)["created"]
                 ):
                     LOG.debug(
                         f"Artifact '{artifact.name}' already exists and has not been updated"

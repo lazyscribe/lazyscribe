@@ -4,9 +4,9 @@ from typing import List, Type
 
 from .base import Artifact
 from .json import JSONArtifact
-from .sklearn import SklearnArtifact
+from .joblib import JoblibArtifact
 
-__all__: List[str] = ["Artifact", "JSONArtifact", "SklearnArtifact", "_get_handler"]
+__all__: List[str] = ["Artifact", "JSONArtifact", "JoblibArtifact", "_get_handler"]
 
 
 def _get_handler(alias: str) -> Type[Artifact]:
