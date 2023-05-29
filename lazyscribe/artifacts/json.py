@@ -57,7 +57,9 @@ class JSONArtifact(Artifact):
             Other keyword arguments.
             Usually class attributes obtained from a project JSON.
         """
-        python_version = kwargs.get("python_version") or ".".join(str(i) for i in sys.version_info[:2])
+        python_version = kwargs.get("python_version") or ".".join(
+            str(i) for i in sys.version_info[:2]
+        )
         return cls(
             name=name,
             value=value,

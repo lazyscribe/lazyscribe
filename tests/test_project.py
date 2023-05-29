@@ -205,14 +205,8 @@ def test_save_project_artifact_multi_experiment(tmp_path):
     # Check that the first experiment artifact was not overwritten
     fs = fsspec.filesystem("file")
 
-    print(f'\nfirst, created_at: {project["my-first-experiment"].created_at}\n')
-    print(f'\nfirst, fs.created: {fs.created(location / project["my-first-experiment"].path / "features.json")}\n')
-    
-    print(f'\nsecond, created_at: {reload_project["my-second-experiment"].created_at}\n')
-    print(f'\nsecond, fs.created: {fs.created(location / reload_project["my-first-experiment"].path / "features.json")}\n')
-
     assert (
-        fs.created(location / project["my-first-experiment"].path / "features.json")
+        datetime.fromtimestamp(fs.info(location / project["my-first-experiment"].path / "features.json")["created"])
         < reload_project["my-second-experiment"].created_at
     )
 
@@ -224,13 +218,11 @@ def test_save_project_artifact_multi_experiment(tmp_path):
 
     # Check that the first and second experiment artifacts were not overwritten
     assert (
-        fs.created(location / project["my-first-experiment"].path / "features.json")
+        datetime.fromtimestamp(fs.info(location / project["my-first-experiment"].path / "features.json")["created"])
         < reload_project["my-second-experiment"].created_at
     )
     assert (
-        fs.created(
-            location / reload_project["my-second-experiment"].path / "features.json"
-        )
+        datetime.fromtimestamp(fs.info(location / reload_project["my-second-experiment"].path / "features.json")["created"])
         < final_project["my-third-experiment"].created_at
     )
 
@@ -258,8 +250,9 @@ def test_save_project_artifact_updated(tmp_path):
     new_project.save()
 
     fs = fsspec.filesystem("file")
+    
     assert (
-        fs.created(location / project["my-experiment"].path / "features.json")
+        datetime.fromtimestamp(fs.info(location / project["my-experiment"].path / "features.json")["created"])
         < new_project["my-experiment"].last_updated
     )
 

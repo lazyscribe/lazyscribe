@@ -74,10 +74,9 @@ class JoblibArtifact(Artifact):
             Keyword arguments for writing an artifact to the filesystem. Provided when an artifact
             is logged to an experiment.
         **kwargs : Dict
-            Other keyword arguments. 
+            Other keyword arguments.
             Usually class attributes obtained from a project JSON.
         """
-
         if not package:
             if not value:
                 raise ValueError(
@@ -93,7 +92,7 @@ class JoblibArtifact(Artifact):
         try:
             import joblib
         except ImportError:
-            raise RuntimeError(f"Please install ``joblib`` to use this handler.")
+            raise RuntimeError("Please install ``joblib`` to use this handler.")
 
         return cls(
             name=name,

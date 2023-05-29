@@ -84,7 +84,7 @@ class Artifact(metaclass=ABCMeta):
             Keyword arguments for writing an artifact to the filesystem. Provided when an artifact
             is logged to an experiment.
         **kwargs : Dict
-            Other keyword arguments. 
+            Other keyword arguments.
             Usually class attributes obtained from a project JSON.
         """
         pass
