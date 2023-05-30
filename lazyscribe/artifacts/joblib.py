@@ -101,8 +101,8 @@ class JoblibArtifact(Artifact):
             created_at=created_at or datetime.now(),
             writer_kwargs=writer_kwargs or {},
             package=package,
-            package_version=kwargs.get("package_version", version(distribution)),
-            joblib_version=kwargs.get("joblib_version", joblib.__version__),
+            package_version=kwargs.get("package_version") or version(distribution),
+            joblib_version=kwargs.get("joblib_version") or joblib.__version__,
         )
 
     @classmethod
