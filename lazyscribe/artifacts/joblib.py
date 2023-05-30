@@ -77,8 +77,8 @@ class JoblibArtifact(Artifact):
             Other keyword arguments.
             Usually class attributes obtained from a project JSON.
         """
-        if not package:
-            if not value:
+        if package is None:
+            if value is None:
                 raise ValueError(
                     "If no ``package`` is specified, you must supply a ``value``."
                 )
