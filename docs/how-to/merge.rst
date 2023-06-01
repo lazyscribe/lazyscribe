@@ -48,7 +48,9 @@ new experiments assumes a unique ``slug`` value. Suppose you have the following 
                 "name": "First experiment",
                 "parameters": {},
                 "short_slug": "first-experiment",
-                "slug": "first-experiment-20220101093000"
+                "slug": "first-experiment-20220101093000",
+                "tests": [],
+                "artifacts": []
             }
         ]
 
@@ -66,7 +68,9 @@ new experiments assumes a unique ``slug`` value. Suppose you have the following 
                 "name": "First experiment",
                 "parameters": {},
                 "short_slug": "first-experiment",
-                "slug": "first-experiment-20220101093000"
+                "slug": "first-experiment-20220101093000",
+                "tests": [],
+                "artifacts": []
             },
             {
                 "author": "My Friend",
@@ -77,7 +81,9 @@ new experiments assumes a unique ``slug`` value. Suppose you have the following 
                 "name": "Second experiment",
                 "parameters": {"features": ["col1", "col2"]},
                 "short_slug": "second-experiment",
-                "slug": "second-experiment-20220105103000"
+                "slug": "second-experiment-20220105103000",
+                "tests": [],
+                "artifacts": []
             }
         ]
 
@@ -104,7 +110,9 @@ Suppose you have the following projects:
                 "name": "First experiment",
                 "parameters": {"features": ["col1"]},
                 "short_slug": "first-experiment",
-                "slug": "first-experiment-20220101093000"
+                "slug": "first-experiment-20220101093000",
+                "tests": [],
+                "artifacts": []
             }
         ]
 
@@ -122,7 +130,9 @@ Suppose you have the following projects:
                 "name": "First experiment",
                 "parameters": {},
                 "short_slug": "first-experiment",
-                "slug": "first-experiment-20220101093000"
+                "slug": "first-experiment-20220101093000",
+                "tests": [],
+                "artifacts": []
             },
             {
                 "author": "My Friend",
@@ -133,7 +143,9 @@ Suppose you have the following projects:
                 "name": "Second experiment",
                 "parameters": {"features": ["col1", "col2"]},
                 "short_slug": "second-experiment",
-                "slug": "second-experiment-20220105103000"
+                "slug": "second-experiment-20220105103000",
+                "tests": [],
+                "artifacts": []
             }
         ]
 
@@ -154,7 +166,9 @@ representation of the experiment. When the projects are merged, the newer record
             "name": "First experiment",
             "parameters": {"features": ["col1"]},
             "short_slug": "first-experiment",
-            "slug": "first-experiment-20220101093000"
+            "slug": "first-experiment-20220101093000",
+            "tests": [],
+            "artifacts": []
         },
         {
             "author": "My Friend",
@@ -165,7 +179,9 @@ representation of the experiment. When the projects are merged, the newer record
             "name": "Second experiment",
             "parameters": {"features": ["col1", "col2"]},
             "short_slug": "second-experiment",
-            "slug": "second-experiment-20220105103000"
+            "slug": "second-experiment-20220105103000",
+            "tests": [],
+            "artifacts": []
         }
     ]
 

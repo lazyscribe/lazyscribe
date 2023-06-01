@@ -1,5 +1,6 @@
 """Test the prefect integration."""
 
+import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -10,21 +11,27 @@ from lazyscribe.prefect import LazyExperiment, LazyProject
 CURR_DIR = Path(__file__).resolve().parent
 DATA_DIR = CURR_DIR / "data"
 
-def test_prefect_experiment():
+
+def test_prefect_experiment(tmp_path):
     """Test creating an experiment and logging basic parameters."""
+    location = tmp_path / "my-location"
+    location.mkdir()
+
     init_experiment = LazyExperiment()
     with Flow(name="Create experiment") as flow:
         experiment = init_experiment(
-            project=Path("project.json"), name="My experiment", author="root"
+            project=location / "project.json", name="My experiment", author="root"
         )
         experiment.log_metric("name", 0.5)
         experiment.log_parameter("param", "value")
+        experiment.log_artifact(name="features", value=[0, 1, 2], handler="json")
         with experiment.log_test(name="My test") as test:
             test.log_metric("subpop", 0.7)
 
     assert {tsk.name for tsk in flow.downstream_tasks(experiment)} == {
         "Log experiment metric",
         "Log parameter",
+        "Log artifact",
         "Append test",
     }
     assert (
@@ -55,13 +62,25 @@ def test_prefect_experiment():
     assert exp_dict["dependencies"] == []
     assert exp_dict["short_slug"] == "my-experiment"
     assert exp_dict["slug"].startswith(f"my-experiment-{today.strftime('%Y%m%d%H%M')}")
-    assert exp_dict["tests"] == [{"name": "My test", "description": None, "metrics": {"subpop": 0.7}}]
+    assert exp_dict["tests"] == [
+        {"name": "My test", "description": None, "metrics": {"subpop": 0.7}}
+    ]
+    assert exp_dict["artifacts"] == [
+        {
+            "name": "features",
+            "fname": "features.json",
+            "handler": "json",
+            "created_at": today.strftime("%Y-%m-%dT%H:%M:%S"),
+            "python_version": ".".join(str(i) for i in sys.version_info[:2]),
+        }
+    ]
 
 
-def test_prefect_project(tmpdir):
+def test_prefect_project(tmp_path):
     """Test lazyscribe project integration with projects."""
-    location = tmpdir.mkdir("my-project")
-    project_location = Path(str(location)) / "project.json"
+    location = tmp_path / "my-project"
+    location.mkdir()
+    project_location = location / "project.json"
 
     init_project = LazyProject(fpath=project_location, author="root")
     with Flow(name="Create project") as flow:
@@ -127,8 +146,12 @@ def test_prefect_project(tmpdir):
     assert proj_list[0]["last_updated"].startswith(today.strftime("%Y-%m-%dT%H:%M"))
     assert proj_list[0]["dependencies"] == []
     assert proj_list[0]["short_slug"] == "my-experiment"
-    assert proj_list[0]["slug"].startswith(f"my-experiment-{today.strftime('%Y%m%d%H%M')}")
-    assert proj_list[0]["tests"] == [{"name": "My test", "description": None, "metrics": {"subpop": 0.7}}]
+    assert proj_list[0]["slug"].startswith(
+        f"my-experiment-{today.strftime('%Y%m%d%H%M')}"
+    )
+    assert proj_list[0]["tests"] == [
+        {"name": "My test", "description": None, "metrics": {"subpop": 0.7}}
+    ]
 
     assert output.result[project].result.to_tabular() == (
         output.result[exp_data].result,
@@ -162,9 +185,14 @@ def test_prefect_project_merge():
             "dependencies": [],
             "short_slug": "my-experiment",
             "slug": "my-experiment-20220101093000",
+            "artifacts": [],
             "tests": [
-                {"name": "My test", "description": None, "metrics": {"name-subpop": 0.3}}
-            ]
+                {
+                    "name": "My test",
+                    "description": None,
+                    "metrics": {"name-subpop": 0.3},
+                }
+            ],
         },
         {
             "name": "My second experiment",
@@ -177,6 +205,7 @@ def test_prefect_project_merge():
             "dependencies": [],
             "short_slug": "my-second-experiment",
             "slug": "my-second-experiment-20220101103000",
-            "tests": []
+            "artifacts": [],
+            "tests": [],
         },
     ]

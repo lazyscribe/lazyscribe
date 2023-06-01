@@ -22,6 +22,8 @@ The basic usage involves instantiating a ``Project`` and using the context manag
 an experiment:
 
 ```python
+import json
+
 from lazyscribe import Project
 
 project = Project(fpath="project.json")
@@ -33,9 +35,7 @@ with project.log(name="My experiment") as exp:
 You've created an experiment! You can view the experimental data by using ``list``:
 
 ```python
-from pprint import pprint
-
-pprint(list(project))
+print(json.dumps(list(project), indent=4))
 ```
 
 ```json
@@ -44,13 +44,19 @@ pprint(list(project))
         "name": "My experiment",
         "author": "<AUTHOR>",
         "last_updated_by": "<AUTHOR>",
-        "metrics": {"auroc": 0.5},
-        "parameters": {"algorithm": "lightgbm"},
+        "metrics": {
+            "auroc": 0.5
+        },
+        "parameters": {
+            "algorithm": "lightgbm"
+        },
         "created_at": "<CREATED_AT>",
         "last_updated": "<LAST_UPDATED>",
         "dependencies": [],
         "short_slug": "my-experiment",
-        "slug": "my-experiment-<CREATED_AT>"
+        "slug": "my-experiment-<CREATED_AT>",
+        "tests": [],
+        "artifacts": []
     }
 ]
 ```

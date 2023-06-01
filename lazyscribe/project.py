@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import getpass
 import json
+import logging
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
@@ -12,9 +13,12 @@ from urllib.parse import urlparse
 
 import fsspec
 
+from .artifacts import _get_handler
 from .experiment import Experiment, ReadOnlyExperiment
 from .linked import LinkedList, merge
 from .test import ReadOnlyTest, Test
+
+LOG = logging.getLogger(__name__)
 
 
 class Project:
@@ -121,13 +125,25 @@ class Project:
                     else:
                         tests.append(Test(**test))
 
+            artifacts = []
+            if "artifacts" in exp:
+                artifactlist = exp.pop("artifacts")
+                for artifact in artifactlist:
+                    handler_cls = _get_handler(artifact.pop("handler"))
+                    created_at = datetime.fromisoformat(artifact.pop("created_at"))
+                    artifacts.append(
+                        handler_cls.construct(**artifact, created_at=created_at)
+                    )
+
             if self.mode in ("r", "a"):
                 self.experiments.append(
                     ReadOnlyExperiment(
                         **exp,
                         project=self.fpath,
+                        fs=self.fs,
                         dependencies=dependencies,
                         tests=tests,
+                        artifacts=artifacts,
                     )
                 )
             else:
@@ -135,14 +151,19 @@ class Project:
                     Experiment(
                         **exp,
                         project=self.fpath,
+                        fs=self.fs,
                         dependencies=dependencies,
                         tests=tests,
+                        artifacts=artifacts,
                     )
                 )
             self.snapshot[self.experiments[-1].slug] = self.experiments[-1].last_updated
 
     def save(self):
-        """Save the project data."""
+        """Save the project data.
+
+        This includes saving any artifact data.
+        """
         if self.mode == "r":
             raise RuntimeError("Project is in read-only mode.")
         elif self.mode == "w+":
@@ -153,8 +174,38 @@ class Project:
                     self[slug].last_updated_by = self.author
 
         data = list(self)
-        with open(self.fpath, "w") as outfile:
+        with self.fs.open(self.fpath, "w") as outfile:
             json.dump(data, outfile, sort_keys=True, indent=4)
+
+        for exp in self.experiments:
+            if isinstance(exp, ReadOnlyExperiment):
+                LOG.debug(f"{exp.slug} was opened in read-only mode. Skipping...")
+                continue
+            if (
+                exp.slug in self.snapshot
+                and exp.last_updated == self.snapshot[exp.slug]
+            ):
+                LOG.debug(f"{exp.slug} has not been updated. Skipping...")
+                continue
+            # Write the artifact data
+            LOG.info(f"Saving artifacts for {exp.slug}")
+            for artifact in exp.artifacts:
+                fmode = "wb" if artifact.binary else "w"
+                fpath = exp.dir / exp.path / artifact.fname
+                if self.fs.isfile(
+                    fpath
+                ) and artifact.created_at <= datetime.fromtimestamp(
+                    self.fs.info(fpath)["created"]
+                ):
+                    LOG.debug(
+                        f"Artifact '{artifact.name}' already exists and has not been updated"
+                    )
+                    continue
+
+                self.fs.makedirs(exp.dir / exp.path, exist_ok=True)
+                LOG.debug(f"Saving '{artifact.name}' to {str(fpath)}...")
+                with self.fs.open(fpath, fmode) as buf:
+                    artifact.write(artifact.value, buf, **artifact.writer_kwargs)
 
     def merge(self, other: Project) -> Project:
         """Merge two projects.
@@ -227,7 +278,9 @@ class Project:
         """
         if self.mode == "r":
             raise RuntimeError("Project is in read-only mode.")
-        experiment = Experiment(name=name, project=self.fpath, author=self.author)
+        experiment = Experiment(
+            name=name, project=self.fpath, fs=self.fs, author=self.author
+        )
 
         try:
             yield experiment

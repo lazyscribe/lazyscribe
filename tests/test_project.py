@@ -1,16 +1,21 @@
 """Test the project class."""
 
 import json
+import time
 from datetime import datetime
 from pathlib import Path
+
+import fsspec
+import pytest
+from unittest.mock import patch
 
 from lazyscribe import Project
 from lazyscribe.experiment import Experiment, ReadOnlyExperiment
 from lazyscribe.test import ReadOnlyTest, Test
-import pytest
 
 CURR_DIR = Path(__file__).resolve().parent
 DATA_DIR = CURR_DIR / "data"
+
 
 @pytest.mark.parametrize(
     "project_kwargs",
@@ -18,9 +23,9 @@ DATA_DIR = CURR_DIR / "data"
         {"author": "root"},
         {
             "author": "root",
-            "fpath": "file://" + (DATA_DIR / "external_fs_project.json").as_posix()
-        }
-    ]
+            "fpath": "file://" + (DATA_DIR / "external_fs_project.json").as_posix(),
+        },
+    ],
 )
 def test_logging_experiment(project_kwargs):
     """Test logging an experiment to a project."""
@@ -42,6 +47,7 @@ def test_logging_experiment(project_kwargs):
         "dependencies": [],
         "short_slug": "my-experiment",
         "slug": f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}",
+        "artifacts": [],
         "tests": [],
     }
     assert project["my-experiment"] == project.experiments[0]
@@ -75,10 +81,11 @@ def test_not_logging_experiment_readonly():
         assert len(project.experiments) == 0
 
 
-def test_save_project(tmpdir):
+def test_save_project(tmp_path):
     """Test saving a project to an output JSON."""
-    location = tmpdir.mkdir("my-project")
-    project_location = Path(str(location)) / "project.json"
+    location = tmp_path / "my-project"
+    location.mkdir()
+    project_location = location / "project.json"
     today = datetime.now()
     project = Project(fpath=project_location, author="root")
     with project.log(name="My experiment") as exp:
@@ -104,6 +111,7 @@ def test_save_project(tmpdir):
             "dependencies": [],
             "short_slug": "my-experiment",
             "slug": f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}",
+            "artifacts": [],
             "tests": [
                 {
                     "name": "My test",
@@ -113,6 +121,140 @@ def test_save_project(tmpdir):
             ],
         }
     ]
+
+
+def test_save_project_artifact(tmp_path):
+    """Test saving a project with an artifact."""
+    location = tmp_path / "my-project"
+    location.mkdir()
+    project_location = location / "project.json"
+    today = datetime.now()
+
+    project = Project(fpath=project_location, author="root")
+    with project.log(name="My experiment") as exp:
+        exp.log_artifact(name="features", value=[0, 1, 2], handler="json")
+
+    project.save()
+
+    assert project_location.is_file()
+    assert (
+        location / f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}" / "features.json"
+    ).is_file()
+
+    with open(location / exp.path / "features.json", "r") as infile:
+        artifact = json.load(infile)
+
+    assert artifact == [0, 1, 2]
+
+
+@patch("lazyscribe.artifacts.joblib.version", side_effect=["1.2.2", "0.0.0"])
+def test_save_project_artifact_failed_validation(mock_version, tmp_path):
+    """Test saving and loading project with an artifact."""
+    location = tmp_path / "my-project"
+    location.mkdir()
+    project_location = location / "project.json"
+    today = datetime.now()
+
+    datasets = pytest.importorskip("sklearn.datasets")
+    svm = pytest.importorskip("sklearn.svm")
+
+    project = Project(fpath=project_location, author="root")
+    with project.log(name="My experiment") as exp:
+        # Fit a basic estimator
+        X, y = datasets.make_classification(n_samples=100, n_features=10)
+        estimator = svm.SVC(kernel="linear")
+        estimator.fit(X, y)
+        exp.log_artifact(name="estimator", value=estimator, handler="joblib")
+
+    project.save()
+
+    assert project_location.is_file()
+    assert (
+        location / f"my-experiment-{exp.last_updated.strftime('%Y%m%d%H%M%S')}" / "estimator.joblib"
+    ).is_file()
+
+    # Reload project and validate experiment
+    with pytest.raises(RuntimeError):
+        project2 = Project(project_location, mode="r")
+        exp2 = project2["my-experiment"]
+        model_load = exp2.load_artifact(name="estimator")
+
+
+
+def test_save_project_artifact_multi_experiment(tmp_path):
+    """Test running save on a project twice with multiple experiments and artifacts.
+
+    The goal of this test is to ensure that an experiment opened in read-only mode or
+    one that has not been updated does not result in the file being overwritten on the filesystem.
+    """
+    location = tmp_path / "my-project"
+    location.mkdir()
+    project_location = location / "project.json"
+
+    project = Project(fpath=project_location, author="root")
+    with project.log(name="My first experiment") as exp:
+        exp.log_artifact(name="features", value=[0, 1, 2], handler="json")
+    project.save()
+
+    # Reload the project in append-mode and log another experiment
+    reload_project = Project(fpath=project_location, mode="a", author="root")
+    with reload_project.log(name="My second experiment") as exp:
+        exp.log_artifact(name="features", value=[3, 4, 5], handler="json")
+    reload_project.save()
+
+    # Check that the first experiment artifact was not overwritten
+    fs = fsspec.filesystem("file")
+
+    assert (
+        datetime.fromtimestamp(fs.info(location / project["my-first-experiment"].path / "features.json")["created"])
+        < reload_project["my-second-experiment"].created_at
+    )
+
+    # Reload the project in editable mode and add another experiment
+    final_project = Project(fpath=project_location, mode="w+", author="root")
+    with final_project.log(name="My third experiment") as exp:
+        exp.log_artifact(name="features", value=[6, 7, 8], handler="json")
+    final_project.save()
+
+    # Check that the first and second experiment artifacts were not overwritten
+    assert (
+        datetime.fromtimestamp(fs.info(location / project["my-first-experiment"].path / "features.json")["created"])
+        < reload_project["my-second-experiment"].created_at
+    )
+    assert (
+        datetime.fromtimestamp(fs.info(location / reload_project["my-second-experiment"].path / "features.json")["created"])
+        < final_project["my-third-experiment"].created_at
+    )
+
+
+def test_save_project_artifact_updated(tmp_path):
+    """Test running save twice with an updated experiment.
+
+    The goal of this test is to ensure that an artifact is not overwritten unnecessarily.
+    """
+    location = tmp_path / "my-project"
+    location.mkdir()
+    project_location = location / "project.json"
+
+    project = Project(fpath=project_location, author="root")
+    with project.log(name="My experiment") as exp:
+        exp.log_artifact(name="features", value=[0, 1, 2], handler="json")
+
+    project.save()
+
+    # Re-open the project in editable mode
+    new_project = Project(fpath=project_location, mode="w+", author="root")
+    new_project["my-experiment"].log_artifact(
+        name="feature_names", value=["a", "b", "c"], handler="json"
+    )
+    new_project.save()
+
+    fs = fsspec.filesystem("file")
+    
+    assert (
+        datetime.fromtimestamp(fs.info(location / project["my-experiment"].path / "features.json")["created"])
+        < new_project["my-experiment"].last_updated
+    )
 
 
 def test_load_project():
@@ -132,10 +274,11 @@ def test_load_project():
     assert project.experiments == [expected]
 
 
-def test_load_project_edit(tmpdir):
+def test_load_project_edit(tmp_path):
     """Test loading a project and editing an experiment."""
-    location = tmpdir.mkdir("my-location")
-    project_location = Path(str(location)) / "project.json"
+    location = tmp_path / "my-location"
+    location.mkdir()
+    project_location = location / "project.json"
     project = Project(fpath=project_location, author="root")
     with project.log(name="My experiment") as exp:
         exp.log_metric("name", 0.5)
