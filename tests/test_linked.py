@@ -1,6 +1,6 @@
 """Test linked list utilities."""
 
-from lazyscribe.linked import Node, LinkedList, merge
+from lazyscribe.linked import LinkedList, Node, merge
 
 
 def test_convert_to_list():
