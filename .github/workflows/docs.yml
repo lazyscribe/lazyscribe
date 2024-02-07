@@ -27,7 +27,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: "docs/build/html"
+          path: "docs/_build/html"
   deploy:
     # Only dpeloy if it's not a PR event. PR is build only to ensure docs build
     if: ${{ github.event_name != 'pull_request'}}
