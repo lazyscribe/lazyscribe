@@ -321,8 +321,10 @@ class Project:
             | ``("last_updated",)``    | Last update timestammp        |
             +--------------------------+-------------------------------+
 
-            as well as one key per metric in the ``metrics`` dictionary
-            for each experiment, with the format ``("metrics", <metric_name>)``.
+            as well as one key per parameter in the ``parameters`` dictionary
+            (with the format ``("parameters", <metric_name>)``) and one key
+            per metric in the ``metrics`` dictionary (with the format
+            ``("metrics", <metric_name>)``) for each experiment.
         List
             A ``tests`` level list. Each entry will represent a test, with the
             following keys:
@@ -342,8 +344,8 @@ class Project:
             | ``("description",)``     | Test description              |
             +--------------------------+-------------------------------+
 
-            as well as one key per metric in the ``metrics`` dictionary for each
-            test, with the format ``("metrics", <metric_name>)``.
+            as well as one key per metric in the ``metrics`` dictionary
+            (with the format ``("metrics", <metric_name>)``) for each test.
         """
         exp_output: List = []
         test_output: List = []
