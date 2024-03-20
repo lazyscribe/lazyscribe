@@ -177,6 +177,10 @@ class Experiment:
         """
         return self.dir / self.slug
 
+    def __str__(self):
+        """String representation."""
+        return '<lazyscribe.experiment.Experiment at {addr}>'.format(addr=hex(id(self)))
+
     def log_metric(self, name: str, value: Union[float, int]):
         """Log a metric to the experiment.
 
@@ -421,3 +425,7 @@ class Experiment:
 @frozen
 class ReadOnlyExperiment(Experiment):
     """Immutable version of an experiment."""
+
+    def __str__(self):
+        """String representation."""
+        return '<lazyscribe.experiment.ReadOnlyExperiment at {addr}>'.format(addr=hex(id(self)))

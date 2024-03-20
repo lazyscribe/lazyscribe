@@ -30,6 +30,9 @@ class Test:
     description: Optional[str] = Factory(lambda: None)
     metrics: Dict = Factory(lambda: {})
 
+    def __str__(self):
+        return '<lazyscribe.test.Test at {addr}>'.format(addr=hex(id(self)))
+
     def log_metric(self, name: str, value: Union[float, int]):
         """Log a metric to the test.
 
@@ -48,3 +51,7 @@ class Test:
 @frozen
 class ReadOnlyTest(Test):
     """Immutable version of the test."""
+
+    def __str__(self):
+        """String representation."""
+        return '<lazyscribe.test.ReadOnlyTest at {addr}>'.format(addr=hex(id(self)))
