@@ -29,7 +29,7 @@ tests = ["scikit-learn", "prefect<2,>=1.0", "pytest", "pytest-cov"]
 dev = ["lazyscribe[build]", "lazyscribe[docs]", "lazyscribe[qa]", "lazyscribe[tests]"]
 
 [project.urls]
-documentation = "https://lazyscribe.readthedocs.io/en/latest/"
+documentation = "https://lazyscribe.github.io/lazyscribe/"
 repository = "https://github.com/lazyscribe/lazyscribe"
 
 # Build system
