@@ -1,21 +1,21 @@
 [project]
 name = "lazyscribe"
-requires-python = ">=3.7.0"
+requires-python = ">=3.8.0"
 description = "Lightweight and lazy experiment logging"
 authors = [
     {name = "Akshay Gupta", email="akgcodes@gmail.com"}
 ]
 license = {text = "MIT license"}
 classifiers = [
-	"Development Status :: 3 - Alpha",
+	"Development Status :: 4 - Beta",
 	"License :: OSI Approved :: MIT License",
 	"Natural Language :: English",
 	"Programming Language :: Python :: 3",
 	"Programming Language :: Python :: 3 :: Only",
-	"Programming Language :: Python :: 3.7",
 	"Programming Language :: Python :: 3.8",
 	"Programming Language :: Python :: 3.9",
 	"Programming Language :: Python :: 3.10",
+	"Programming Language :: Python :: 3.11",
 ]
 dependencies = ["attrs<=23.1.0,>=21.2.0", "importlib-metadata<=6.6.0,>=6.0", "python-slugify<=8.0.1,>=5.0.0", "fsspec<=2023.5.0,>=0.4.0"]
 
@@ -83,7 +83,7 @@ command = "pytest tests"
 
 [tool.ruff]
 extend-include = ["*.ipynb"]
-target-version = "py39"
+target-version = "py38"
 
 [tool.ruff.lint]
 preview = true
