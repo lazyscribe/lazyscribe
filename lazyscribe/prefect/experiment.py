@@ -54,7 +54,7 @@ def log_artifact(
     handler: str,
     fname: Optional[str] = None,
     overwrite: bool = False,
-    **kwargs
+    **kwargs,
 ):
     """Log an artifact.
 
@@ -136,7 +136,7 @@ class LazyExperiment(Task):
         self,
         project: Optional[Path] = None,
         author: Optional[str] = getpass.getuser(),
-        **kwargs
+        **kwargs,
     ):
         """Init method."""
         self.project = project
@@ -207,7 +207,7 @@ class LazyExperiment(Task):
         handler: str,
         fname: Optional[str] = None,
         overwrite: bool = False,
-        **kwargs
+        **kwargs,
     ):
         """Add a ``log_artifact`` task.
 

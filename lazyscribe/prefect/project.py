@@ -102,7 +102,7 @@ class LazyProject(Task):
         mode: str = "w",
         author: Optional[str] = None,
         storage_options: Optional[Dict] = None,
-        **kwargs
+        **kwargs,
     ):
         """Init method."""
         self.fpath = fpath

@@ -92,7 +92,9 @@ class JoblibArtifact(Artifact):
         try:
             import joblib
         except ImportError as err:
-            raise RuntimeError("Please install ``joblib`` to use this handler.") from err
+            raise RuntimeError(
+                "Please install ``joblib`` to use this handler."
+            ) from err
 
         return cls(
             name=name,

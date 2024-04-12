@@ -61,7 +61,7 @@ class Artifact(metaclass=ABCMeta):
         fname: Optional[str] = None,
         created_at: Optional[datetime] = None,
         writer_kwargs: Optional[Dict] = None,
-        **kwargs
+        **kwargs,
     ):
         """Construct the artifact handler.
 

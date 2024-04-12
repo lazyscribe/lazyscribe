@@ -97,7 +97,6 @@ select = [
 	"UP",  # pyupgrade
 	"B",  # flake8-bugbear
 	"C",  # flake8-comprehensions
-	"C901",  # mccabe complexity
 	"T20",  # flake8-print
 	"TID252",  # flake8-tidy-imports ban relative imports
 	"SIM",  # flake8-simplify
@@ -105,6 +104,7 @@ select = [
 	"RUF",  # Ruff errors
 ]
 ignore = [
+	"C901",  # Add back in later
 	"E111",  # Check indentation level. Using formatter instead.
 	"E114",  # Check indentation level. Using formatter instead.
 	"E117",  # Check indentation level. Using formatter instead.
@@ -121,6 +121,7 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["E402"]
 "**/{tests,docs}/*" = ["E402", "D", "F841", "ARG"]
+"tutorials/*" = ["D", "T201"]
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"

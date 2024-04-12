@@ -61,10 +61,9 @@ def test_logging_experiment(project_kwargs):
 def test_not_logging_experiment():
     """Test not logging an experiment when raising an error."""
     project = Project(author="root")
-    with pytest.raises(ValueError):
-        with project.log(name="My experiment") as exp:
-            raise ValueError("An error.")
-            exp.log_metric("name", 0.5)
+    with pytest.raises(ValueError), project.log(name="My experiment") as exp:
+        raise ValueError("An error.")
+        exp.log_metric("name", 0.5)
 
     assert len(project.experiments) == 0
 
@@ -73,9 +72,8 @@ def test_not_logging_experiment_readonly():
     """Test trying to log an experiment in read only mode."""
     project = Project(fpath=DATA_DIR / "project.json", mode="r")
 
-    with pytest.raises(RuntimeError):
-        with project.log(name="My experiment") as exp:
-            exp.log_metric("name", 0.5)
+    with pytest.raises(RuntimeError), project.log(name="My experiment") as exp:
+        exp.log_metric("name", 0.5)
 
         assert len(project.experiments) == 0
 
@@ -169,7 +167,9 @@ def test_save_project_artifact_failed_validation(mock_version, tmp_path):
 
     assert project_location.is_file()
     assert (
-        location / f"my-experiment-{exp.last_updated.strftime('%Y%m%d%H%M%S')}" / "estimator.joblib"
+        location
+        / f"my-experiment-{exp.last_updated.strftime('%Y%m%d%H%M%S')}"
+        / "estimator.joblib"
     ).is_file()
 
     # Reload project and validate experiment
@@ -204,7 +204,11 @@ def test_save_project_artifact_multi_experiment(tmp_path):
     fs = fsspec.filesystem("file")
 
     assert (
-        datetime.fromtimestamp(fs.info(location / project["my-first-experiment"].path / "features.json")["created"])
+        datetime.fromtimestamp(
+            fs.info(location / project["my-first-experiment"].path / "features.json")[
+                "created"
+            ]
+        )
         < reload_project["my-second-experiment"].created_at
     )
 
@@ -216,11 +220,19 @@ def test_save_project_artifact_multi_experiment(tmp_path):
 
     # Check that the first and second experiment artifacts were not overwritten
     assert (
-        datetime.fromtimestamp(fs.info(location / project["my-first-experiment"].path / "features.json")["created"])
+        datetime.fromtimestamp(
+            fs.info(location / project["my-first-experiment"].path / "features.json")[
+                "created"
+            ]
+        )
         < reload_project["my-second-experiment"].created_at
     )
     assert (
-        datetime.fromtimestamp(fs.info(location / reload_project["my-second-experiment"].path / "features.json")["created"])
+        datetime.fromtimestamp(
+            fs.info(
+                location / reload_project["my-second-experiment"].path / "features.json"
+            )["created"]
+        )
         < final_project["my-third-experiment"].created_at
     )
 
@@ -250,7 +262,11 @@ def test_save_project_artifact_updated(tmp_path):
     fs = fsspec.filesystem("file")
 
     assert (
-        datetime.fromtimestamp(fs.info(location / project["my-experiment"].path / "features.json")["created"])
+        datetime.fromtimestamp(
+            fs.info(location / project["my-experiment"].path / "features.json")[
+                "created"
+            ]
+        )
         < new_project["my-experiment"].last_updated
     )
 
