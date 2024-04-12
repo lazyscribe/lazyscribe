@@ -29,18 +29,3 @@ To use these lists, convert them to :py:class:`pandas.DataFrame` objects with mu
 
     test_df = pd.DataFrame(tests)
     test_df.columns = pd.MultiIndex.from_tuples(test_df.columns)
-
-To view the experiments themselves as dictionaries, you can either iterate through the project:
-
-.. code-block:: python
-
-    import json
-
-    for exp in project:
-        print(json.dumps(exp, indent=4))
-
-or call :py:meth:`lazyscribe.Experiment.to_dict` directly:
-
-.. code-block:: python
-
-    project["my-experiment-slug"].to_dict()
