@@ -2,14 +2,19 @@
 
 from typing import List
 
-from .experiment import (
+from lazyscribe.prefect.experiment import (
     LazyExperiment,
     append_test,
     log_experiment_metric,
     log_parameter,
 )
-from .project import LazyProject, append_experiment, merge_projects, save_project
-from .test import LazyTest, log_test_metric
+from lazyscribe.prefect.project import (
+    LazyProject,
+    append_experiment,
+    merge_projects,
+    save_project,
+)
+from lazyscribe.prefect.test import LazyTest, log_test_metric
 
 __all__: List[str] = [
     "LazyExperiment",

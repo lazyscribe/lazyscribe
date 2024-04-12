@@ -5,7 +5,7 @@ from typing import Optional, Union
 from prefect import Task, task
 from prefect.utilities.tasks import defaults_from_attrs
 
-from ..test import Test
+from lazyscribe.test import Test
 
 
 @task(name="Log test metric")

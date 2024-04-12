@@ -8,7 +8,7 @@ from typing import Any, ClassVar, Dict, Optional
 from attrs import define
 from slugify import slugify
 
-from .base import Artifact
+from lazyscribe.artifacts.base import Artifact
 
 
 @define(auto_attribs=True)

@@ -14,8 +14,8 @@ from fsspec.implementations.local import LocalFileSystem
 from fsspec.spec import AbstractFileSystem
 from slugify import slugify
 
-from .artifacts import Artifact, _get_handler
-from .test import ReadOnlyTest, Test
+from lazyscribe.artifacts import Artifact, _get_handler
+from lazyscribe.test import ReadOnlyTest, Test
 
 LOG = logging.getLogger(__name__)
 

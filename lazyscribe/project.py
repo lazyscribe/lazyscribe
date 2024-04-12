@@ -8,15 +8,15 @@ import logging
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Iterator, List, Literal, Optional, Tuple, Union
+from typing import Dict, Iterator, List, Literal, Tuple
 from urllib.parse import urlparse
 
 import fsspec
 
-from .artifacts import _get_handler
-from .experiment import Experiment, ReadOnlyExperiment
-from .linked import LinkedList, merge
-from .test import ReadOnlyTest, Test
+from lazyscribe.artifacts import _get_handler
+from lazyscribe.experiment import Experiment, ReadOnlyExperiment
+from lazyscribe.linked import LinkedList, merge
+from lazyscribe.test import ReadOnlyTest, Test
 
 LOG = logging.getLogger(__name__)
 
@@ -58,9 +58,9 @@ class Project:
 
     def __init__(
         self,
-        fpath: Union[str, Path] = "project.json",
+        fpath: str | Path = "project.json",
         mode: Literal["r", "a", "w", "w+"] = "w",
-        author: Optional[str] = None,
+        author: str | None = None,
         **storage_options,
     ):
         """Init method."""
@@ -74,7 +74,7 @@ class Project:
         self.storage_options = storage_options
 
         # If in ``r``, ``a``, or ``w+`` mode, read in the existing project.
-        self.experiments: List[Union[Experiment, ReadOnlyExperiment]] = []
+        self.experiments: List[Experiment | ReadOnlyExperiment] = []
         self.snapshot: Dict = {}
         self.fs = fsspec.filesystem(self.protocol, **storage_options)
 
@@ -401,7 +401,7 @@ class Project:
 
         return out
 
-    def __getitem__(self, arg: str) -> Union[Experiment, ReadOnlyExperiment]:
+    def __getitem__(self, arg: str) -> Experiment | ReadOnlyExperiment:
         """Use brackets to retrieve an experiment by slug.
 
         Parameters

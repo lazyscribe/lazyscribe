@@ -9,9 +9,9 @@ import prefect
 from prefect import Flow, Task, task
 from prefect.utilities.tasks import defaults_from_attrs
 
-from ..experiment import Experiment
-from ..project import Project
-from .experiment import LazyExperiment
+from lazyscribe.experiment import Experiment
+from lazyscribe.prefect.experiment import LazyExperiment
+from lazyscribe.project import Project
 
 
 @task(name="Append experiment")
