@@ -2,7 +2,7 @@
 
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Dict, Iterator, List, Optional, Tuple
+from typing import Dict, Iterator, List, Literal, Optional, Tuple
 from urllib.parse import urlparse
 
 import prefect
@@ -99,7 +99,7 @@ class LazyProject(Task):
     def __init__(
         self,
         fpath: str = "project.json",
-        mode: str = "w",
+        mode: Literal["r", "a", "w", "w+"] = "w",
         author: Optional[str] = None,
         storage_options: Optional[Dict] = None,
         **kwargs,
@@ -116,7 +116,7 @@ class LazyProject(Task):
     def run(
         self,
         fpath: Optional[str] = None,
-        mode: Optional[str] = None,
+        mode: Optional[Literal["r", "a", "w", "w+"]] = None,
         author: Optional[str] = None,
         storage_options: Optional[Dict] = None,
     ) -> Project:
