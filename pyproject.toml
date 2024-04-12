@@ -74,7 +74,7 @@ version_pattern = "MAJOR.MINOR.PATCH"
 # EDGETEST -------------------------------------------------------------------
 
 [edgetest.envs.core]
-python_version = 3.9
+python_version = "3.9"
 extras = ["tests"]
 upgrade = ["attrs", "python-slugify", "fsspec"]
 command = "pytest tests"
