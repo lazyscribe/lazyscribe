@@ -1,10 +1,10 @@
 """Joblib-based handler for pickle-serializable objects."""
 
 from datetime import datetime
-from typing import Any, ClassVar, Optional, Dict
+from typing import Any, ClassVar, Dict, Optional
 
-from importlib_metadata import version, packages_distributions
 from attrs import define
+from importlib_metadata import packages_distributions, version
 from slugify import slugify
 
 from .base import Artifact

@@ -3,7 +3,7 @@
 import sys
 from datetime import datetime
 from json import dump, load
-from typing import Any, ClassVar, Optional, Dict
+from typing import Any, ClassVar, Dict, Optional
 
 from attrs import define
 from slugify import slugify

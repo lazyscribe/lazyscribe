@@ -8,10 +8,11 @@ experiment.
 
 import json
 
-from lazyscribe import Project
 import pandas as pd
 from sklearn.datasets import make_classification
 from sklearn.svm import SVC
+
+from lazyscribe import Project
 
 # %%
 # First, let's create some toy data for the experiment.

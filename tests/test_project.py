@@ -1,13 +1,12 @@
 """Test the project class."""
 
 import json
-import time
 from datetime import datetime
 from pathlib import Path
+from unittest.mock import patch
 
 import fsspec
 import pytest
-from unittest.mock import patch
 
 from lazyscribe import Project
 from lazyscribe.experiment import Experiment, ReadOnlyExperiment
@@ -96,7 +95,7 @@ def test_save_project(tmp_path):
     project.save()
     assert project_location.is_file()
 
-    with open(project_location, "r") as infile:
+    with open(project_location) as infile:
         serialized = json.load(infile)
 
     assert serialized == [
@@ -141,7 +140,7 @@ def test_save_project_artifact(tmp_path):
         location / f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}" / "features.json"
     ).is_file()
 
-    with open(location / exp.path / "features.json", "r") as infile:
+    with open(location / exp.path / "features.json") as infile:
         artifact = json.load(infile)
 
     assert artifact == [0, 1, 2]
@@ -178,7 +177,6 @@ def test_save_project_artifact_failed_validation(mock_version, tmp_path):
         project2 = Project(project_location, mode="r")
         exp2 = project2["my-experiment"]
         model_load = exp2.load_artifact(name="estimator")
-
 
 
 def test_save_project_artifact_multi_experiment(tmp_path):
@@ -250,7 +248,7 @@ def test_save_project_artifact_updated(tmp_path):
     new_project.save()
 
     fs = fsspec.filesystem("file")
-    
+
     assert (
         datetime.fromtimestamp(fs.info(location / project["my-experiment"].path / "features.json")["created"])
         < new_project["my-experiment"].last_updated

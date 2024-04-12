@@ -8,11 +8,12 @@ In this tutorial, we will demonstrate how you can use ``lazyscribe`` with ``pref
 import json
 from typing import Tuple
 
-from lazyscribe.prefect import LazyProject
 import numpy as np
-from prefect import task, Flow
+from prefect import Flow, task
 from sklearn.datasets import make_classification
 from sklearn.svm import SVC
+
+from lazyscribe.prefect import LazyProject
 
 # %%
 # First, let's make some tasks to generate fake data, train an estimator, and score the model.

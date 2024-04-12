@@ -3,8 +3,8 @@
 from typing import List, Type
 
 from .base import Artifact
-from .json import JSONArtifact
 from .joblib import JoblibArtifact
+from .json import JSONArtifact
 
 __all__: List[str] = ["Artifact", "JSONArtifact", "JoblibArtifact", "_get_handler"]
 

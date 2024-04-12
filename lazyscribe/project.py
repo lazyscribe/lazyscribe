@@ -8,7 +8,7 @@ import logging
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Iterator, List, Optional, Tuple, Union
+from typing import Dict, Iterator, List, Literal, Optional, Tuple, Union
 from urllib.parse import urlparse
 
 import fsspec
@@ -59,7 +59,7 @@ class Project:
     def __init__(
         self,
         fpath: Union[str, Path] = "project.json",
-        mode: str = "w",
+        mode: Literal["r", "a", "w", "w+"] = "w",
         author: Optional[str] = None,
         **storage_options,
     ):
@@ -77,6 +77,9 @@ class Project:
         self.experiments: List[Union[Experiment, ReadOnlyExperiment]] = []
         self.snapshot: Dict = {}
         self.fs = fsspec.filesystem(self.protocol, **storage_options)
+
+        if mode not in ("r", "a", "w", "w+"):
+            raise ValueError("Please provide a valid ``mode`` value.")
         self.mode = mode
         if mode in ("r", "a", "w+") and self.fs.isfile(self.fpath):
             self.load()
@@ -203,7 +206,7 @@ class Project:
                     continue
 
                 self.fs.makedirs(exp.dir / exp.path, exist_ok=True)
-                LOG.debug(f"Saving '{artifact.name}' to {str(fpath)}...")
+                LOG.debug(f"Saving '{artifact.name}' to {fpath!s}...")
                 with self.fs.open(fpath, fmode) as buf:
                     artifact.write(artifact.value, buf, **artifact.writer_kwargs)
 
