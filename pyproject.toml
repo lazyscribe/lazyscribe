@@ -24,7 +24,7 @@ dynamic = ["readme", "version"]
 [project.optional-dependencies]
 build = ["build", "bumpver", "twine", "wheel"]
 docs = ["furo", "matplotlib", "pandas", "pillow", "prefect<2,>=1.0", "scikit-learn", "sphinx", "sphinx-gallery", "sphinx-inline-tabs"]
-qa = ["ruff", "edgetest", "mypy", "pip-tools", "types-python-slugify"]
+qa = ["ruff==0.3.7", "edgetest", "mypy", "pip-tools", "types-python-slugify"]
 tests = ["scikit-learn", "prefect<2,>=1.0", "pytest", "pytest-cov"]
 dev = ["lazyscribe[build]", "lazyscribe[docs]", "lazyscribe[qa]", "lazyscribe[tests]"]
 
