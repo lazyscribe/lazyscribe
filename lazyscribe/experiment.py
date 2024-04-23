@@ -14,8 +14,8 @@ from fsspec.implementations.local import LocalFileSystem
 from fsspec.spec import AbstractFileSystem
 from slugify import slugify
 
-from .artifacts import Artifact, _get_handler
-from .test import Test
+from lazyscribe.artifacts import Artifact, _get_handler
+from lazyscribe.test import ReadOnlyTest, Test
 
 LOG = logging.getLogger(__name__)
 
@@ -111,7 +111,7 @@ class Experiment:
     dependencies: Dict = field(eq=False, factory=lambda: {})
     short_slug: str = field()
     slug: str = field()
-    tests: List = Factory(lambda: [])
+    tests: List[Union[Test, ReadOnlyTest]] = Factory(lambda: [])
     artifacts: List[Artifact] = Factory(factory=lambda: [])
 
     @dir.default

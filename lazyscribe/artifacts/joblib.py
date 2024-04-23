@@ -1,13 +1,13 @@
 """Joblib-based handler for pickle-serializable objects."""
 
 from datetime import datetime
-from typing import Any, ClassVar, Optional, Dict
+from typing import Any, ClassVar, Dict, Optional
 
-from importlib_metadata import version, packages_distributions
 from attrs import define
+from importlib_metadata import packages_distributions, version
 from slugify import slugify
 
-from .base import Artifact
+from lazyscribe.artifacts.base import Artifact
 
 
 @define(auto_attribs=True)
@@ -86,13 +86,15 @@ class JoblibArtifact(Artifact):
 
         try:
             distribution = packages_distributions()[package][0]
-        except KeyError:
-            raise ValueError(f"{package} was not found.")
+        except KeyError as err:
+            raise ValueError(f"{package} was not found.") from err
 
         try:
             import joblib
-        except ImportError:
-            raise RuntimeError("Please install ``joblib`` to use this handler.")
+        except ImportError as err:
+            raise RuntimeError(
+                "Please install ``joblib`` to use this handler."
+            ) from err
 
         return cls(
             name=name,

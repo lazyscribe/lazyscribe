@@ -41,9 +41,9 @@ please make sure to run our QA tools before submitting a PR:
 .. code-block:: python
 
     python -m pip install -e .[qa]
-    python -m black lazyscribe
-    python -m flake8 lazyscribe
-    python -m pydocstyle --convention=numpy
+    python -m ruff check .
+    python -m ruff format .
+    python -m mypy lazyscribe
 
 If you're writing sphinx documentation, make sure to build the docs locally and preview
 them before submitting a PR:
@@ -80,7 +80,7 @@ Ready to contribute? Here's how you can set up:
 
 #. Install your local copy into a virtualenv. We recommend using `mamba <https://mamba.readthedocs.io/en/latest/index.html>`_::
 
-    $ mamba create -n lazyscribe python=3.8 -y
+    $ mamba create -n lazyscribe python=3.9 -y
     $ conda activate lazyscribe
     $ python -m pip install -r requirements.txt -e .[dev]
 
@@ -90,10 +90,9 @@ Ready to contribute? Here's how you can set up:
 
 #. When you're done making changes, run the QA tooling and tests::
 
-    $ python -m black lazyscribe
-    $ python -m flake8 lazyscribe
+    $ python -m ruff check .
+    $ python -m ruff format .
     $ python -m mypy lazyscribe
-    $ python -m pydocstyle --convention=numpy lazyscribe
     $ python -m pytest tests --cov=lazyscribe --cov-report=term-missing
 
 #. Commit your changes and push your branch to GitHub::

@@ -2,16 +2,16 @@
 
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Dict, Iterator, List, Optional, Tuple
+from typing import Dict, Iterator, List, Literal, Optional, Tuple
 from urllib.parse import urlparse
 
 import prefect
 from prefect import Flow, Task, task
 from prefect.utilities.tasks import defaults_from_attrs
 
-from ..experiment import Experiment
-from ..project import Project
-from .experiment import LazyExperiment
+from lazyscribe.experiment import Experiment
+from lazyscribe.prefect.experiment import LazyExperiment
+from lazyscribe.project import Project
 
 
 @task(name="Append experiment")
@@ -99,10 +99,10 @@ class LazyProject(Task):
     def __init__(
         self,
         fpath: str = "project.json",
-        mode: str = "w",
+        mode: Literal["r", "a", "w", "w+"] = "w",
         author: Optional[str] = None,
         storage_options: Optional[Dict] = None,
-        **kwargs
+        **kwargs,
     ):
         """Init method."""
         self.fpath = fpath
@@ -116,7 +116,7 @@ class LazyProject(Task):
     def run(
         self,
         fpath: Optional[str] = None,
-        mode: Optional[str] = None,
+        mode: Optional[Literal["r", "a", "w", "w+"]] = None,
         author: Optional[str] = None,
         storage_options: Optional[Dict] = None,
     ) -> Project:

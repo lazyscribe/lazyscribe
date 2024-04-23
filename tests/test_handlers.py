@@ -2,7 +2,7 @@
 
 import pytest
 
-from lazyscribe.artifacts import JSONArtifact, JoblibArtifact, _get_handler
+from lazyscribe.artifacts import JoblibArtifact, JSONArtifact, _get_handler
 
 
 def test_json_handler(tmp_path):
@@ -20,7 +20,7 @@ def test_json_handler(tmp_path):
 
     assert (location / handler.fname).is_file()
 
-    with open(location / handler.fname, "r") as buf:
+    with open(location / handler.fname) as buf:
         out = handler.read(buf)
 
     assert data == out
