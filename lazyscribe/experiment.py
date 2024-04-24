@@ -218,6 +218,7 @@ class Experiment:
         append : bool, optional (default True)
             Whether to add or overwrite the new tags.
         """
+        self.last_updated = datetime.now()
         new_tags_ = list(args)
         if append:
             self.tags += new_tags_

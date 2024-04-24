@@ -298,8 +298,8 @@ class Project:
         Parameters
         ----------
         func : Callable
-            A callable that takes in the experiment and returns a boolean indicating
-            whether or not it passes the filter.
+            A callable that takes in a :py:class:`lazyscribe.Experiment` object
+            and returns a boolean indicating whether or not it passes the filter.
 
         Yields
         ------
