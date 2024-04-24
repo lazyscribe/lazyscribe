@@ -29,12 +29,22 @@ def test_experiment_logging():
     exp.log_metric("name", 0.5)
     exp.log_metric("name-cv", 0.4)
     exp.log_parameter("features", ["col1", "col2"])
+    exp.tag("success")
     with exp.log_test(name="My test") as test:
         test.log_metric("name-subpop", 0.3)
 
     assert exp.metrics == {"name": 0.5, "name-cv": 0.4}
     assert exp.parameters == {"features": ["col1", "col2"]}
     assert exp.tests == [Test(name="My test", metrics={"name-subpop": 0.3})]
+    assert exp.tags == ["success"]
+
+    # Add another tag without overwriting
+    exp.tag("huge success")
+    assert exp.tags == ["success", "huge success"]
+
+    # Overwrite the tags
+    exp.tag("actually a failure", append=False)
+    assert exp.tags == ["actually a failure"]
 
 
 def test_experiment_serialization():
@@ -60,7 +70,7 @@ def test_experiment_serialization():
         "tests": [
             {"name": "My test", "description": None, "metrics": {"name-subpop": 0.3}}
         ],
-        "tags": []
+        "tags": [],
     }
 
 
@@ -92,7 +102,7 @@ def test_experiment_artifact_logging_basic():
             }
         ],
         "tests": [],
-        "tags": []
+        "tags": [],
     }
 
 
@@ -196,7 +206,7 @@ def test_experiment_serialization_dependencies():
         "slug": f"my-downstream-experiment-{today.strftime('%Y%m%d%H%M%S')}",
         "artifacts": [],
         "tests": [],
-        "tags": []
+        "tags": [],
     }
 
 

@@ -117,7 +117,7 @@ def test_save_project(tmp_path):
                     "metrics": {"name-subpop": 0.3},
                 }
             ],
-            "tags": []
+            "tags": [],
         }
     ]
 

@@ -208,7 +208,6 @@ class Experiment:
         self.last_updated = datetime.now()
         self.parameters[name] = value
 
-
     def tag(self, *args, append: bool = True):
         """Add one or more tags to the experiment.
 
@@ -224,7 +223,6 @@ class Experiment:
             self.tags += new_tags_
         else:
             self.tags = new_tags_
-
 
     def log_artifact(
         self,

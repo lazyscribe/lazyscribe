@@ -3,7 +3,7 @@
 import getpass
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Iterator, Optional, Union
+from typing import Any, Iterator, Optional, Tuple, Union
 
 import prefect
 from prefect import Flow, Task, task
@@ -117,6 +117,22 @@ def append_test(experiment: Experiment, test: Test):
     experiment.tests.append(test)
 
 
+@task(name="Add tag")
+def add_tag(experiment: Experiment, tags: Tuple[str], append: bool):
+    """Add tags to the experiment.
+
+    Parameters
+    ----------
+    experiment : Experiment
+        The experiment.
+    tags : tuple
+        The tags to add.
+    append : bool
+        Whether to append the new tags to the existing ones or overwrite.
+    """
+    experiment.tag(*tags, append=append)
+
+
 class LazyExperiment(Task):
     """Prefect integration for logging ``lazyscribe`` experiments.
 
@@ -199,6 +215,18 @@ class LazyExperiment(Task):
             The parameter itself.
         """
         log_parameter(self, name, value)
+
+    def tag(self, *args, append: bool = True):
+        """Add a ``add_tag`` task.
+
+        Parameters
+        ----------
+        *args
+            The tags.
+        append : bool, optional (default True)
+            Whether to add or overwrite the new tags.
+        """
+        add_tag(self, args, append)
 
     def log_artifact(
         self,
