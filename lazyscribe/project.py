@@ -332,20 +332,20 @@ class Project:
             A ``tests`` level list. Each entry will represent a test, with the
             following keys:
 
-            +--------------------------+-------------------------------+
-            | Field                    | Description                   |
-            |                          |                               |
-            +==========================+===============================+
-            | ``("name",)``            | Name of the experiment        |
-            +--------------------------+-------------------------------+
-            | ``("short_slug",)``      | Short slug for the experiment |
-            +--------------------------+-------------------------------+
-            | ``("slug",)``            | Full slug for the experiment  |
-            +--------------------------+-------------------------------+
-            | ``("test",)``            | Test name                     |
-            +--------------------------+-------------------------------+
-            | ``("description",)``     | Test description              |
-            +--------------------------+-------------------------------+
+            +-------------------------------------+-------------------------------+
+            | Field                               | Description                   |
+            |                                     |                               |
+            +=====================================+===============================+
+            | ``("experiment_name",)``            | Name of the experiment        |
+            +-------------------------------------+-------------------------------+
+            | ``("experiment_short_slug",)``      | Short slug for the experiment |
+            +-------------------------------------+-------------------------------+
+            | ``("experiment_slug",)``            | Full slug for the experiment  |
+            +-------------------------------------+-------------------------------+
+            | ``("test",)``                       | Test name                     |
+            +-------------------------------------+-------------------------------+
+            | ``("description",)``                | Test description              |
+            +-------------------------------------+-------------------------------+
 
             as well as one key per metric in the ``metrics`` dictionary
             (with the format ``("metrics", <metric_name>)``) for each test.
@@ -376,9 +376,9 @@ class Project:
             for test in exp["tests"]:
                 test_output.append(
                     {
-                        ("name", ""): exp["name"],
-                        ("short_slug", ""): exp["short_slug"],
-                        ("slug", ""): exp["slug"],
+                        ("experiment_name", ""): exp["name"],
+                        ("experiment_short_slug", ""): exp["short_slug"],
+                        ("experiment_slug", ""): exp["slug"],
                         ("test", ""): test["name"],
                         ("description", ""): test["description"],
                         **{
