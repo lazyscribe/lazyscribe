@@ -60,6 +60,7 @@ def test_experiment_serialization():
         "tests": [
             {"name": "My test", "description": None, "metrics": {"name-subpop": 0.3}}
         ],
+        "tags": []
     }
 
 
@@ -91,6 +92,7 @@ def test_experiment_artifact_logging_basic():
             }
         ],
         "tests": [],
+        "tags": []
     }
 
 
@@ -194,6 +196,7 @@ def test_experiment_serialization_dependencies():
         "slug": f"my-downstream-experiment-{today.strftime('%Y%m%d%H%M%S')}",
         "artifacts": [],
         "tests": [],
+        "tags": []
     }
 
 

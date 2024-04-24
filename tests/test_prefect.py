@@ -193,6 +193,7 @@ def test_prefect_project_merge():
                     "metrics": {"name-subpop": 0.3},
                 }
             ],
+            "tags": []
         },
         {
             "name": "My second experiment",
@@ -207,5 +208,6 @@ def test_prefect_project_merge():
             "slug": "my-second-experiment-20220101103000",
             "artifacts": [],
             "tests": [],
+            "tags": []
         },
     ]

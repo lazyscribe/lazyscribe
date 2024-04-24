@@ -48,6 +48,7 @@ def test_logging_experiment(project_kwargs):
         "slug": f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}",
         "artifacts": [],
         "tests": [],
+        "tags": [],
     }
     assert project["my-experiment"] == project.experiments[0]
     assert (
@@ -116,6 +117,7 @@ def test_save_project(tmp_path):
                     "metrics": {"name-subpop": 0.3},
                 }
             ],
+            "tags": []
         }
     ]
 

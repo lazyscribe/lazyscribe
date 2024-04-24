@@ -113,6 +113,7 @@ class Experiment:
     slug: str = field()
     tests: List[Union[Test, ReadOnlyTest]] = Factory(lambda: [])
     artifacts: List[Artifact] = Factory(factory=lambda: [])
+    tags: List[str] = Factory(factory=lambda: [])
 
     @dir.default
     def _dir_factory(self) -> Path:
@@ -206,6 +207,24 @@ class Experiment:
         """
         self.last_updated = datetime.now()
         self.parameters[name] = value
+
+
+    def tag(self, *args, append: bool = True):
+        """Add one or more tags to the experiment.
+
+        Parameters
+        ----------
+        *args
+            The tags.
+        append : bool, optional (default True)
+            Whether to add or overwrite the new tags.
+        """
+        new_tags_ = list(args)
+        if append:
+            self.tags += new_tags_
+        else:
+            self.tags = new_tags_
+
 
     def log_artifact(
         self,
