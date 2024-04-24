@@ -43,7 +43,7 @@ def test_experiment_logging():
     assert exp.tags == ["success", "huge success"]
 
     # Overwrite the tags
-    exp.tag("actually a failure", append=False)
+    exp.tag("actually a failure", overwrite=True)
     assert exp.tags == ["actually a failure"]
 
 

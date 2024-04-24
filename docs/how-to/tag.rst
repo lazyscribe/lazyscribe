@@ -38,5 +38,10 @@ or through multiple calls.
         if metric > 0.75:
             exp.tag("best-model")
 
-When you call :py:meth:`lazyscribe.Experiment.tag`, you can use ``append=False`` to overwrite
+When you call :py:meth:`lazyscribe.Experiment.tag`, you can use ``overwrite=True`` to overwrite
 any existing tags.
+
+.. important::
+
+    If you call :py:meth:`lazyscribe.Experiment.tag` with no supplied tags and ``overwrite=True``, you
+    will delete all existing tags on the experiment.

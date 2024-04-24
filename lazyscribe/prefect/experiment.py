@@ -118,7 +118,7 @@ def append_test(experiment: Experiment, test: Test):
 
 
 @task(name="Add tag")
-def add_tag(experiment: Experiment, tags: Tuple[str], append: bool):
+def add_tag(experiment: Experiment, tags: Tuple[str], overwrite: bool):
     """Add tags to the experiment.
 
     Parameters
@@ -127,10 +127,10 @@ def add_tag(experiment: Experiment, tags: Tuple[str], append: bool):
         The experiment.
     tags : tuple
         The tags to add.
-    append : bool
+    overwrite : bool
         Whether to append the new tags to the existing ones or overwrite.
     """
-    experiment.tag(*tags, append=append)
+    experiment.tag(*tags, overwrite=overwrite)
 
 
 class LazyExperiment(Task):
@@ -216,17 +216,17 @@ class LazyExperiment(Task):
         """
         log_parameter(self, name, value)
 
-    def tag(self, *args, append: bool = True):
+    def tag(self, *args, overwrite: bool = False):
         """Add a ``add_tag`` task.
 
         Parameters
         ----------
         *args
             The tags.
-        append : bool, optional (default True)
+        overwrite : bool, optional (default False)
             Whether to add or overwrite the new tags.
         """
-        add_tag(self, args, append)
+        add_tag(self, args, overwrite)
 
     def log_artifact(
         self,

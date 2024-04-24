@@ -484,9 +484,7 @@ def test_to_tabular():
 def test_filter_project():
     """Test iterating through experiments based on a filter."""
     project = Project(fpath=DATA_DIR / "merge_update.json", mode="r")
-    out = list(
-        project.filter(func=lambda x: x.last_updated_by == "friend")
-    )
+    out = list(project.filter(func=lambda x: x.last_updated_by == "friend"))
 
     expected = [
         ReadOnlyExperiment(
