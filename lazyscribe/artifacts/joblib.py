@@ -12,11 +12,15 @@ from lazyscribe.artifacts.base import Artifact
 
 @define(auto_attribs=True)
 class JoblibArtifact(Artifact):
-    """Handler for pickle-serializable objects through joblib.
+    """Handler for pickle-serializable objects through ``joblib`` package.
 
-    This handler will store the active versions of ``joblib`` and the root
-    module of the ``value`` object as attributes to ensure compatibility
-    between the runtime environment and the artifacts.
+    .. important::
+
+        ``joblib`` package should be installed to use this handler.
+
+    This handler will store the ``joblib`` version and the package (or the root module
+    of the ``value``) name and version as attributes to ensure compatibility between
+    the runtime environment and the artifacts.
 
     .. important::
 
@@ -26,7 +30,7 @@ class JoblibArtifact(Artifact):
     Parameters
     ----------
     package : str
-        The root module of the python object to be serialized.
+        The root module name of the python object to be serialized.
     package_version : str
         The installed version of the package pertaining to the python object to be
         serialized.
@@ -67,7 +71,7 @@ class JoblibArtifact(Artifact):
         created_at : datetime, optional (default None)
             When the artifact was created. If not supplied, :py:meth:`datetime.now` will be used.
         package: str, optional (default None)
-            The package name or root module of the serializable python object.
+            The package name or root module name of the serializable python object.
             Note: this may be different from the distribution name. e.g ``scikit-learn`` is
             a distribution name, where as ``sklearn`` is the corresponding package name.
         writer_kwargs : Dict, optional (default None)
