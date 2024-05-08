@@ -82,7 +82,13 @@ class JoblibArtifact(Artifact):
                 raise ValueError(
                     "If no ``package`` is specified, you must supply a ``value``."
                 )
-            package = value.__module__.split(".")[0]
+            try:
+                package = value.__module__.split(".")[0]
+            except AttributeError as err:
+                raise AttributeError(
+                    "Unable to identify the package based on the supplied ``value``. "
+                    "Please provide an argument for ``package``."
+                ) from err
 
         try:
             distribution = packages_distributions()[package][0]

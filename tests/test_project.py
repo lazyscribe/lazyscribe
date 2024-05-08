@@ -469,9 +469,9 @@ def test_to_tabular():
 
     assert tests == [
         {
-            ("name", ""): "My experiment",
-            ("short_slug", ""): "my-experiment",
-            ("slug", ""): "my-experiment-20220101093000",
+            ("experiment_name", ""): "My experiment",
+            ("experiment_short_slug", ""): "my-experiment",
+            ("experiment_slug", ""): "my-experiment-20220101093000",
             ("test", ""): "My test",
             ("description", ""): None,
             ("metrics", "name-subpop"): 0.3,
