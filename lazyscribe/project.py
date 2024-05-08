@@ -8,7 +8,7 @@ import logging
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Iterator, List, Literal, Tuple
+from typing import Callable, Dict, Iterator, List, Literal, Tuple
 from urllib.parse import urlparse
 
 import fsspec
@@ -291,6 +291,24 @@ class Project:
             self.append(experiment)
         except Exception as exc:
             raise exc
+
+    def filter(self, func: Callable) -> Iterator[Experiment | ReadOnlyExperiment]:
+        """Filter the experiments in the project.
+
+        Parameters
+        ----------
+        func : Callable
+            A callable that takes in a :py:class:`lazyscribe.Experiment` object
+            and returns a boolean indicating whether or not it passes the filter.
+
+        Yields
+        ------
+        Experiment
+            An experiment.
+        """
+        for exp in self.experiments:
+            if func(exp):
+                yield exp
 
     def to_tabular(self) -> Tuple[List, List]:
         """Create a dictionary that can be fed into ``pandas``.

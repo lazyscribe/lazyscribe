@@ -48,6 +48,7 @@ def test_logging_experiment(project_kwargs):
         "slug": f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}",
         "artifacts": [],
         "tests": [],
+        "tags": [],
     }
     assert project["my-experiment"] == project.experiments[0]
     assert (
@@ -116,6 +117,7 @@ def test_save_project(tmp_path):
                     "metrics": {"name-subpop": 0.3},
                 }
             ],
+            "tags": [],
         }
     ]
 
@@ -477,3 +479,25 @@ def test_to_tabular():
             ("metrics", "name-subpop"): 0.3,
         }
     ]
+
+
+def test_filter_project():
+    """Test iterating through experiments based on a filter."""
+    project = Project(fpath=DATA_DIR / "merge_update.json", mode="r")
+    out = list(project.filter(func=lambda x: x.last_updated_by == "friend"))
+
+    expected = [
+        ReadOnlyExperiment(
+            name="My experiment",
+            project=DATA_DIR / "merge_update.json",
+            author="root",
+            last_updated_by="friend",
+            metrics={"name": 0.5},
+            parameters={"features": ["col1", "col2", "col3"]},
+            created_at=datetime(2022, 1, 1, 9, 30, 0),
+            last_updated=datetime(2022, 1, 10, 9, 30, 0),
+            tests=[ReadOnlyTest(name="My test", metrics={"name-subpop": 0.3})],
+        ),
+    ]
+
+    assert out == expected

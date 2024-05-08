@@ -33,6 +33,8 @@ Contents
     :caption: How-to...
 
     how-to/basic
+    how-to/tag
+    how-to/filter
     how-to/tests
     how-to/tabular
     how-to/artifact
