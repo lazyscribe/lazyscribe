@@ -8,7 +8,7 @@ filter experiments. First, create a :py:class:`lazyscribe.Project`.
 
     from lazyscribe import Project
 
-    project = Project()
+    project = Project(fpath="project.json", mode="w")
 
 Then, let's log a couple of experiments.
 
