@@ -7,7 +7,7 @@ To create your first project, instantiate the :py:class:`lazyscribe.Project` cla
 
     from lazyscribe import Project
 
-    project = Project()
+    project = Project(fpath="project.json", mode="w")
 
 Then, use the context manager to create an experiment and log it back to the project.
 

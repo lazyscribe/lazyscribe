@@ -8,7 +8,7 @@ let's create a :py:class:`lazyscribe.Project`.
 
     from lazyscribe import Project
 
-    project = Project()
+    project = Project(fpath="project.json", mode="w")
 
 Then, while logging an experiment, we can add our tag using :py:meth:`lazyscribe.Experiment.tag`:
 

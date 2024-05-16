@@ -8,7 +8,7 @@ Sometimes, it's helpful to log non-global metrics to an experimenent. To do so, 
 
     from lazyscribe import Project
 
-    project = Project()
+    project = Project(fpath="project.json", mode="w")
 
     with project.log(name="My experiment") as exp:
         with exp.log_test(name="My test", description="Demo test") as test:
