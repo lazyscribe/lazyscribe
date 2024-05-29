@@ -1,22 +1,26 @@
 """Joblib-based handler for pickle-serializable objects."""
 
 from datetime import datetime
-from typing import Any, ClassVar, Optional, Dict
+from typing import Any, ClassVar, Dict, Optional
 
-from importlib_metadata import version, packages_distributions
 from attrs import define
+from importlib_metadata import packages_distributions, version
 from slugify import slugify
 
-from .base import Artifact
+from lazyscribe.artifacts.base import Artifact
 
 
 @define(auto_attribs=True)
 class JoblibArtifact(Artifact):
-    """Handler for pickle-serializable objects through joblib.
+    """Handler for pickle-serializable objects through ``joblib`` package.
 
-    This handler will store the active versions of ``joblib`` and the root
-    module of the ``value`` object as attributes to ensure compatibility
-    between the runtime environment and the artifacts.
+    .. important::
+
+        ``joblib`` package should be installed to use this handler.
+
+    This handler will store the ``joblib`` version and the package (or the root module
+    of the ``value``) name and version as attributes to ensure compatibility between
+    the runtime environment and the artifacts.
 
     .. important::
 
@@ -26,7 +30,7 @@ class JoblibArtifact(Artifact):
     Parameters
     ----------
     package : str
-        The root module of the python object to be serialized.
+        The root module name of the python object to be serialized.
     package_version : str
         The installed version of the package pertaining to the python object to be
         serialized.
@@ -67,7 +71,7 @@ class JoblibArtifact(Artifact):
         created_at : datetime, optional (default None)
             When the artifact was created. If not supplied, :py:meth:`datetime.now` will be used.
         package: str, optional (default None)
-            The package name or root module of the serializable python object.
+            The package name or root module name of the serializable python object.
             Note: this may be different from the distribution name. e.g ``scikit-learn`` is
             a distribution name, where as ``sklearn`` is the corresponding package name.
         writer_kwargs : Dict, optional (default None)
@@ -82,17 +86,25 @@ class JoblibArtifact(Artifact):
                 raise ValueError(
                     "If no ``package`` is specified, you must supply a ``value``."
                 )
-            package = value.__module__.split(".")[0]
+            try:
+                package = value.__module__.split(".")[0]
+            except AttributeError as err:
+                raise AttributeError(
+                    "Unable to identify the package based on the supplied ``value``. "
+                    "Please provide an argument for ``package``."
+                ) from err
 
         try:
             distribution = packages_distributions()[package][0]
-        except KeyError:
-            raise ValueError(f"{package} was not found.")
+        except KeyError as err:
+            raise ValueError(f"{package} was not found.") from err
 
         try:
             import joblib
-        except ImportError:
-            raise RuntimeError("Please install ``joblib`` to use this handler.")
+        except ImportError as err:
+            raise RuntimeError(
+                "Please install ``joblib`` to use this handler."
+            ) from err
 
         return cls(
             name=name,

@@ -14,7 +14,7 @@ to a unique folder based on experiment slug:
 
     from lazyscribe import Project
 
-    project = Project()
+    project = Project(fpath="project.json", mode="w")
     with project.log("My experiment") as exp:
         exp.path
 
@@ -35,7 +35,7 @@ Serialization is delegated to a subclass of :py:class:`lazyscribe.artifacts.Arti
     from lazyscribe import Project
     from sklearn.svm import SVC
 
-    project = Project()
+    project = Project(fpath="project.json", mode="w")
     with project.log("My experiment") as exp:
         X, y = ...
         model = SVC()

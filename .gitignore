@@ -70,6 +70,7 @@ instance/
 docs/_build/
 docs/api/*
 docs/tutorials/
+docs/sg_execution_times.rst
 
 # PyBuilder
 target/
@@ -109,3 +110,5 @@ ENV/
 
 # IDE settings
 .vscode/
+
+.DS_Store

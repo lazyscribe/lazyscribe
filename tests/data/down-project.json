@@ -12,6 +12,7 @@
         "short_slug": "my-downstream-experiment",
         "slug": "my-downstream-experiment-20220115093000",
         "artifacts": [],
-        "tests": []
+        "tests": [],
+        "tags": []
     }
 ]

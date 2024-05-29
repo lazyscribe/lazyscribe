@@ -2,7 +2,7 @@
 
 import pytest
 
-from lazyscribe.artifacts import JSONArtifact, JoblibArtifact, _get_handler
+from lazyscribe.artifacts import JoblibArtifact, JSONArtifact, _get_handler
 
 
 def test_json_handler(tmp_path):
@@ -20,7 +20,7 @@ def test_json_handler(tmp_path):
 
     assert (location / handler.fname).is_file()
 
-    with open(location / handler.fname, "r") as buf:
+    with open(location / handler.fname) as buf:
         out = handler.read(buf)
 
     assert data == out
@@ -69,6 +69,27 @@ def test_joblib_handler(tmp_path):
             joblib_version=joblib.__version__,
         )
     ) == handler
+
+
+def test_joblib_handler_error_no_inputs():
+    """Test that the joblib handler raises an error when no value or package is provided."""
+    with pytest.raises(ValueError):
+        _ = JoblibArtifact.construct(name="My artifact")
+
+
+def test_joblib_handler_invalid_package():
+    """Test that the joblib handler raises an error when an invalid package is provided."""
+    with pytest.raises(ValueError):
+        _ = JoblibArtifact.construct(name="My artifact", package="my_invalid_package")
+
+
+def test_joblib_handler_raise_attribute_error():
+    """Test that the joblib handler raises an error for objects where the package can't be determined."""
+    numpy = pytest.importorskip("numpy")
+
+    myarr = numpy.array([])
+    with pytest.raises(AttributeError):
+        JoblibArtifact.construct(name="My array", value=myarr)
 
 
 def test_get_handler():

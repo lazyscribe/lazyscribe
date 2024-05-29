@@ -1,21 +1,21 @@
 [project]
 name = "lazyscribe"
-requires-python = ">=3.7.0"
+requires-python = ">=3.8.0"
 description = "Lightweight and lazy experiment logging"
 authors = [
     {name = "Akshay Gupta", email="akgcodes@gmail.com"}
 ]
 license = {text = "MIT license"}
 classifiers = [
-	"Development Status :: 3 - Alpha",
+	"Development Status :: 4 - Beta",
 	"License :: OSI Approved :: MIT License",
 	"Natural Language :: English",
 	"Programming Language :: Python :: 3",
 	"Programming Language :: Python :: 3 :: Only",
-	"Programming Language :: Python :: 3.7",
 	"Programming Language :: Python :: 3.8",
 	"Programming Language :: Python :: 3.9",
 	"Programming Language :: Python :: 3.10",
+	"Programming Language :: Python :: 3.11",
 ]
 dependencies = ["attrs<=23.1.0,>=21.2.0", "importlib-metadata<=6.6.0,>=6.0", "python-slugify<=8.0.1,>=5.0.0", "fsspec<=2023.5.0,>=0.4.0"]
 
@@ -24,12 +24,12 @@ dynamic = ["readme", "version"]
 [project.optional-dependencies]
 build = ["build", "bumpver", "twine", "wheel"]
 docs = ["furo", "matplotlib", "pandas", "pillow", "prefect<2,>=1.0", "scikit-learn", "sphinx", "sphinx-gallery", "sphinx-inline-tabs"]
-qa = ["black", "edgetest", "flake8", "isort", "mypy", "pip-tools", "pydocstyle", "types-python-slugify"]
+qa = ["ruff==0.3.7", "edgetest", "mypy", "pip-tools", "types-python-slugify"]
 tests = ["scikit-learn", "prefect<2,>=1.0", "pytest", "pytest-cov"]
 dev = ["lazyscribe[build]", "lazyscribe[docs]", "lazyscribe[qa]", "lazyscribe[tests]"]
 
 [project.urls]
-documentation = "https://lazyscribe.readthedocs.io/en/latest/"
+documentation = "https://lazyscribe.github.io/lazyscribe/"
 repository = "https://github.com/lazyscribe/lazyscribe"
 
 # Build system
@@ -57,7 +57,7 @@ readme = {file = ["README.md"], content-type = "text/markdown"}
 # BUMPVER --------------------------------------------------------------------
 
 [bumpver]
-current_version = "0.4.0"
+current_version = "0.5.0"
 version_pattern = "MAJOR.MINOR.PATCH"
 
 [bumpver.file_patterns]
@@ -74,15 +74,60 @@ version_pattern = "MAJOR.MINOR.PATCH"
 # EDGETEST -------------------------------------------------------------------
 
 [edgetest.envs.core]
-python_version = 3.9
+python_version = "3.9"
 extras = ["tests"]
 upgrade = ["attrs", "python-slugify", "fsspec"]
 command = "pytest tests"
 
-# ISORT ----------------------------------------------------------------------
+# RUFF -----------------------------------------------------------------------
 
-[tool.isort]
-profile = "black"
+[tool.ruff]
+extend-include = ["*.ipynb"]
+target-version = "py38"
+
+[tool.ruff.lint]
+preview = true
+ignore-init-module-imports = true
+select = [
+	"E",  # pycodestyle errors
+	"W",  # pycodestyle warnings
+	"F",  # pyflakes
+	"D",  # pydocstyle
+	"I",  # isort
+	"UP",  # pyupgrade
+	"B",  # flake8-bugbear
+	"C",  # flake8-comprehensions
+	"T20",  # flake8-print
+	"TID252",  # flake8-tidy-imports ban relative imports
+	"SIM",  # flake8-simplify
+	"LOG",  # flake8-logging
+	"RUF",  # Ruff errors
+]
+ignore = [
+	"C901",  # Add back in later
+	"E111",  # Check indentation level. Using formatter instead.
+	"E114",  # Check indentation level. Using formatter instead.
+	"E117",  # Check indentation level. Using formatter instead.
+	"E203",  # Check whitespace. Using formatter instead.
+	"E501",  # Line too long. Using formatter instead.
+	"D206",  # Docstring indentation. Using formatter instead.
+	"D300",  # Use triple single quotes. Using formatter instead.
+	"SIM108",  # Use ternary operator instead of if-else blocks.
+	"SIM105",  # Use ``contextlib.suppress(FileNotFoundError)`` insetad of try - execpt - pass.
+	"UP035",  # ``typing.x`` is deprecated, use ``x`` instead
+	"UP006",  # ``typing.x`` is deprecated, use ``x`` instead
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["E402"]
+"**/{tests,docs}/*" = ["E402", "D", "F841", "ARG"]
+"tutorials/*" = ["D", "T201"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
 
 # MYPY -----------------------------------------------------------------------
 

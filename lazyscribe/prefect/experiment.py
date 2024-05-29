@@ -3,15 +3,15 @@
 import getpass
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Iterator, Optional, Union
+from typing import Any, Iterator, Optional, Tuple, Union
 
 import prefect
 from prefect import Flow, Task, task
 from prefect.utilities.tasks import defaults_from_attrs
 
-from ..experiment import Experiment
-from ..test import Test
-from .test import LazyTest
+from lazyscribe.experiment import Experiment
+from lazyscribe.prefect.test import LazyTest
+from lazyscribe.test import Test
 
 
 @task(name="Log experiment metric")
@@ -54,7 +54,7 @@ def log_artifact(
     handler: str,
     fname: Optional[str] = None,
     overwrite: bool = False,
-    **kwargs
+    **kwargs,
 ):
     """Log an artifact.
 
@@ -117,6 +117,22 @@ def append_test(experiment: Experiment, test: Test):
     experiment.tests.append(test)
 
 
+@task(name="Add tag")
+def add_tag(experiment: Experiment, tags: Tuple[str], overwrite: bool):
+    """Add tags to the experiment.
+
+    Parameters
+    ----------
+    experiment : Experiment
+        The experiment.
+    tags : tuple
+        The tags to add.
+    overwrite : bool
+        Whether to append the new tags to the existing ones or overwrite.
+    """
+    experiment.tag(*tags, overwrite=overwrite)
+
+
 class LazyExperiment(Task):
     """Prefect integration for logging ``lazyscribe`` experiments.
 
@@ -136,7 +152,7 @@ class LazyExperiment(Task):
         self,
         project: Optional[Path] = None,
         author: Optional[str] = getpass.getuser(),
-        **kwargs
+        **kwargs,
     ):
         """Init method."""
         self.project = project
@@ -200,6 +216,18 @@ class LazyExperiment(Task):
         """
         log_parameter(self, name, value)
 
+    def tag(self, *args, overwrite: bool = False):
+        """Add a ``add_tag`` task.
+
+        Parameters
+        ----------
+        *args
+            The tags.
+        overwrite : bool, optional (default False)
+            Whether to add or overwrite the new tags.
+        """
+        add_tag(self, args, overwrite)
+
     def log_artifact(
         self,
         name: str,
@@ -207,7 +235,7 @@ class LazyExperiment(Task):
         handler: str,
         fname: Optional[str] = None,
         overwrite: bool = False,
-        **kwargs
+        **kwargs,
     ):
         """Add a ``log_artifact`` task.
 

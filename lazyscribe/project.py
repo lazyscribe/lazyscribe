@@ -8,15 +8,15 @@ import logging
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Iterator, List, Optional, Tuple, Union
+from typing import Callable, Dict, Iterator, List, Literal, Tuple
 from urllib.parse import urlparse
 
 import fsspec
 
-from .artifacts import _get_handler
-from .experiment import Experiment, ReadOnlyExperiment
-from .linked import LinkedList, merge
-from .test import ReadOnlyTest, Test
+from lazyscribe.artifacts import _get_handler
+from lazyscribe.experiment import Experiment, ReadOnlyExperiment
+from lazyscribe.linked import LinkedList, merge
+from lazyscribe.test import ReadOnlyTest, Test
 
 LOG = logging.getLogger(__name__)
 
@@ -58,9 +58,9 @@ class Project:
 
     def __init__(
         self,
-        fpath: Union[str, Path] = "project.json",
-        mode: str = "w",
-        author: Optional[str] = None,
+        fpath: str | Path = "project.json",
+        mode: Literal["r", "a", "w", "w+"] = "w",
+        author: str | None = None,
         **storage_options,
     ):
         """Init method."""
@@ -74,9 +74,12 @@ class Project:
         self.storage_options = storage_options
 
         # If in ``r``, ``a``, or ``w+`` mode, read in the existing project.
-        self.experiments: List[Union[Experiment, ReadOnlyExperiment]] = []
+        self.experiments: List[Experiment | ReadOnlyExperiment] = []
         self.snapshot: Dict = {}
         self.fs = fsspec.filesystem(self.protocol, **storage_options)
+
+        if mode not in ("r", "a", "w", "w+"):
+            raise ValueError("Please provide a valid ``mode`` value.")
         self.mode = mode
         if mode in ("r", "a", "w+") and self.fs.isfile(self.fpath):
             self.load()
@@ -203,7 +206,7 @@ class Project:
                     continue
 
                 self.fs.makedirs(exp.dir / exp.path, exist_ok=True)
-                LOG.debug(f"Saving '{artifact.name}' to {str(fpath)}...")
+                LOG.debug(f"Saving '{artifact.name}' to {fpath!s}...")
                 with self.fs.open(fpath, fmode) as buf:
                     artifact.write(artifact.value, buf, **artifact.writer_kwargs)
 
@@ -289,6 +292,24 @@ class Project:
         except Exception as exc:
             raise exc
 
+    def filter(self, func: Callable) -> Iterator[Experiment | ReadOnlyExperiment]:
+        """Filter the experiments in the project.
+
+        Parameters
+        ----------
+        func : Callable
+            A callable that takes in a :py:class:`lazyscribe.Experiment` object
+            and returns a boolean indicating whether or not it passes the filter.
+
+        Yields
+        ------
+        Experiment
+            An experiment.
+        """
+        for exp in self.experiments:
+            if func(exp):
+                yield exp
+
     def to_tabular(self) -> Tuple[List, List]:
         """Create a dictionary that can be fed into ``pandas``.
 
@@ -321,29 +342,31 @@ class Project:
             | ``("last_updated",)``    | Last update timestammp        |
             +--------------------------+-------------------------------+
 
-            as well as one key per metric in the ``metrics`` dictionary
-            for each experiment, with the format ``("metrics", <metric_name>)``.
+            as well as one key per parameter in the ``parameters`` dictionary
+            (with the format ``("parameters", <metric_name>)``) and one key
+            per metric in the ``metrics`` dictionary (with the format
+            ``("metrics", <metric_name>)``) for each experiment.
         List
             A ``tests`` level list. Each entry will represent a test, with the
             following keys:
 
-            +--------------------------+-------------------------------+
-            | Field                    | Description                   |
-            |                          |                               |
-            +==========================+===============================+
-            | ``("name",)``            | Name of the experiment        |
-            +--------------------------+-------------------------------+
-            | ``("short_slug",)``      | Short slug for the experiment |
-            +--------------------------+-------------------------------+
-            | ``("slug",)``            | Full slug for the experiment  |
-            +--------------------------+-------------------------------+
-            | ``("test",)``            | Test name                     |
-            +--------------------------+-------------------------------+
-            | ``("description",)``     | Test description              |
-            +--------------------------+-------------------------------+
+            +-------------------------------------+-------------------------------+
+            | Field                               | Description                   |
+            |                                     |                               |
+            +=====================================+===============================+
+            | ``("experiment_name",)``            | Name of the experiment        |
+            +-------------------------------------+-------------------------------+
+            | ``("experiment_short_slug",)``      | Short slug for the experiment |
+            +-------------------------------------+-------------------------------+
+            | ``("experiment_slug",)``            | Full slug for the experiment  |
+            +-------------------------------------+-------------------------------+
+            | ``("test",)``                       | Test name                     |
+            +-------------------------------------+-------------------------------+
+            | ``("description",)``                | Test description              |
+            +-------------------------------------+-------------------------------+
 
-            as well as one key per metric in the ``metrics`` dictionary for each
-            test, with the format ``("metrics", <metric_name>)``.
+            as well as one key per metric in the ``metrics`` dictionary
+            (with the format ``("metrics", <metric_name>)``) for each test.
         """
         exp_output: List = []
         test_output: List = []
@@ -371,9 +394,9 @@ class Project:
             for test in exp["tests"]:
                 test_output.append(
                     {
-                        ("name", ""): exp["name"],
-                        ("short_slug", ""): exp["short_slug"],
-                        ("slug", ""): exp["slug"],
+                        ("experiment_name", ""): exp["name"],
+                        ("experiment_short_slug", ""): exp["short_slug"],
+                        ("experiment_slug", ""): exp["slug"],
                         ("test", ""): test["name"],
                         ("description", ""): test["description"],
                         **{
@@ -396,7 +419,7 @@ class Project:
 
         return out
 
-    def __getitem__(self, arg: str) -> Union[Experiment, ReadOnlyExperiment]:
+    def __getitem__(self, arg: str) -> Experiment | ReadOnlyExperiment:
         """Use brackets to retrieve an experiment by slug.
 
         Parameters

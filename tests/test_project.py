@@ -1,13 +1,12 @@
 """Test the project class."""
 
 import json
-import time
 from datetime import datetime
 from pathlib import Path
+from unittest.mock import patch
 
 import fsspec
 import pytest
-from unittest.mock import patch
 
 from lazyscribe import Project
 from lazyscribe.experiment import Experiment, ReadOnlyExperiment
@@ -49,6 +48,7 @@ def test_logging_experiment(project_kwargs):
         "slug": f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}",
         "artifacts": [],
         "tests": [],
+        "tags": [],
     }
     assert project["my-experiment"] == project.experiments[0]
     assert (
@@ -62,10 +62,9 @@ def test_logging_experiment(project_kwargs):
 def test_not_logging_experiment():
     """Test not logging an experiment when raising an error."""
     project = Project(author="root")
-    with pytest.raises(ValueError):
-        with project.log(name="My experiment") as exp:
-            raise ValueError("An error.")
-            exp.log_metric("name", 0.5)
+    with pytest.raises(ValueError), project.log(name="My experiment") as exp:
+        raise ValueError("An error.")
+        exp.log_metric("name", 0.5)
 
     assert len(project.experiments) == 0
 
@@ -74,9 +73,8 @@ def test_not_logging_experiment_readonly():
     """Test trying to log an experiment in read only mode."""
     project = Project(fpath=DATA_DIR / "project.json", mode="r")
 
-    with pytest.raises(RuntimeError):
-        with project.log(name="My experiment") as exp:
-            exp.log_metric("name", 0.5)
+    with pytest.raises(RuntimeError), project.log(name="My experiment") as exp:
+        exp.log_metric("name", 0.5)
 
         assert len(project.experiments) == 0
 
@@ -96,7 +94,7 @@ def test_save_project(tmp_path):
     project.save()
     assert project_location.is_file()
 
-    with open(project_location, "r") as infile:
+    with open(project_location) as infile:
         serialized = json.load(infile)
 
     assert serialized == [
@@ -119,6 +117,7 @@ def test_save_project(tmp_path):
                     "metrics": {"name-subpop": 0.3},
                 }
             ],
+            "tags": [],
         }
     ]
 
@@ -141,7 +140,7 @@ def test_save_project_artifact(tmp_path):
         location / f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}" / "features.json"
     ).is_file()
 
-    with open(location / exp.path / "features.json", "r") as infile:
+    with open(location / exp.path / "features.json") as infile:
         artifact = json.load(infile)
 
     assert artifact == [0, 1, 2]
@@ -170,7 +169,9 @@ def test_save_project_artifact_failed_validation(mock_version, tmp_path):
 
     assert project_location.is_file()
     assert (
-        location / f"my-experiment-{exp.last_updated.strftime('%Y%m%d%H%M%S')}" / "estimator.joblib"
+        location
+        / f"my-experiment-{exp.last_updated.strftime('%Y%m%d%H%M%S')}"
+        / "estimator.joblib"
     ).is_file()
 
     # Reload project and validate experiment
@@ -178,7 +179,6 @@ def test_save_project_artifact_failed_validation(mock_version, tmp_path):
         project2 = Project(project_location, mode="r")
         exp2 = project2["my-experiment"]
         model_load = exp2.load_artifact(name="estimator")
-
 
 
 def test_save_project_artifact_multi_experiment(tmp_path):
@@ -206,7 +206,11 @@ def test_save_project_artifact_multi_experiment(tmp_path):
     fs = fsspec.filesystem("file")
 
     assert (
-        datetime.fromtimestamp(fs.info(location / project["my-first-experiment"].path / "features.json")["created"])
+        datetime.fromtimestamp(
+            fs.info(location / project["my-first-experiment"].path / "features.json")[
+                "created"
+            ]
+        )
         < reload_project["my-second-experiment"].created_at
     )
 
@@ -218,11 +222,19 @@ def test_save_project_artifact_multi_experiment(tmp_path):
 
     # Check that the first and second experiment artifacts were not overwritten
     assert (
-        datetime.fromtimestamp(fs.info(location / project["my-first-experiment"].path / "features.json")["created"])
+        datetime.fromtimestamp(
+            fs.info(location / project["my-first-experiment"].path / "features.json")[
+                "created"
+            ]
+        )
         < reload_project["my-second-experiment"].created_at
     )
     assert (
-        datetime.fromtimestamp(fs.info(location / reload_project["my-second-experiment"].path / "features.json")["created"])
+        datetime.fromtimestamp(
+            fs.info(
+                location / reload_project["my-second-experiment"].path / "features.json"
+            )["created"]
+        )
         < final_project["my-third-experiment"].created_at
     )
 
@@ -250,9 +262,13 @@ def test_save_project_artifact_updated(tmp_path):
     new_project.save()
 
     fs = fsspec.filesystem("file")
-    
+
     assert (
-        datetime.fromtimestamp(fs.info(location / project["my-experiment"].path / "features.json")["created"])
+        datetime.fromtimestamp(
+            fs.info(location / project["my-experiment"].path / "features.json")[
+                "created"
+            ]
+        )
         < new_project["my-experiment"].last_updated
     )
 
@@ -455,11 +471,33 @@ def test_to_tabular():
 
     assert tests == [
         {
-            ("name", ""): "My experiment",
-            ("short_slug", ""): "my-experiment",
-            ("slug", ""): "my-experiment-20220101093000",
+            ("experiment_name", ""): "My experiment",
+            ("experiment_short_slug", ""): "my-experiment",
+            ("experiment_slug", ""): "my-experiment-20220101093000",
             ("test", ""): "My test",
             ("description", ""): None,
             ("metrics", "name-subpop"): 0.3,
         }
     ]
+
+
+def test_filter_project():
+    """Test iterating through experiments based on a filter."""
+    project = Project(fpath=DATA_DIR / "merge_update.json", mode="r")
+    out = list(project.filter(func=lambda x: x.last_updated_by == "friend"))
+
+    expected = [
+        ReadOnlyExperiment(
+            name="My experiment",
+            project=DATA_DIR / "merge_update.json",
+            author="root",
+            last_updated_by="friend",
+            metrics={"name": 0.5},
+            parameters={"features": ["col1", "col2", "col3"]},
+            created_at=datetime(2022, 1, 1, 9, 30, 0),
+            last_updated=datetime(2022, 1, 10, 9, 30, 0),
+            tests=[ReadOnlyTest(name="My test", metrics={"name-subpop": 0.3})],
+        ),
+    ]
+
+    assert out == expected

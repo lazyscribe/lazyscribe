@@ -18,7 +18,8 @@
                     "name-subpop": 0.3
                 }
             }
-        ]
+        ],
+        "tags": []
     },
     {
         "name": "My second experiment",
@@ -31,6 +32,7 @@
         "short_slug": "my-second-experiment",
         "slug": "my-second-experiment-20220101103000",
         "artifacts": [],
-        "tests": []
+        "tests": [],
+        "tags": []
     }
 ]

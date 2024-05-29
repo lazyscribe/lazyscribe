@@ -14,8 +14,8 @@ from fsspec.implementations.local import LocalFileSystem
 from fsspec.spec import AbstractFileSystem
 from slugify import slugify
 
-from .artifacts import Artifact, _get_handler
-from .test import Test
+from lazyscribe.artifacts import Artifact, _get_handler
+from lazyscribe.test import ReadOnlyTest, Test
 
 LOG = logging.getLogger(__name__)
 
@@ -111,8 +111,9 @@ class Experiment:
     dependencies: Dict = field(eq=False, factory=lambda: {})
     short_slug: str = field()
     slug: str = field()
-    tests: List = Factory(lambda: [])
+    tests: List[Union[Test, ReadOnlyTest]] = Factory(lambda: [])
     artifacts: List[Artifact] = Factory(factory=lambda: [])
+    tags: List[str] = Factory(factory=lambda: [])
 
     @dir.default
     def _dir_factory(self) -> Path:
@@ -206,6 +207,29 @@ class Experiment:
         """
         self.last_updated = datetime.now()
         self.parameters[name] = value
+
+    def tag(self, *args, overwrite: bool = False):
+        """Add one or more tags to the experiment.
+
+        .. important::
+
+            If this function is called with no supplied values for ``*args``
+            _and_ ``overwrite=True``, the result will be that the experiment has
+            no associated tags.
+
+        Parameters
+        ----------
+        *args
+            The tags.
+        overwrite : bool, optional (default False)
+            Whether to add or overwrite the new tags.
+        """
+        self.last_updated = datetime.now()
+        new_tags_ = list(args)
+        if overwrite:
+            self.tags = new_tags_
+        else:
+            self.tags += new_tags_
 
     def log_artifact(
         self,

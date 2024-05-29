@@ -2,9 +2,9 @@
 
 from typing import List, Type
 
-from .base import Artifact
-from .json import JSONArtifact
-from .joblib import JoblibArtifact
+from lazyscribe.artifacts.base import Artifact
+from lazyscribe.artifacts.joblib import JoblibArtifact
+from lazyscribe.artifacts.json import JSONArtifact
 
 __all__: List[str] = ["Artifact", "JSONArtifact", "JoblibArtifact", "_get_handler"]
 

@@ -7,7 +7,7 @@ To create your first project, instantiate the :py:class:`lazyscribe.Project` cla
 
     from lazyscribe import Project
 
-    project = Project()
+    project = Project(fpath="project.json", mode="w")
 
 Then, use the context manager to create an experiment and log it back to the project.
 
@@ -17,8 +17,9 @@ Then, use the context manager to create an experiment and log it back to the pro
         exp.log_metric(...)
         exp.log_parameter(...)
 
-When the context manager exits, the experiment will be added to the project. If you want
-to avoid using the context manager, simply instantiate your own experiment and append it
+When the context manager exits, the experiment will be appended to the ``Project.experiments`` list.
+Using a list allows us to preserve the order and reference a copy when associating it with the project.
+If you want to avoid using the context manager, simply instantiate your own experiment and append it
 to the ``Project.experiments`` list.
 
 .. code-block:: python
@@ -29,3 +30,10 @@ to the ``Project.experiments`` list.
     exp.log_metric(...)
     exp.log_parameter(...)
     project.append(exp)
+
+Once you've finished, save the project to the filesystem using :py:meth:`lazyscribe.Project.save`
+method:
+
+.. code-block:: python
+
+    project.save()

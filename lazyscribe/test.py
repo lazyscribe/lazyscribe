@@ -23,6 +23,9 @@ class Test:
         A dictionary of metric values. Each metric value can be an individual value or a list.
     """
 
+    # Tell pytest it's not a Python test class
+    __test__ = False
+
     name: str
     description: Optional[str] = Factory(lambda: None)
     metrics: Dict = Factory(lambda: {})
