@@ -211,7 +211,7 @@ class Project:
                 with self.fs.open(fpath, fmode) as buf:
                     artifact.write(artifact.value, buf, **artifact.writer_kwargs)
                     if artifact.output_only:
-                        warnings.warn(f"Artifact {artifact.name} is added. It is not meant to be read back as Python Object", UserWarning)
+                        warnings.warn(f"Artifact '{artifact.name}' is added. It is not meant to be read back as Python Object", UserWarning)
 
     def merge(self, other: Project) -> Project:
         """Merge two projects.

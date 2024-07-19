@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 from attrs.exceptions import FrozenInstanceError
 
-from lazyscribe.artifacts import JSONArtifact
+from lazyscribe.artifacts import JSONArtifact, Artifact
 from lazyscribe.experiment import Experiment, ReadOnlyExperiment
 from lazyscribe.test import Test
 
@@ -238,3 +238,43 @@ def test_frozen_experiment():
     exp = ReadOnlyExperiment(name="My experiment", project=Path("project.json"))
     with pytest.raises(FrozenInstanceError):
         exp.name = "Let's change the name"
+
+import warnings
+
+from .conftest import TestArtifact
+
+def test_experiment_artifact_log_load_output_only(tmp_path):
+    """Test loading an experiment artifact from the disk."""
+    location = tmp_path / "my-location"
+    location.mkdir()
+
+    exp = Experiment(
+        name="My experiment", project=location / "project.json", author="root"
+    )
+    with warnings.catch_warnings(record=True) as w:
+
+        warnings.simplefilter("always")
+        exp.log_artifact(name="features", value=[0, 1, 2], handler="testartifact")
+        assert len(w) == 1
+        assert issubclass(w[-1].category, UserWarning)
+        assert f"Artifact 'features' is added. It is not meant to be read back as Python Object" in str(w[-1].message)
+        
+
+    # Need to write the artifact to disk
+    fpath = exp.dir / exp.path / exp.artifacts[0].fname
+    exp.fs.makedirs(exp.dir / exp.path, exist_ok=True)
+    with exp.fs.open(fpath, "w") as buf:
+        exp.artifacts[0].write(exp.artifacts[0].value, buf)
+
+    assert (location / "my-location" / exp.path / "features.testartifact").is_file()
+
+
+    with warnings.catch_warnings(record=True) as w:
+        
+        warnings.simplefilter("always")
+        exp.load_artifact(name="features")
+
+        assert len(w) == 1
+        assert issubclass(w[-1].category, UserWarning)
+        assert f"Artifact 'features' is not the original Python Object"in str(w[-1].message)
+        

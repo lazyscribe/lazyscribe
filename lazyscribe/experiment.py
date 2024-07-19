@@ -284,7 +284,7 @@ class Experiment:
                 if overwrite:
                     self.artifacts[index] = artifact_handler
                     if handler_cls.output_only:
-                        warnings.warn(f"Artifact {name} is overwritten. It is not meant to be read back as Python Object", UserWarning)
+                        warnings.warn(f"Artifact '{name}' is added. It is not meant to be read back as Python Object", UserWarning)
                     break
                 else:
                     raise RuntimeError(
@@ -294,7 +294,7 @@ class Experiment:
         else:
             self.artifacts.append(artifact_handler)
             if handler_cls.output_only:
-                warnings.warn(f"Artifact {name} is added. It is not meant to be read back as Python Object", UserWarning)
+                warnings.warn(f"Artifact '{name}' is added. It is not meant to be read back as Python Object", UserWarning)
 
     def load_artifact(self, name: str, validate: bool = True, **kwargs) -> Any:
         """Load a single artifact.
@@ -355,7 +355,7 @@ class Experiment:
                 with self.fs.open(self.dir / self.path / artifact.fname, mode) as buf:
                     out = curr_handler.read(buf, **kwargs)
                 if artifact.output_only: 
-                    warnings.warn(f"Artifact {name} is not the original Python Object", UserWarning)
+                    warnings.warn(f"Artifact '{name}' is not the original Python Object", UserWarning)
                 break
         else:
             raise ValueError(f"No artifact with name {name}")
