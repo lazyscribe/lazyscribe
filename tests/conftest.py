@@ -1,15 +1,16 @@
-from typing import ClassVar, Optional,Any,Dict
-from slugify import slugify
-from lazyscribe.artifacts import Artifact
 from datetime import datetime
-# import pytest
+from typing import Any, ClassVar, Dict, Optional
 
-# @pytest.fixture
+from slugify import slugify
+
+from lazyscribe.artifacts import Artifact
+
+
 class TestArtifact(Artifact):
     alias: ClassVar[str] = "testartifact"
     suffix: ClassVar[str] = "testartifact"
     binary: ClassVar[bool] = True
-    output_only : ClassVar[bool] = True
+    output_only: ClassVar[bool] = True
     python_version: str
 
     @classmethod
@@ -22,7 +23,6 @@ class TestArtifact(Artifact):
         writer_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
-        
         return cls(
             name=name,
             value=value,
@@ -31,13 +31,10 @@ class TestArtifact(Artifact):
             created_at=created_at or datetime.now(),
         )
 
-    
     @classmethod
     def read(cls, buf, **kwargs):
         pass
 
-
     @classmethod
     def write(cls, obj, buf, **kwargs):
         pass
-

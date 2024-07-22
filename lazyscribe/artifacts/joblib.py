@@ -41,7 +41,7 @@ class JoblibArtifact(Artifact):
     alias: ClassVar[str] = "joblib"
     suffix: ClassVar[str] = "joblib"
     binary: ClassVar[bool] = True
-    output_only : ClassVar[bool] = False
+    output_only: ClassVar[bool] = False
     package: str
     package_version: str
     joblib_version: str

@@ -48,7 +48,9 @@ class Artifact(metaclass=ABCMeta):
     alias: ClassVar[str]
     suffix: ClassVar[str]
     binary: ClassVar[bool]
-    output_only: ClassVar[bool]  # Describes if the artifact will reconstruct to a python object on read
+    output_only: ClassVar[
+        bool
+    ]  # Describes if the artifact will reconstruct to a python object on read
     name: str = field(eq=False)
     fname: str = field(eq=False)
     value: Any = field(eq=False)

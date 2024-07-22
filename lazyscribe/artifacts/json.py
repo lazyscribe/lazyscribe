@@ -24,7 +24,7 @@ class JSONArtifact(Artifact):
     alias: ClassVar[str] = "json"
     suffix: ClassVar[str] = "json"
     binary: ClassVar[bool] = False
-    output_only : ClassVar[bool] = False
+    output_only: ClassVar[bool] = False
     python_version: str
 
     @classmethod

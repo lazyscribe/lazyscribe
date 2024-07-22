@@ -5,12 +5,12 @@ from __future__ import annotations
 import getpass
 import json
 import logging
+import warnings
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 from typing import Callable, Dict, Iterator, List, Literal, Tuple
 from urllib.parse import urlparse
-import warnings
 
 import fsspec
 
@@ -211,7 +211,11 @@ class Project:
                 with self.fs.open(fpath, fmode) as buf:
                     artifact.write(artifact.value, buf, **artifact.writer_kwargs)
                     if artifact.output_only:
-                        warnings.warn(f"Artifact '{artifact.name}' is added. It is not meant to be read back as Python Object", UserWarning)
+                        warnings.warn(
+                            f"Artifact '{artifact.name}' is added. It is not meant to be read back as Python Object",
+                            UserWarning,
+                            stacklevel=2,
+                        )
 
     def merge(self, other: Project) -> Project:
         """Merge two projects.
