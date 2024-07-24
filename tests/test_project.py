@@ -11,6 +11,7 @@ import pytest
 from lazyscribe import Project
 from lazyscribe.experiment import Experiment, ReadOnlyExperiment
 from lazyscribe.test import ReadOnlyTest, Test
+from tests.conftest import TestArtifact
 
 CURR_DIR = Path(__file__).resolve().parent
 DATA_DIR = CURR_DIR / "data"
@@ -501,3 +502,69 @@ def test_filter_project():
     ]
 
     assert out == expected
+
+
+import warnings
+
+
+def test_save_project_artifact_output_only(tmp_path):
+    """Test saving a project with an output only artifact."""
+    location = tmp_path / "my-project"
+    location.mkdir()
+    project_location = location / "project.testartifact"
+    today = datetime.now()
+
+    project = Project(fpath=project_location, author="root")
+    with (
+        project.log(name="My experiment") as exp,
+        warnings.catch_warnings(record=True) as w,
+    ):
+        warnings.simplefilter("always")
+        exp.log_artifact(name="features", value=[0, 1, 2], handler="testartifact")
+        assert len(w) == 1
+        assert issubclass(w[-1].category, UserWarning)
+        assert (
+            "Artifact 'features' is added. It is not meant to be read back as Python Object"
+            in str(w[-1].message)
+        )
+        assert isinstance(exp.artifacts[0], TestArtifact)
+        assert exp.to_dict() == {
+            "name": "My experiment",
+            "author": "root",
+            "last_updated_by": "root",
+            "metrics": {},
+            "parameters": {},
+            "created_at": today.strftime("%Y-%m-%dT%H:%M:%S"),
+            "last_updated": today.strftime("%Y-%m-%dT%H:%M:%S"),
+            "dependencies": [],
+            "short_slug": "my-experiment",
+            "slug": f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}",
+            "artifacts": [
+                {
+                    "name": "features",
+                    "fname": "features.testartifact",
+                    "handler": "testartifact",
+                    "created_at": today.strftime("%Y-%m-%dT%H:%M:%S"),
+                }
+            ],
+            "tests": [],
+            "tags": [],
+        }
+
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        project.save()
+
+        assert len(w) == 1
+        assert issubclass(w[-1].category, UserWarning)
+        assert (
+            "Artifact 'features' is added. It is not meant to be read back as Python Object"
+            in str(w[-1].message)
+        )
+
+    assert project_location.is_file()
+    assert (
+        location
+        / f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}"
+        / "features.testartifact"
+    ).is_file()
