@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 from attrs.exceptions import FrozenInstanceError
 
-from lazyscribe.artifacts import JSONArtifact
+from lazyscribe.artifacts import _get_handler
 from lazyscribe.experiment import Experiment, ReadOnlyExperiment
 from lazyscribe.test import Test
 
@@ -79,7 +79,7 @@ def test_experiment_artifact_logging_basic():
     today = datetime.now()
     exp = Experiment(name="My experiment", project=Path("project.json"), author="root")
     exp.log_artifact(name="features", value=[0, 1, 2], handler="json")
-
+    JSONArtifact = _get_handler("json")
     assert isinstance(exp.artifacts[0], JSONArtifact)
     assert exp.to_dict() == {
         "name": "My experiment",
@@ -110,7 +110,7 @@ def test_experiment_artifact_logging_overwrite():
     """Test overwriting an artifact."""
     exp = Experiment(name="My experiment", project=Path("project.json"), author="root")
     exp.log_artifact(name="features", value=[0, 1, 2], handler="json")
-
+    JSONArtifact = _get_handler("json")
     assert isinstance(exp.artifacts[0], JSONArtifact)
 
     with pytest.raises(RuntimeError):

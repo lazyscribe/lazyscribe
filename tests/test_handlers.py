@@ -2,7 +2,9 @@
 
 import pytest
 
-from lazyscribe.artifacts import JoblibArtifact, JSONArtifact, _get_handler
+from lazyscribe.artifacts import _get_handler
+from lazyscribe.artifacts.joblib import JoblibArtifact
+from lazyscribe.artifacts.json import JSONArtifact
 
 
 def test_json_handler(tmp_path):
