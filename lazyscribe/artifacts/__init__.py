@@ -24,14 +24,6 @@ def _get_handler(alias: str) -> Type[Artifact]:
         The artifact handler class object. This object will need to be constructed
         using :py:meth:`lazyscribe.artifacts.Artifact.construct`.
     """
-    # for obj in Artifact.__subclasses__():
-    #     if obj.alias == alias:
-    #         out = obj
-    #         break
-    # else:
-    #     raise ValueError(f"No handler available with the alias {alias}")
-
-    # return out
 
     eps = entry_points()
     entry = eps.select(group="artifact_type")
