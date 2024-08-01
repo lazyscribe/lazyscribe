@@ -1,7 +1,7 @@
 """Import the handlers."""
 
 from importlib import import_module
-from typing import List, Type, Union
+from typing import List, Type
 
 from importlib_metadata import entry_points
 
@@ -24,7 +24,6 @@ def _get_handler(alias: str) -> Type[Artifact]:
         The artifact handler class object. This object will need to be constructed
         using :py:meth:`lazyscribe.artifacts.Artifact.construct`.
     """
-
     eps = entry_points()
     entry = eps.select(group="artifact_type")
 
@@ -37,16 +36,18 @@ def _get_handler(alias: str) -> Type[Artifact]:
                 raise RuntimeError(
                     f"Unable to import handler for {alias} through entry points or standard import."
                 ) from imp
-            
+
             for part in name.split("."):
                 mod = getattr(mod, part)
-            
+
             if not isinstance(mod, type):
                 raise TypeError(f"{full_artifact_class} is not a class")
-            
+
             break
-    
+
     else:
-        raise ValueError(f"No handler available with the alias {alias}")
+        raise ValueError(
+            f"No handler available with the name {alias} in `artifact_type` group."
+        )
 
     return mod
