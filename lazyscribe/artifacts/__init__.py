@@ -1,9 +1,11 @@
 """Import the handlers."""
 
-from importlib import import_module
 from typing import List, Type
 
-from importlib_metadata import entry_points
+try:
+    from importlib_metadata import entry_points
+except ImportError:
+    from importlib.metadata import entry_points  # type: ignore
 
 from lazyscribe.artifacts.base import Artifact
 
@@ -24,21 +26,16 @@ def _get_handler(alias: str) -> Type[Artifact]:
         The artifact handler class object. This object will need to be constructed
         using :py:meth:`lazyscribe.artifacts.Artifact.construct`.
     """
-    eps = entry_points()
-    entry = eps.select(group="artifact_type")
+    entry = entry_points(group="lazyscribe.artifact_type")
 
-    for full_artifact_class in entry:
+    for full_artifact_class in entry:  # search through entrypoints first
         if full_artifact_class.name == alias:
-            mod, name = full_artifact_class.value.rsplit(".", 1)
             try:
-                mod = import_module(mod)
+                mod = full_artifact_class.load()
             except ImportError as imp:
                 raise RuntimeError(
-                    f"Unable to import handler for {alias} through entry points or standard import."
+                    f"Unable to import handler for {alias} through entry points"
                 ) from imp
-
-            for part in name.split("."):
-                mod = getattr(mod, part)
 
             if not isinstance(mod, type):
                 raise TypeError(f"{full_artifact_class} is not a class")
@@ -46,8 +43,15 @@ def _get_handler(alias: str) -> Type[Artifact]:
             break
 
     else:
-        raise ValueError(
-            f"No handler available with the name {alias} in `artifact_type` group."
-        )
+        for obj in Artifact.__subclasses__():  # search through experiment subclasses
+            if obj.alias == alias:
+                mod = obj
+                break
 
-    return mod
+        # no handler found in both entrypoints or subclass
+        else:
+            raise ValueError(
+                f"No handler available with the name {alias} in `artifact_type` group."
+            )
+
+    return mod  # type: ignore

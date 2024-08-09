@@ -37,11 +37,11 @@ repository = "https://github.com/lazyscribe/lazyscribe"
 requires = ["setuptools>=64.0.0"]
 build-backend = "setuptools.build_meta"
 
-[project.entry-points."artifact_type"]
-base = "lazyscribe.artifacts.base.Artifact"
-joblib = "lazyscribe.artifacts.joblib.JoblibArtifact"
-json = "lazyscribe.artifacts.json.JSONArtifact"
-testartifact = "tests.conftest.TestArtifact"
+[project.entry-points."lazyscribe.artifact_type"]
+base = "lazyscribe.artifacts.base:Artifact"
+joblib = "lazyscribe.artifacts.joblib:JoblibArtifact"
+json = "lazyscribe.artifacts.json:JSONArtifact"
+testartifact = "tests.conftest:TestArtifact"
 
 ##############################################################################
 # Setuptools configuration
