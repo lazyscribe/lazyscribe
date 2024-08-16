@@ -4,7 +4,8 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from prefect import Flow
+import pytest
+from prefect import Flow, Parameter
 
 from lazyscribe.prefect import LazyExperiment, LazyProject
 
@@ -79,15 +80,24 @@ def test_prefect_experiment(tmp_path):
     assert exp_dict["tags"] == ["success"]
 
 
-def test_prefect_project(tmp_path):
+@pytest.mark.parametrize("parametrized", [True, False])
+def test_prefect_project(parametrized, tmp_path):
     """Test lazyscribe project integration with projects."""
     location = tmp_path / "my-project"
     location.mkdir()
     project_location = location / "project.json"
 
-    init_project = LazyProject(fpath=project_location, author="root")
+    if parametrized:
+        init_project = LazyProject(author="root")
+    else:
+        init_project = LazyProject(fpath=project_location, author="root")
     with Flow(name="Create project") as flow:
-        project = init_project()
+        if parametrized:
+            param = Parameter(name="fpath", default=project_location)
+            project = init_project(fpath=param)
+        else:
+            project = init_project()
+
         with project.log(name="My experiment") as experiment:
             experiment.log_metric("name", 0.5)
             experiment.log_parameter("param", "value")
