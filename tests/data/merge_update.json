@@ -17,6 +17,9 @@
                 "description": null,
                 "metrics": {
                     "name-subpop": 0.3
+                },
+                "parameters": {
+                    "param": "value"
                 }
             }
         ],

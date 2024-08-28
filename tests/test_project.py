@@ -91,6 +91,7 @@ def test_save_project(tmp_path):
         exp.log_metric("name", 0.5)
         with exp.log_test("My test") as test:
             test.log_metric("name-subpop", 0.3)
+            test.log_parameter("features", ["col3", "col4"])
 
     project.save()
     assert project_location.is_file()
@@ -116,6 +117,7 @@ def test_save_project(tmp_path):
                     "name": "My test",
                     "description": None,
                     "metrics": {"name-subpop": 0.3},
+                    "parameters": {"features": ["col3", "col4"]}
                 }
             ],
             "tags": [],
@@ -285,7 +287,7 @@ def test_load_project():
         metrics={"name": 0.5},
         created_at=datetime(2022, 1, 1, 9, 30, 0),
         last_updated=datetime(2022, 1, 1, 9, 30, 0),
-        tests=[Test(name="My test", metrics={"name-subpop": 0.3})],
+        tests=[Test(name="My test", metrics={"name-subpop": 0.3}, parameters={"param": "value"})]
     )
 
     assert project.experiments == [expected]
@@ -324,7 +326,7 @@ def test_load_project_readonly():
         metrics={"name": 0.5},
         created_at=datetime(2022, 1, 1, 9, 30, 0),
         last_updated=datetime(2022, 1, 1, 9, 30, 0),
-        tests=[ReadOnlyTest(name="My test", metrics={"name-subpop": 0.3})],
+        tests=[ReadOnlyTest(name="My test", metrics={"name-subpop": 0.3}, parameters={"param": "value"})],
     )
 
     assert project.experiments == [expected]
@@ -372,7 +374,7 @@ def test_merge_append():
             metrics={"name": 0.5},
             created_at=datetime(2022, 1, 1, 9, 30, 0),
             last_updated=datetime(2022, 1, 1, 9, 30, 0),
-            tests=[ReadOnlyTest(name="My test", metrics={"name-subpop": 0.3})],
+            tests=[ReadOnlyTest(name="My test", metrics={"name-subpop": 0.3}, parameters={"param": "value"})],
         ),
         ReadOnlyExperiment(
             name="My second experiment",
@@ -400,7 +402,7 @@ def test_merge_distinct():
             metrics={"name": 0.5},
             created_at=datetime(2022, 1, 1, 9, 30, 0),
             last_updated=datetime(2022, 1, 1, 9, 30, 0),
-            tests=[ReadOnlyTest(name="My test", metrics={"name-subpop": 0.3})],
+            tests=[ReadOnlyTest(name="My test", metrics={"name-subpop": 0.3}, parameters={"param": "value"})],
         ),
         ReadOnlyExperiment(
             name="My second experiment",
@@ -430,7 +432,7 @@ def test_merge_update():
             parameters={"features": ["col1", "col2", "col3"]},
             created_at=datetime(2022, 1, 1, 9, 30, 0),
             last_updated=datetime(2022, 1, 10, 9, 30, 0),
-            tests=[ReadOnlyTest(name="My test", metrics={"name-subpop": 0.3})],
+            tests=[ReadOnlyTest(name="My test", metrics={"name-subpop": 0.3}, parameters={"param": "value"})],
         ),
         ReadOnlyExperiment(
             name="My second experiment",
@@ -478,6 +480,7 @@ def test_to_tabular():
             ("test", ""): "My test",
             ("description", ""): None,
             ("metrics", "name-subpop"): 0.3,
+            ("parameters", "param"): "value",
         }
     ]
 
@@ -497,7 +500,7 @@ def test_filter_project():
             parameters={"features": ["col1", "col2", "col3"]},
             created_at=datetime(2022, 1, 1, 9, 30, 0),
             last_updated=datetime(2022, 1, 10, 9, 30, 0),
-            tests=[ReadOnlyTest(name="My test", metrics={"name-subpop": 0.3})],
+            tests=[ReadOnlyTest(name="My test", metrics={"name-subpop": 0.3}, parameters={"param": "value"})]
         ),
     ]
 
