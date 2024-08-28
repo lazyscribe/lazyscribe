@@ -18,7 +18,7 @@ basic example of how you might log an experiment.
     with Flow(name="My experiment logging") as flow:
         project = init_project()
         with project.log(name="My experiment") as exp:
-            exp.log_metric(...)
+            exp.log_metric("build_time", "10M")
 
 Let's go through the tasks in this flow.
 
@@ -38,6 +38,7 @@ The highlighted task will read (or create) a new project.
     with Flow(name="My experiment logging") as flow:
         project = init_project()
         with project.log(name="My experiment") as exp:
+            exp.log_metric("build_time", "10M")
 
 The context handler will return a :py:class:`lazyscribe.prefect.LazyExperiment`
 object, which is a Prefect wrapper on :py:class:`lazyscribe.Experiment` that
@@ -61,7 +62,7 @@ Finally,
     with Flow(name="My experiment logging") as flow:
         project = init_project()
         with project.log(name="My experiment") as exp:
-            exp.log_metric(...)
+            exp.log_metric("build_time", "10M")
 
 The :py:meth:`lazyscribe.prefect.LazyExperiment.log_metric` method will add a
 task to log a metric to the experiment.
