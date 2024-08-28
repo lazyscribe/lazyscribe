@@ -320,8 +320,8 @@ class Project:
         Returns
         -------
         List
-            A global project list, with one entry per experiment. Each dictionary
-            will have the following keys:
+            The ``experiments`` list. Each entry will represent an experiment,
+            with the following keys:
 
             +--------------------------+-------------------------------+
             | Field                    | Description                   |
@@ -343,11 +343,11 @@ class Project:
             +--------------------------+-------------------------------+
 
             as well as one key per parameter in the ``parameters`` dictionary
-            (with the format ``("parameters", <metric_name>)``) and one key
+            (with the format ``("parameters", <parameter_name>)``) and one key
             per metric in the ``metrics`` dictionary (with the format
             ``("metrics", <metric_name>)``) for each experiment.
         List
-            A ``tests`` level list. Each entry will represent a test, with the
+            The ``tests`` list. Each entry will represent a test, with the
             following keys:
 
             +-------------------------------------+-------------------------------+
