@@ -2,11 +2,11 @@
 
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Dict, Iterator, List, Literal, Optional, Tuple
+from typing import Dict, Iterator, List, Literal, Optional, Tuple, Union
 from urllib.parse import urlparse
 
 import prefect
-from prefect import Flow, Task, task
+from prefect import Flow, Parameter, Task, task
 from prefect.utilities.tasks import defaults_from_attrs
 
 from lazyscribe.experiment import Experiment
@@ -228,7 +228,7 @@ class LazyProject(Task):
     def log(
         self,
         name: str,
-        project: Optional[str] = None,
+        project: Optional[Union[str, Path, Parameter]] = None,
         author: Optional[str] = None,
         flow: Optional[Flow] = None,
     ) -> Iterator[Task]:
@@ -267,8 +267,8 @@ class LazyProject(Task):
         elif isinstance(project, str):
             parsed = urlparse(project)
             fpath = Path(parsed.netloc + parsed.path)
-        elif isinstance(project, Path):
-            fpath = project
+        elif isinstance(project, (Path, Parameter)):
+            fpath = project  # type: ignore
         else:
             raise ValueError("Please supply a valid project value.")
 
