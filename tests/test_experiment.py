@@ -39,6 +39,7 @@ def test_experiment_logging():
     assert exp.parameters == {"features": ["col1", "col2"]}
     assert exp.tests == [Test(name="My test", metrics={"name-subpop": 0.3})]
     assert exp.tags == ["success"]
+    assert "lazyscribe.test.Test" in str(test)
 
     # Add another tag without overwriting
     exp.tag("huge success")
