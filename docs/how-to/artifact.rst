@@ -81,10 +81,10 @@ To load an artifact, use :py:meth:`lazyscribe.Experiment.load_artifact`.
 
 When an artifact is persisted to the filesystem, the handler may save environment
 parameters to use for validation when attempting to load the artifact into python.
-For example, when persisting a ``scikit-learn`` model object with the :py:class:`lazyscribe.artifacts.JoblibArtifact`, it will include the ``scikit-learn``
-and ``joblib`` versions in the artifact metadata. If the metadata doesn't match with a handler constructed
-in the current runtime environment, ``lazyscribe`` will raise an error. You can disable validation using
-``validate=False``:
+For example, when persisting a ``scikit-learn`` model object with the :py:class:`lazyscribe.artifacts.JoblibArtifact`,
+it will include the ``scikit-learn`` and ``joblib`` versions in the artifact metadata.
+If the metadata doesn't match with a handler constructed in the current runtime environment, ``lazyscribe`` will raise
+an error. You can disable validation using ``validate=False``:
 
 .. code-block:: python
 
