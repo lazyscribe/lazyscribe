@@ -7,6 +7,8 @@ from lazyscribe.artifacts import Artifact
 
 
 class TestArtifact(Artifact):
+    # Tell pytest it's not a Python test class
+    __test__ = False
     alias: ClassVar[str] = "testartifact"
     suffix: ClassVar[str] = "testartifact"
     binary: ClassVar[bool] = True
