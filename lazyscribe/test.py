@@ -44,7 +44,15 @@ class Test:
         """
         self.metrics[name] = value
 
+    def __str__(self):
+        """Shortened string representation."""
+        return f"<lazyscribe.test.Test at {hex(id(self))}>"
+
 
 @frozen
 class ReadOnlyTest(Test):
     """Immutable version of the test."""
+
+    def __str__(self):
+        """Shortened string representation."""
+        return f"<lazyscribe.test.ReadOnlyTest at {hex(id(self))}>"
