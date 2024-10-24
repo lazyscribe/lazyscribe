@@ -1,6 +1,6 @@
 """Sub-population tests."""
 
-from typing import Dict, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 from attrs import Factory, define, frozen
 
@@ -21,6 +21,8 @@ class Test:
         A description of the test.
     metrics : dict, optional (default {})
         A dictionary of metric values. Each metric value can be an individual value or a list.
+    parameters : dict, optional (default {})
+        A dictionary of test parameters. The key must be a string but the value can be anything.
     """
 
     # Tell pytest it's not a Python test class
@@ -29,6 +31,7 @@ class Test:
     name: str
     description: Optional[str] = Factory(lambda: None)
     metrics: Dict = Factory(lambda: {})
+    parameters: Dict = Factory(lambda: {})
 
     def log_metric(self, name: str, value: Union[float, int]):
         """Log a metric to the test.
@@ -47,6 +50,20 @@ class Test:
     def __str__(self):
         """Shortened string representation."""
         return f"<lazyscribe.test.Test at {hex(id(self))}>"
+
+    def log_parameter(self, name: str, value: Any):
+        """Log a parameter to the test.
+
+        This method will overwrite existing keys.
+
+        Parameters
+        ----------
+        name : str
+            The name of the parameter.
+        value : any
+            The parameter itself.
+        """
+        self.parameters[name] = value
 
 
 @frozen

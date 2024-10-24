@@ -13,6 +13,9 @@ Sometimes, it's helpful to log non-global metrics to an experimenent. To do so, 
     with project.log(name="My experiment") as exp:
         with exp.log_test(name="My test", description="Demo test") as test:
             test.log_metric("metric", 0.3)
+            test.log_parameter("param", "value")
+
+The test's parameter has been also stored here.
 
 The :py:meth:`Experiment.log_test` context handler creates a :py:class:`Test` object and
 logs it back to the experiment when the handler exits. If you want to avoid using the context

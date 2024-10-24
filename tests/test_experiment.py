@@ -33,11 +33,18 @@ def test_experiment_logging():
     exp.log_parameter("features", ["col1", "col2"])
     exp.tag("success")
     with exp.log_test(name="My test") as test:
+        test.log_parameter("features", ["col3", "col4"])
         test.log_metric("name-subpop", 0.3)
 
     assert exp.metrics == {"name": 0.5, "name-cv": 0.4}
     assert exp.parameters == {"features": ["col1", "col2"]}
-    assert exp.tests == [Test(name="My test", metrics={"name-subpop": 0.3})]
+    assert exp.tests == [
+        Test(
+            name="My test",
+            metrics={"name-subpop": 0.3},
+            parameters={"features": ["col3", "col4"]},
+        )
+    ]
     assert exp.tags == ["success"]
     assert "lazyscribe.test.Test" in str(test)
 
@@ -71,7 +78,12 @@ def test_experiment_serialization():
         "slug": f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}",
         "artifacts": [],
         "tests": [
-            {"name": "My test", "description": None, "metrics": {"name-subpop": 0.3}}
+            {
+                "name": "My test",
+                "description": None,
+                "metrics": {"name-subpop": 0.3},
+                "parameters": {},
+            }
         ],
         "tags": [],
     }

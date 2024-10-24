@@ -374,8 +374,10 @@ class Project:
             | ``("description",)``                | Test description              |
             +-------------------------------------+-------------------------------+
 
-            as well as one key per metric in the ``metrics`` dictionary
-            (with the format ``("metrics", <metric_name>)``) for each test.
+            as well as one key per parameter in the ``parameters`` dictionary
+            (with the format ``("parameters", <parameter_name>)``) and one key
+            per metric in the ``metrics`` dictionary (with the format
+            ``("metrics", <metric_name>)``) for each test.
         """
         exp_output: List = []
         test_output: List = []
@@ -411,6 +413,11 @@ class Project:
                         **{
                             ("metrics", key): value
                             for key, value in test["metrics"].items()
+                        },
+                        **{
+                            ("parameters", key): value
+                            for key, value in test["parameters"].items()
+                            if not isinstance(value, (tuple, list, dict))
                         },
                     }
                 )

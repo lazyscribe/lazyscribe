@@ -29,6 +29,7 @@ def test_prefect_experiment(tmp_path):
         experiment.log_artifact(name="features", value=[0, 1, 2], handler="json")
         with experiment.log_test(name="My test") as test:
             test.log_metric("subpop", 0.7)
+            test.log_parameter("param", "value")
 
     assert {tsk.name for tsk in flow.downstream_tasks(experiment)} == {
         "Log experiment metric",
@@ -43,6 +44,7 @@ def test_prefect_experiment(tmp_path):
     assert flow.downstream_tasks(flow.get_tasks(name="Log parameter")[0]) == set()
     assert {tsk.name for tsk in flow.downstream_tasks(test)} == {
         "Log test metric",
+        "Log test parameter",
         "Append test",
     }
     assert {
@@ -66,7 +68,12 @@ def test_prefect_experiment(tmp_path):
     assert exp_dict["short_slug"] == "my-experiment"
     assert exp_dict["slug"].startswith(f"my-experiment-{today.strftime('%Y%m%d%H%M')}")
     assert exp_dict["tests"] == [
-        {"name": "My test", "description": None, "metrics": {"subpop": 0.7}}
+        {
+            "name": "My test",
+            "description": None,
+            "metrics": {"subpop": 0.7},
+            "parameters": {"param": "value"},
+        }
     ]
     assert exp_dict["artifacts"] == [
         {
@@ -102,6 +109,7 @@ def test_prefect_project(parametrized, tmp_path):
             experiment.log_metric("name", 0.5)
             experiment.log_parameter("param", "value")
             with experiment.log_test(name="My test") as test:
+                test.log_parameter("param", "value")
                 test.log_metric("subpop", 0.7)
 
         exp_data, test_data = project.to_tabular()
@@ -137,6 +145,7 @@ def test_prefect_project(parametrized, tmp_path):
     } == {"Append experiment"}
     assert {tsk.name for tsk in flow.downstream_tasks(test)} == {
         "Log test metric",
+        "Log test parameter",
         "Append test",
     }
     assert {
@@ -163,7 +172,12 @@ def test_prefect_project(parametrized, tmp_path):
         f"my-experiment-{today.strftime('%Y%m%d%H%M')}"
     )
     assert proj_list[0]["tests"] == [
-        {"name": "My test", "description": None, "metrics": {"subpop": 0.7}}
+        {
+            "name": "My test",
+            "description": None,
+            "metrics": {"subpop": 0.7},
+            "parameters": {"param": "value"},
+        }
     ]
 
     assert output.result[project].result.to_tabular() == (
@@ -204,6 +218,7 @@ def test_prefect_project_merge():
                     "name": "My test",
                     "description": None,
                     "metrics": {"name-subpop": 0.3},
+                    "parameters": {"param": "value"},
                 }
             ],
             "tags": [],
