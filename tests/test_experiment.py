@@ -10,7 +10,7 @@ from attrs.exceptions import FrozenInstanceError
 
 from lazyscribe.artifacts import _get_handler
 from lazyscribe.experiment import Experiment, ReadOnlyExperiment
-from lazyscribe.test import Test
+from lazyscribe.test import ReadOnlyTest, Test
 
 
 def test_attrs_default():
@@ -243,6 +243,15 @@ def test_frozen_experiment():
         exp.name = "Let's change the name"
 
     assert "lazyscribe.experiment.ReadOnlyExperiment" in str(exp)
+
+
+def test_frozen_test():
+    """Test raising errors with a read-only test."""
+    test = ReadOnlyTest(name="my test", description="my description")
+    with pytest.raises(FrozenInstanceError):
+        test.name = "actually the test is not that"
+
+    assert "lazyscribe.test.ReadOnlyTest" in str(test)
 
 
 def test_experiment_artifact_log_load_output_only(tmp_path):
