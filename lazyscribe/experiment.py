@@ -418,6 +418,10 @@ class Experiment:
             ),
         )
 
+    def __str__(self):
+        """Shortened string representation."""
+        return f"<lazyscribe.experiment.Experiment at {hex(id(self))}>"
+
     def __gt__(self, other):
         """Determine whether this experiment is newer than another experiment.
 
@@ -464,3 +468,7 @@ class Experiment:
 @frozen
 class ReadOnlyExperiment(Experiment):
     """Immutable version of an experiment."""
+
+    def __str__(self):
+        """Shortened string representation."""
+        return f"<lazyscribe.experiment.ReadOnlyExperiment at {hex(id(self))}>"

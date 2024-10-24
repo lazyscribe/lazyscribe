@@ -223,6 +223,8 @@ class Project:
         The new project will inherit the current project ``fpath``,
         ``author``, and ``mode``.
 
+        For details on the merging process, see :doc:`here<../how-to/merge>`.
+
         Returns
         -------
         Project
