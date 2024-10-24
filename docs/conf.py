@@ -51,7 +51,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "Lightweight experiment tracking"
-copyright = "2021, Akshay Gupta"
+copyright = "2024, Akshay Gupta"
 author = "Akshay Gupta"
 
 # The version info for the project you're documenting, acts as replacement
