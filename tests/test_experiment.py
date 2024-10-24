@@ -1,6 +1,7 @@
 """Test the experiment dataclass."""
 
 import sys
+import warnings
 from datetime import datetime
 from pathlib import Path
 
@@ -21,6 +22,7 @@ def test_attrs_default():
     assert exp.short_slug == "my-experiment"
     assert exp.slug == f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}"
     assert exp.path == Path(".", f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}")
+    assert "lazyscribe.experiment.Experiment" in str(exp)
 
 
 def test_experiment_logging():
@@ -239,8 +241,7 @@ def test_frozen_experiment():
     with pytest.raises(FrozenInstanceError):
         exp.name = "Let's change the name"
 
-
-import warnings
+    assert "lazyscribe.experiment.ReadOnlyExperiment" in str(exp)
 
 
 def test_experiment_artifact_log_load_output_only(tmp_path):
