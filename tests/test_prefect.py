@@ -68,7 +68,12 @@ def test_prefect_experiment(tmp_path):
     assert exp_dict["short_slug"] == "my-experiment"
     assert exp_dict["slug"].startswith(f"my-experiment-{today.strftime('%Y%m%d%H%M')}")
     assert exp_dict["tests"] == [
-        {"name": "My test", "description": None, "metrics": {"subpop": 0.7}, "parameters": {"param": "value"}}
+        {
+            "name": "My test",
+            "description": None,
+            "metrics": {"subpop": 0.7},
+            "parameters": {"param": "value"},
+        }
     ]
     assert exp_dict["artifacts"] == [
         {
@@ -167,7 +172,12 @@ def test_prefect_project(parametrized, tmp_path):
         f"my-experiment-{today.strftime('%Y%m%d%H%M')}"
     )
     assert proj_list[0]["tests"] == [
-        {"name": "My test", "description": None, "metrics": {"subpop": 0.7}, "parameters": {"param": "value"}}
+        {
+            "name": "My test",
+            "description": None,
+            "metrics": {"subpop": 0.7},
+            "parameters": {"param": "value"},
+        }
     ]
 
     assert output.result[project].result.to_tabular() == (
@@ -208,7 +218,7 @@ def test_prefect_project_merge():
                     "name": "My test",
                     "description": None,
                     "metrics": {"name-subpop": 0.3},
-                    "parameters": {"param": "value"}
+                    "parameters": {"param": "value"},
                 }
             ],
             "tags": [],
