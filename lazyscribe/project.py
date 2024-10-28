@@ -223,7 +223,7 @@ class Project:
         The new project will inherit the current project ``fpath``,
         ``author``, and ``mode``.
 
-        For details on the merging process, see :doc:`here<../how-to/merge>`.
+        For details on the merging process, see :doc:`here<../how-to/merge#updating>`.
 
         Returns
         -------
@@ -252,6 +252,8 @@ class Project:
 
     def append(self, other: Experiment):
         """Append an experiment to the project.
+
+        For details on the merging process, see :doc:`here<../how-to/merge#appending>`.
 
         Parameters
         ----------
