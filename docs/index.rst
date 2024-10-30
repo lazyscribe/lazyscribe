@@ -38,6 +38,7 @@ Contents
     how-to/tests
     how-to/tabular
     how-to/artifact
+    how-to/custom-artifact
     how-to/dependencies
     how-to/external-fs
     how-to/readonly

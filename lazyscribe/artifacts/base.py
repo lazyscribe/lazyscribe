@@ -35,6 +35,8 @@ class Artifact(metaclass=ABCMeta):
     binary : bool
         Whether or not the file format for the handler is binary in nature. This
         affects whether or not the file handler uses ``w`` or ``wb``.
+    output_only : bool
+        Whether or not the file output by the handler is meant to be read as the orginal project.
     name : str
         The name of the artifact.
     fname : str
@@ -46,6 +48,9 @@ class Artifact(metaclass=ABCMeta):
     alias: ClassVar[str]
     suffix: ClassVar[str]
     binary: ClassVar[bool]
+    output_only: ClassVar[
+        bool
+    ]  # Describes if the artifact will reconstruct to a python object on read
     name: str = field(eq=False)
     fname: str = field(eq=False)
     value: Any = field(eq=False)

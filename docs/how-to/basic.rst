@@ -14,8 +14,8 @@ Then, use the context manager to create an experiment and log it back to the pro
 .. code-block:: python
 
     with project.log(name="My experiment") as exp:
-        exp.log_metric(...)
-        exp.log_parameter(...)
+        exp.log_metric("metric", 0.3)
+        exp.log_parameter("param", "value")
 
 When the context manager exits, the experiment will be appended to the ``Project.experiments`` list.
 Using a list allows us to preserve the order and reference a copy when associating it with the project.
@@ -27,8 +27,8 @@ to the ``Project.experiments`` list.
     from lazyscribe import Experiment
 
     exp = Experiment(name="My experiment", project=project.fpath, author=project.author)
-    exp.log_metric(...)
-    exp.log_parameter(...)
+    exp.log_metric("metric", 0.3)
+    exp.log_parameter("param", "value")
     project.append(exp)
 
 Once you've finished, save the project to the filesystem using :py:meth:`lazyscribe.Project.save`

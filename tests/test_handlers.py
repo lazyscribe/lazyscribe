@@ -2,7 +2,9 @@
 
 import pytest
 
-from lazyscribe.artifacts import JoblibArtifact, JSONArtifact, _get_handler
+from lazyscribe.artifacts import _get_handler
+from lazyscribe.artifacts.joblib import JoblibArtifact
+from lazyscribe.artifacts.json import JSONArtifact
 
 
 def test_json_handler(tmp_path):
@@ -97,5 +99,32 @@ def test_get_handler():
     handler = _get_handler("joblib")
     assert handler == JoblibArtifact
 
+    handler = _get_handler("json")
+    assert handler == JSONArtifact
+
     with pytest.raises(ValueError):
         _get_handler("fake-handler")
+
+
+from unittest.mock import Mock, patch
+
+
+@patch("lazyscribe.artifacts.entry_points")
+def test_get_handler_type_error(mock_entry_points):
+    mock_plugin = Mock()
+    mock_plugin.name = "dummy"
+
+    mock_entry_points.return_value = [mock_plugin]
+    with pytest.raises(TypeError):
+        _get_handler(alias="dummy")
+
+
+@patch("lazyscribe.artifacts.entry_points")
+def test_get_handler_import_error(mock_entry_points):
+    mock_plugin_import = Mock()
+    mock_plugin_import.name = "dummy"
+    mock_plugin_import.load.side_effect = ImportError()
+
+    mock_entry_points.return_value = [mock_plugin_import]
+    with pytest.raises(RuntimeError):
+        _get_handler(alias="dummy")

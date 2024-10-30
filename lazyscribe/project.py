@@ -5,6 +5,7 @@ from __future__ import annotations
 import getpass
 import json
 import logging
+import warnings
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
@@ -209,12 +210,20 @@ class Project:
                 LOG.debug(f"Saving '{artifact.name}' to {fpath!s}...")
                 with self.fs.open(fpath, fmode) as buf:
                     artifact.write(artifact.value, buf, **artifact.writer_kwargs)
+                    if artifact.output_only:
+                        warnings.warn(
+                            f"Artifact '{artifact.name}' is added. It is not meant to be read back as Python Object",
+                            UserWarning,
+                            stacklevel=2,
+                        )
 
     def merge(self, other: Project) -> Project:
         """Merge two projects.
 
         The new project will inherit the current project ``fpath``,
         ``author``, and ``mode``.
+
+        For details on the merging process, see :doc:`here<../how-to/merge#updating>`.
 
         Returns
         -------
@@ -243,6 +252,8 @@ class Project:
 
     def append(self, other: Experiment):
         """Append an experiment to the project.
+
+        For details on the merging process, see :doc:`here<../how-to/merge#appending>`.
 
         Parameters
         ----------
@@ -320,8 +331,8 @@ class Project:
         Returns
         -------
         List
-            A global project list, with one entry per experiment. Each dictionary
-            will have the following keys:
+            The ``experiments`` list. Each entry will represent an experiment,
+            with the following keys:
 
             +--------------------------+-------------------------------+
             | Field                    | Description                   |
@@ -343,11 +354,11 @@ class Project:
             +--------------------------+-------------------------------+
 
             as well as one key per parameter in the ``parameters`` dictionary
-            (with the format ``("parameters", <metric_name>)``) and one key
+            (with the format ``("parameters", <parameter_name>)``) and one key
             per metric in the ``metrics`` dictionary (with the format
             ``("metrics", <metric_name>)``) for each experiment.
         List
-            A ``tests`` level list. Each entry will represent a test, with the
+            The ``tests`` list. Each entry will represent a test, with the
             following keys:
 
             +-------------------------------------+-------------------------------+
@@ -365,8 +376,10 @@ class Project:
             | ``("description",)``                | Test description              |
             +-------------------------------------+-------------------------------+
 
-            as well as one key per metric in the ``metrics`` dictionary
-            (with the format ``("metrics", <metric_name>)``) for each test.
+            as well as one key per parameter in the ``parameters`` dictionary
+            (with the format ``("parameters", <parameter_name>)``) and one key
+            per metric in the ``metrics`` dictionary (with the format
+            ``("metrics", <metric_name>)``) for each test.
         """
         exp_output: List = []
         test_output: List = []
@@ -402,6 +415,11 @@ class Project:
                         **{
                             ("metrics", key): value
                             for key, value in test["metrics"].items()
+                        },
+                        **{
+                            ("parameters", key): value
+                            for key, value in test["parameters"].items()
+                            if not isinstance(value, (tuple, list, dict))
                         },
                     }
                 )

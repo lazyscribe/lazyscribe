@@ -1,15 +1,16 @@
 """Test the experiment dataclass."""
 
 import sys
+import warnings
 from datetime import datetime
 from pathlib import Path
 
 import pytest
 from attrs.exceptions import FrozenInstanceError
 
-from lazyscribe.artifacts import JSONArtifact
+from lazyscribe.artifacts import _get_handler
 from lazyscribe.experiment import Experiment, ReadOnlyExperiment
-from lazyscribe.test import Test
+from lazyscribe.test import ReadOnlyTest, Test
 
 
 def test_attrs_default():
@@ -21,6 +22,7 @@ def test_attrs_default():
     assert exp.short_slug == "my-experiment"
     assert exp.slug == f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}"
     assert exp.path == Path(".", f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}")
+    assert "lazyscribe.experiment.Experiment" in str(exp)
 
 
 def test_experiment_logging():
@@ -31,12 +33,20 @@ def test_experiment_logging():
     exp.log_parameter("features", ["col1", "col2"])
     exp.tag("success")
     with exp.log_test(name="My test") as test:
+        test.log_parameter("features", ["col3", "col4"])
         test.log_metric("name-subpop", 0.3)
 
     assert exp.metrics == {"name": 0.5, "name-cv": 0.4}
     assert exp.parameters == {"features": ["col1", "col2"]}
-    assert exp.tests == [Test(name="My test", metrics={"name-subpop": 0.3})]
+    assert exp.tests == [
+        Test(
+            name="My test",
+            metrics={"name-subpop": 0.3},
+            parameters={"features": ["col3", "col4"]},
+        )
+    ]
     assert exp.tags == ["success"]
+    assert "lazyscribe.test.Test" in str(test)
 
     # Add another tag without overwriting
     exp.tag("huge success")
@@ -68,7 +78,12 @@ def test_experiment_serialization():
         "slug": f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}",
         "artifacts": [],
         "tests": [
-            {"name": "My test", "description": None, "metrics": {"name-subpop": 0.3}}
+            {
+                "name": "My test",
+                "description": None,
+                "metrics": {"name-subpop": 0.3},
+                "parameters": {},
+            }
         ],
         "tags": [],
     }
@@ -79,7 +94,7 @@ def test_experiment_artifact_logging_basic():
     today = datetime.now()
     exp = Experiment(name="My experiment", project=Path("project.json"), author="root")
     exp.log_artifact(name="features", value=[0, 1, 2], handler="json")
-
+    JSONArtifact = _get_handler("json")
     assert isinstance(exp.artifacts[0], JSONArtifact)
     assert exp.to_dict() == {
         "name": "My experiment",
@@ -110,7 +125,7 @@ def test_experiment_artifact_logging_overwrite():
     """Test overwriting an artifact."""
     exp = Experiment(name="My experiment", project=Path("project.json"), author="root")
     exp.log_artifact(name="features", value=[0, 1, 2], handler="json")
-
+    JSONArtifact = _get_handler("json")
     assert isinstance(exp.artifacts[0], JSONArtifact)
 
     with pytest.raises(RuntimeError):
@@ -238,3 +253,51 @@ def test_frozen_experiment():
     exp = ReadOnlyExperiment(name="My experiment", project=Path("project.json"))
     with pytest.raises(FrozenInstanceError):
         exp.name = "Let's change the name"
+
+    assert "lazyscribe.experiment.ReadOnlyExperiment" in str(exp)
+
+
+def test_frozen_test():
+    """Test raising errors with a read-only test."""
+    test = ReadOnlyTest(name="my test", description="my description")
+    with pytest.raises(FrozenInstanceError):
+        test.name = "actually the test is not that"
+
+    assert "lazyscribe.test.ReadOnlyTest" in str(test)
+
+
+def test_experiment_artifact_log_load_output_only(tmp_path):
+    """Test loading an experiment artifact from the disk."""
+    location = tmp_path / "my-location"
+    location.mkdir()
+
+    exp = Experiment(
+        name="My experiment", project=location / "project.json", author="root"
+    )
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        exp.log_artifact(name="features", value=[0, 1, 2], handler="testartifact")
+        assert len(w) == 1
+        assert issubclass(w[-1].category, UserWarning)
+        assert (
+            "Artifact 'features' is added. It is not meant to be read back as Python Object"
+            in str(w[-1].message)
+        )
+
+    # Need to write the artifact to disk
+    fpath = exp.dir / exp.path / exp.artifacts[0].fname
+    exp.fs.makedirs(exp.dir / exp.path, exist_ok=True)
+    with exp.fs.open(fpath, "w") as buf:
+        exp.artifacts[0].write(exp.artifacts[0].value, buf)
+
+    assert (location / "my-location" / exp.path / "features.testartifact").is_file()
+
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        exp.load_artifact(name="features")
+
+        assert len(w) == 1
+        assert issubclass(w[-1].category, UserWarning)
+        assert "Artifact 'features' is not the original Python Object" in str(
+            w[-1].message
+        )
