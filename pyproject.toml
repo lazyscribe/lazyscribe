@@ -110,8 +110,6 @@ select = [
 ignore = [
 	"C901",  # Function/method is too complex. (Add back in later.)
 	"E501",  # Line too long. Using formatter instead.
-	"UP035",  # ``typing.x`` is deprecated, use ``x`` instead
-	"UP006",  # ``typing.x`` is deprecated, use ``x`` instead
 ]
 
 [tool.ruff.lint.per-file-ignores]

@@ -1,8 +1,9 @@
 """Prefect project tasks."""
 
+from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Dict, Iterator, List, Literal, Optional, Tuple, Union
+from typing import Literal, Optional, Union
 from urllib.parse import urlparse
 
 import prefect
@@ -60,7 +61,7 @@ def merge_projects(base: Project, other: Project) -> Project:
 
 
 @task(name="Create tabular data", nout=2)
-def project_to_tabular(project: Project) -> Tuple[List, List]:
+def project_to_tabular(project: Project) -> tuple[list, list]:
     """Create tabular representations of the project.
 
     Parameters
@@ -70,9 +71,9 @@ def project_to_tabular(project: Project) -> Tuple[List, List]:
 
     Returns
     -------
-    List
+    list
         A global project list, with one entry per experiment.
-    List
+    list
         A tests level list.
     """
     return project.to_tabular()
@@ -90,7 +91,7 @@ class LazyProject(Task):
         The mode for opening the project. See :py:class:`lazyscribe.Project` for reference.
     author : str, optional (default None)
         The project author.
-    storage_options : Dict, optional (default None)
+    storage_options : dict, optional (default None)
         Storage options to pass to the filesystem initialization.
     **kwargs
         Keyword arguments for :py:class:`prefect.Task`.
@@ -101,7 +102,7 @@ class LazyProject(Task):
         fpath: str = "project.json",
         mode: Literal["r", "a", "w", "w+"] = "w",
         author: Optional[str] = None,
-        storage_options: Optional[Dict] = None,
+        storage_options: Optional[dict] = None,
         **kwargs,
     ):
         """Init method."""
@@ -118,7 +119,7 @@ class LazyProject(Task):
         fpath: Optional[str] = None,
         mode: Optional[Literal["r", "a", "w", "w+"]] = None,
         author: Optional[str] = None,
-        storage_options: Optional[Dict] = None,
+        storage_options: Optional[dict] = None,
     ) -> Project:
         """Instantiate a :py:class:`lazyscribe.Project`.
 
@@ -130,7 +131,7 @@ class LazyProject(Task):
             The mode for opening the project.
         author : str, optional (default None)
             The author for the project.
-        storage_options : Dict, optional (default None)
+        storage_options : dict, optional (default None)
             Storage options to pass to the filesystem initialization.
 
         Returns

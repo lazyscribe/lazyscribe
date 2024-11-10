@@ -51,7 +51,7 @@ additional metadata to capture, this is where we would capture it
 .. code-block:: python
 
     from datetime import datetime
-    from typing import Any, ClassVar, Dict, Optional
+    from typing import Any, ClassVar, Optional
 
     from attrs import define
 
@@ -73,7 +73,7 @@ additional metadata to capture, this is where we would capture it
             value: Optional[Any] = None,
             fname: Optional[str] = None,
             created_at: Optional[datetime] = None,
-            writer_kwargs: Optional[Dict] = None,
+            writer_kwargs: Optional[dict] = None,
             **kwargs
         ):
             """Construct the handler class."""

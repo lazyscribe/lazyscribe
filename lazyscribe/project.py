@@ -6,10 +6,11 @@ import getpass
 import json
 import logging
 import warnings
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, Dict, Iterator, List, Literal, Tuple
+from typing import Literal
 from urllib.parse import urlparse
 
 import fsspec
@@ -43,7 +44,7 @@ class Project:
     author : str, optional (default None)
         The project author. This author will be used for any new experiments or modifications to
         existing experiments. If not supplied, ``getpass.getuser()`` will be used.
-    storage_options : Dict, optional (default None)
+    storage_options : dict, optional (default None)
         Storage options to pass to the filesystem initialization. Will be passed to
         fsspec.filesystem.
 
@@ -75,8 +76,8 @@ class Project:
         self.storage_options = storage_options
 
         # If in ``r``, ``a``, or ``w+`` mode, read in the existing project.
-        self.experiments: List[Experiment | ReadOnlyExperiment] = []
-        self.snapshot: Dict = {}
+        self.experiments: list[Experiment | ReadOnlyExperiment] = []
+        self.snapshot: dict = {}
         self.fs = fsspec.filesystem(self.protocol, **storage_options)
 
         if mode not in ("r", "a", "w", "w+"):
@@ -321,7 +322,7 @@ class Project:
             if func(exp):
                 yield exp
 
-    def to_tabular(self) -> Tuple[List, List]:
+    def to_tabular(self) -> tuple[list, list]:
         """Create a dictionary that can be fed into ``pandas``.
 
         This method depends on the user consistently logging
@@ -330,7 +331,7 @@ class Project:
 
         Returns
         -------
-        List
+        list
             The ``experiments`` list. Each entry will represent an experiment,
             with the following keys:
 
@@ -357,7 +358,7 @@ class Project:
             (with the format ``("parameters", <parameter_name>)``) and one key
             per metric in the ``metrics`` dictionary (with the format
             ``("metrics", <metric_name>)``) for each experiment.
-        List
+        list
             The ``tests`` list. Each entry will represent a test, with the
             following keys:
 
@@ -381,8 +382,8 @@ class Project:
             per metric in the ``metrics`` dictionary (with the format
             ``("metrics", <metric_name>)``) for each test.
         """
-        exp_output: List = []
-        test_output: List = []
+        exp_output: list = []
+        test_output: list = []
 
         for exp in self:
             exp_output.append(

@@ -1,7 +1,7 @@
 """Joblib-based handler for pickle-serializable objects."""
 
 from datetime import datetime
-from typing import Any, ClassVar, Dict, Optional
+from typing import Any, ClassVar, Optional
 
 from attrs import define
 from importlib_metadata import packages_distributions, version
@@ -53,7 +53,7 @@ class JoblibArtifact(Artifact):
         value: Optional[Any] = None,
         fname: Optional[str] = None,
         created_at: Optional[datetime] = None,
-        writer_kwargs: Optional[Dict] = None,
+        writer_kwargs: Optional[dict] = None,
         package: Optional[str] = None,
         **kwargs,
     ):
@@ -75,10 +75,10 @@ class JoblibArtifact(Artifact):
             The package name or root module name of the serializable python object.
             Note: this may be different from the distribution name. e.g ``scikit-learn`` is
             a distribution name, where as ``sklearn`` is the corresponding package name.
-        writer_kwargs : Dict, optional (default None)
+        writer_kwargs : dict, optional (default None)
             Keyword arguments for writing an artifact to the filesystem. Provided when an artifact
             is logged to an experiment.
-        **kwargs : Dict
+        **kwargs : dict
             Other keyword arguments.
             Usually class attributes obtained from a project JSON.
         """
