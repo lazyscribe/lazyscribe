@@ -111,16 +111,8 @@ select = [
 	"RUF",  # Ruff errors
 ]
 ignore = [
-	"C901",  # Add back in later
-	"E111",  # Check indentation level. Using formatter instead.
-	"E114",  # Check indentation level. Using formatter instead.
-	"E117",  # Check indentation level. Using formatter instead.
-	"E203",  # Check whitespace. Using formatter instead.
+	"C901",  # Function/method is too complex. (Add back in later.)
 	"E501",  # Line too long. Using formatter instead.
-	"D206",  # Docstring indentation. Using formatter instead.
-	"D300",  # Use triple single quotes. Using formatter instead.
-	"SIM108",  # Use ternary operator instead of if-else blocks.
-	"SIM105",  # Use ``contextlib.suppress(FileNotFoundError)`` insetad of try - execpt - pass.
 	"UP035",  # ``typing.x`` is deprecated, use ``x`` instead
 	"UP006",  # ``typing.x`` is deprecated, use ``x`` instead
 ]
