@@ -82,7 +82,7 @@ Ready to contribute? Here's how you can set up:
 
     $ mamba create -n lazyscribe python=3.9 -y
     $ conda activate lazyscribe
-    $ python -m pip install -r requirements.txt -e .[dev]
+    $ python -m pip install -e .[dev,tests]
 
 #. Create a branch for local development::
 
