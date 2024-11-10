@@ -2,7 +2,7 @@
 
 from abc import ABCMeta, abstractmethod
 from datetime import datetime
-from typing import Any, ClassVar, Dict, Optional
+from typing import Any, ClassVar, Optional
 
 from attrs import define, field
 
@@ -21,7 +21,7 @@ class Artifact(metaclass=ABCMeta):
         The filename of the artifact.
     value : Any
         The value for the artifact.
-    writer_kwargs : Dict
+    writer_kwargs : dict
         User provided keyword arguments for writing an artifact. Provided when
         the artifact is logged to an experiment.
 
@@ -54,7 +54,7 @@ class Artifact(metaclass=ABCMeta):
     name: str = field(eq=False)
     fname: str = field(eq=False)
     value: Any = field(eq=False)
-    writer_kwargs: Dict = field(eq=False)
+    writer_kwargs: dict = field(eq=False)
     created_at: datetime = field(eq=False)
 
     @classmethod
@@ -65,7 +65,7 @@ class Artifact(metaclass=ABCMeta):
         value: Optional[Any] = None,
         fname: Optional[str] = None,
         created_at: Optional[datetime] = None,
-        writer_kwargs: Optional[Dict] = None,
+        writer_kwargs: Optional[dict] = None,
         **kwargs,
     ):
         """Construct the artifact handler.
@@ -85,10 +85,10 @@ class Artifact(metaclass=ABCMeta):
             the name of the artifact and the suffix for the class.
         created_at : datetime, optional (default None)
             When the artifact was created. If not supplied, :py:meth:`datetime.now` will be used.
-        writer_kwargs : Dict, optional (default None)
+        writer_kwargs : dict, optional (default None)
             Keyword arguments for writing an artifact to the filesystem. Provided when an artifact
             is logged to an experiment.
-        **kwargs : Dict
+        **kwargs : dict
             Other keyword arguments.
             Usually class attributes obtained from a project JSON.
         """

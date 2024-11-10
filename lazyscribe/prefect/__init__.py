@@ -1,7 +1,5 @@
 """Import the tasks."""
 
-from typing import List
-
 from lazyscribe.prefect.experiment import (
     LazyExperiment,
     append_test,
@@ -16,7 +14,7 @@ from lazyscribe.prefect.project import (
 )
 from lazyscribe.prefect.test import LazyTest, log_test_metric
 
-__all__: List[str] = [
+__all__: list[str] = [
     "LazyExperiment",
     "LazyProject",
     "LazyTest",

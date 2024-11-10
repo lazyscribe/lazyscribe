@@ -6,7 +6,7 @@ The code for this module is lifted from
 
 from __future__ import annotations
 
-from typing import Any, List
+from typing import Any
 
 from attrs import define
 
@@ -26,7 +26,7 @@ class Node:
     data: Any = None
     next: Any = None
 
-    def to_list(self) -> List:
+    def to_list(self) -> list:
         """Convert the nodes to a de-duped list.
 
         Returns
@@ -74,7 +74,7 @@ class LinkedList:
             self.head = new
 
     @staticmethod
-    def from_list(data: List) -> LinkedList:
+    def from_list(data: list) -> LinkedList:
         """Convert a standard list to a linked list."""
         # Sort the list
         sorted_list = sorted(data)

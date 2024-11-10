@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, ClassVar, Dict, Optional
+from typing import Any, ClassVar, Optional
 
 from slugify import slugify
 
@@ -22,7 +22,7 @@ class TestArtifact(Artifact):
         value: Optional[Any] = None,
         fname: Optional[str] = None,
         created_at: Optional[datetime] = None,
-        writer_kwargs: Optional[Dict] = None,
+        writer_kwargs: Optional[dict] = None,
         **kwargs,
     ):
         return cls(

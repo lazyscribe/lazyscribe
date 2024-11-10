@@ -6,7 +6,6 @@ In this tutorial, we will demonstrate how you can use ``lazyscribe`` with ``pref
 """
 
 import json
-from typing import Tuple
 
 import numpy as np
 from prefect import Flow, task
@@ -22,7 +21,7 @@ from lazyscribe.prefect import LazyProject
 @task(name="Generate data", nout=2)
 def generate_data(
     n_samples: int = 1000, n_features: int = 10
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray]:
     """Generate classification data.
 
     Parameters
