@@ -10,11 +10,11 @@ jobs:
     runs-on: ubuntu-latest
     name: running edgetest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           ref: develop
       - id: run-edgetest
-        uses: edgetest-dev/run-edgetest-action@v1.4
+        uses: edgetest-dev/run-edgetest-action@v1.5
         with:
           edgetest-flags: '-c pyproject.toml -r requirements.txt --export'
           base-branch: 'develop'
