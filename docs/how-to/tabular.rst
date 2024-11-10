@@ -29,3 +29,13 @@ To use these lists, convert them to :py:class:`pandas.DataFrame` objects with mu
 
     test_df = pd.DataFrame(tests)
     test_df.columns = pd.MultiIndex.from_tuples(test_df.columns)
+
+You can also make a :py:class:`pandas.Series` for an experiment or a test:
+
+.. code-block:: python
+
+    experiment = project.experiments[0]
+    exp_s = pd.Series(experiment.to_tabular())
+
+    test = experiment.tests[0]
+    test_s = pd.Series(test.to_tabular())

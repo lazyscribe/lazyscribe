@@ -89,6 +89,26 @@ def test_experiment_serialization():
     }
 
 
+def test_experiment_to_tabular():
+    """Test converting an experiment to a pandas-ready list."""
+    today = datetime.now()
+    exp = Experiment(name="My experiment", project=Path("project.json"), author="root")
+    exp.log_metric("name", 0.5)
+    with exp.log_test(name="My test") as test:
+        test.log_metric("name-subpop", 0.3)
+
+    assert exp.to_tabular() == {
+        ("name", ""): "My experiment",
+        ("author", ""): "root",
+        ("last_updated_by", ""): "root",
+        ("metrics", "name"): 0.5,
+        ("created_at", ""): today.strftime("%Y-%m-%dT%H:%M:%S"),
+        ("last_updated", ""): today.strftime("%Y-%m-%dT%H:%M:%S"),
+        ("short_slug", ""): "my-experiment",
+        ("slug", ""): "my-experiment-" + today.strftime("%Y%m%d%H%M%S"),
+    }
+
+
 def test_experiment_artifact_logging_basic():
     """Test logging an artifact to the experiment."""
     today = datetime.now()
