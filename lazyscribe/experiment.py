@@ -5,10 +5,11 @@ import inspect
 import json
 import logging
 import warnings
+from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Union
+from typing import Any, Optional, Union
 
 from attrs import Factory, asdict, define, field, fields, filters, frozen
 from fsspec.implementations.local import LocalFileSystem
@@ -105,16 +106,16 @@ class Experiment:
     fs: AbstractFileSystem = field(eq=False)
     author: str = Factory(getpass.getuser)
     last_updated_by: str = field()
-    metrics: Dict = Factory(lambda: {})
-    parameters: Dict = Factory(lambda: {})
+    metrics: dict = Factory(lambda: {})
+    parameters: dict = Factory(lambda: {})
     created_at: datetime = Factory(datetime.now)
     last_updated: datetime = Factory(datetime.now)
-    dependencies: Dict = field(eq=False, factory=lambda: {})
+    dependencies: dict = field(eq=False, factory=lambda: {})
     short_slug: str = field()
     slug: str = field()
-    tests: List[Union[Test, ReadOnlyTest]] = Factory(lambda: [])
-    artifacts: List[Artifact] = Factory(factory=lambda: [])
-    tags: List[str] = Factory(factory=lambda: [])
+    tests: list[Union[Test, ReadOnlyTest]] = Factory(lambda: [])
+    artifacts: list[Artifact] = Factory(factory=lambda: [])
+    tags: list[str] = Factory(factory=lambda: [])
 
     @dir.default
     def _dir_factory(self) -> Path:
@@ -400,12 +401,12 @@ class Experiment:
         except Exception as exc:
             raise exc
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Serialize the experiment to a dictionary.
 
         Returns
         -------
-        Dict
+        dict
             The experiment dictionary.
         """
         return asdict(

@@ -1,6 +1,6 @@
 """Sub-population tests."""
 
-from typing import Any, Dict, Optional, Union
+from typing import Any, Optional, Union
 
 from attrs import Factory, define, frozen
 
@@ -30,8 +30,8 @@ class Test:
 
     name: str
     description: Optional[str] = Factory(lambda: None)
-    metrics: Dict = Factory(lambda: {})
-    parameters: Dict = Factory(lambda: {})
+    metrics: dict = Factory(lambda: {})
+    parameters: dict = Factory(lambda: {})
 
     def log_metric(self, name: str, value: Union[float, int]):
         """Log a metric to the test.

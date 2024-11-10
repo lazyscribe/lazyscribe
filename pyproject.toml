@@ -90,7 +90,7 @@ command = "pytest tests"
 
 [tool.ruff]
 extend-include = ["*.ipynb"]
-target-version = "py38"
+target-version = "py39"
 
 [tool.ruff.lint]
 preview = true
@@ -121,8 +121,6 @@ ignore = [
 	"D300",  # Use triple single quotes. Using formatter instead.
 	"SIM108",  # Use ternary operator instead of if-else blocks.
 	"SIM105",  # Use ``contextlib.suppress(FileNotFoundError)`` insetad of try - execpt - pass.
-	"UP035",  # ``typing.x`` is deprecated, use ``x`` instead
-	"UP006",  # ``typing.x`` is deprecated, use ``x`` instead
 ]
 
 [tool.ruff.lint.per-file-ignores]
