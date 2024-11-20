@@ -80,7 +80,7 @@ Ready to contribute? Here's how you can set up:
 
 #. Install your local copy into a virtualenv. We recommend using `mamba <https://mamba.readthedocs.io/en/latest/index.html>`_::
 
-    $ mamba create -n lazyscribe python=3.9 -y
+    $ mamba create -n lazyscribe python=3.12 -y
     $ conda activate lazyscribe
     $ python -m pip install -r requirements.txt -e .[dev]
 

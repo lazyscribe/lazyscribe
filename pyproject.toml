@@ -12,21 +12,20 @@ classifiers = [
 	"Natural Language :: English",
 	"Programming Language :: Python :: 3",
 	"Programming Language :: Python :: 3 :: Only",
-	"Programming Language :: Python :: 3.8",
 	"Programming Language :: Python :: 3.9",
 	"Programming Language :: Python :: 3.10",
 	"Programming Language :: Python :: 3.11",
 	"Programming Language :: Python :: 3.12",
 	"Programming Language :: Python :: 3.13",
 ]
-dependencies = ["attrs<=24.2.0,>=21.2.0", "importlib-metadata<=6.6.0,>=6.0", "python-slugify<=8.0.4,>=5.0.0", "fsspec<=2024.10.0,>=0.4.0"]
+dependencies = ["attrs<=24.2.0,>=21.2.0", "importlib-metadata<=8.5.0,>=6.0", "python-slugify<=8.0.4,>=5.0.0", "fsspec<=2024.10.0,>=0.4.0"]
 
 dynamic = ["readme", "version"]
 
 [project.optional-dependencies]
 build = ["build", "bumpver", "twine", "wheel"]
 docs = ["furo", "matplotlib", "pandas", "pillow", "prefect<2,>=1.0", "scikit-learn", "sphinx", "sphinx-gallery", "sphinx-inline-tabs"]
-qa = ["ruff==0.3.7", "edgetest", "mypy", "pip-tools", "types-python-slugify"]
+qa = ["ruff==0.7.3", "edgetest", "mypy", "pip-tools", "types-python-slugify"]
 tests = ["scikit-learn", "prefect<2,>=1.0", "pytest", "pytest-cov"]
 dev = ["lazyscribe[build]", "lazyscribe[docs]", "lazyscribe[qa]", "lazyscribe[tests]"]
 
@@ -89,12 +88,10 @@ command = "pytest tests"
 # RUFF -----------------------------------------------------------------------
 
 [tool.ruff]
-extend-include = ["*.ipynb"]
-target-version = "py38"
+target-version = "py39"
 
 [tool.ruff.lint]
 preview = true
-ignore-init-module-imports = true
 select = [
 	"E",  # pycodestyle errors
 	"W",  # pycodestyle warnings
