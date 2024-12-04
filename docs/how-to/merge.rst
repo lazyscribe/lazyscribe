@@ -23,6 +23,8 @@ To perform a project merge, run :py:class:`lazyscribe.Project.merge`:
 The new project will take on the ``author`` and ``fpath`` attributes from ``myversion``.
 ``myversion`` also takes priority for the merge in specific situations.
 
+.. _Project Appending:
+
 Appending
 ---------
 
@@ -89,6 +91,8 @@ new experiments assumes a unique ``slug`` value. Suppose you have the following 
 
 In this scenario, the first experiment is identical in each project, but Project 2
 has a new experiment. The result from the merge will be Project 2's experiment list.
+
+.. _Project Updating:
 
 Updating
 --------
