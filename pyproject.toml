@@ -1,6 +1,6 @@
 [project]
 name = "lazyscribe"
-requires-python = ">=3.8.0"
+requires-python = ">=3.9.0"
 description = "Lightweight and lazy experiment logging"
 authors = [
     {name = "Akshay Gupta", email="akgcodes@gmail.com"}
