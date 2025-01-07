@@ -1,7 +1,5 @@
 """Import the handlers."""
 
-from typing import List, Type
-
 try:
     from importlib_metadata import entry_points
 except ImportError:
@@ -9,10 +7,10 @@ except ImportError:
 
 from lazyscribe.artifacts.base import Artifact
 
-__all__: List[str] = ["_get_handler"]
+__all__: list[str] = ["_get_handler"]
 
 
-def _get_handler(alias: str) -> Type[Artifact]:
+def _get_handler(alias: str) -> type[Artifact]:
     """Retrieve a specific handler based on the alias.
 
     Parameters
