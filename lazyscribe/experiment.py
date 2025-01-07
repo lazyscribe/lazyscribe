@@ -16,59 +16,11 @@ from fsspec.implementations.local import LocalFileSystem
 from fsspec.spec import AbstractFileSystem
 from slugify import slugify
 
+from lazyscribe._utils import serializer
 from lazyscribe.artifacts import Artifact, _get_handler
 from lazyscribe.test import ReadOnlyTest, Test
 
 LOG = logging.getLogger(__name__)
-
-
-def serializer(inst, field, value):
-    """Datetime and dependencies converter for :meth:`attrs.asdict`.
-
-    Parameters
-    ----------
-    inst
-        Included for compatibility.
-    field
-        The field name.
-    value
-        The field value.
-
-    Returns
-    -------
-    Any
-        Converted value for easy serialization.
-    """
-    if isinstance(value, datetime):
-        return value.isoformat(timespec="seconds")
-    if field is not None and field.name == "dependencies":
-        new = [f"{exp.project}|{exp.slug}" for exp in value.values()]
-        return new
-    if field is not None and field.name == "tests":
-        new = [asdict(test) for test in value]
-        return new
-    if field is not None and field.name == "artifacts":
-        new = [
-            {
-                **asdict(
-                    artifact,
-                    filter=filters.exclude(
-                        fields(type(artifact)).value,
-                        fields(type(artifact)).writer_kwargs,
-                    ),
-                    value_serializer=lambda _, __, value: value.isoformat(
-                        timespec="seconds"
-                    )
-                    if isinstance(value, datetime)
-                    else value,
-                ),
-                "handler": artifact.alias,
-            }
-            for artifact in value
-        ]
-        return new
-
-    return value
 
 
 @define
@@ -418,6 +370,55 @@ class Experiment:
                 fields(Experiment).fs,
             ),
         )
+
+    def to_tabular(self) -> dict:
+        """Create a dictionary that can be fed into ``pandas``.
+
+        Returns
+        -------
+        dict
+            Represent the experiment, with the following keys:
+
+            +--------------------------+-------------------------------+
+            | Field                    | Description                   |
+            |                          |                               |
+            +==========================+===============================+
+            | ``("name",)``            | Name of the experiment        |
+            +--------------------------+-------------------------------+
+            | ``("short_slug",)``      | Short slug for the experiment |
+            +--------------------------+-------------------------------+
+            | ``("slug",)``            | Full slug for the experiment  |
+            +--------------------------+-------------------------------+
+            | ``("author",)``          | Experiment author             |
+            +--------------------------+-------------------------------+
+            | ``("last_updated_by",)`` | Last author                   |
+            +--------------------------+-------------------------------+
+            | ``("created_at",)``      | Created timestamp             |
+            +--------------------------+-------------------------------+
+            | ``("last_updated",)``    | Last update timestammp        |
+            +--------------------------+-------------------------------+
+
+            as well as one key per parameter in the ``parameters`` dictionary
+            (with the format ``("parameters", <parameter_name>)``) and one key
+            per metric in the ``metrics`` dictionary (with the format
+            ``("metrics", <metric_name>)``) for each experiment.
+        """
+        d = self.to_dict()
+        return {
+            ("name", ""): d["name"],
+            ("slug", ""): d["slug"],
+            ("short_slug", ""): d["short_slug"],
+            ("author", ""): d["author"],
+            ("created_at", ""): d["created_at"],
+            ("last_updated", ""): d["last_updated"],
+            ("last_updated_by", ""): d["last_updated_by"],
+            **{
+                ("parameters", key): value
+                for key, value in d["parameters"].items()
+                if not isinstance(value, (tuple, list, dict))
+            },
+            **{("metrics", key): value for key, value in d["metrics"].items()},
+        }
 
     def __str__(self):
         """Shortened string representation."""

@@ -2,7 +2,9 @@
 
 from typing import Any, Optional, Union
 
-from attrs import Factory, define, frozen
+from attrs import Factory, asdict, define, frozen
+
+from lazyscribe._utils import serializer
 
 
 @define
@@ -64,6 +66,53 @@ class Test:
             The parameter itself.
         """
         self.parameters[name] = value
+
+    def to_dict(self) -> dict:
+        """Serialize the test to a dictionary.
+
+        Returns
+        -------
+        dict
+            The test dictionary.
+        """
+        return asdict(
+            self,
+            value_serializer=serializer,
+        )
+
+    def to_tabular(self) -> dict:
+        """Create a dictionary that can be fed into ``pandas``.
+
+        Returns
+        -------
+        dict
+            Represent the test, with the following keys:
+
+            +-------------------------------------+-------------------------------+
+            | Field                               | Description                   |
+            |                                     |                               |
+            +=====================================+===============================+
+            | ``("test",)``                       | Test name                     |
+            +-------------------------------------+-------------------------------+
+            | ``("description",)``                | Test description              |
+            +-------------------------------------+-------------------------------+
+
+            as well as one key per parameter in the ``parameters`` dictionary
+            (with the format ``("parameters", <parameter_name>)``) and one key
+            per metric in the ``metrics`` dictionary (with the format
+            ``("metrics", <metric_name>)``) for each test.
+        """
+        d = self.to_dict()
+        return {
+            ("test", ""): d["name"],
+            ("description", ""): d["description"],
+            **{
+                ("parameters", key): value
+                for key, value in d["parameters"].items()
+                if not isinstance(value, (tuple, list, dict))
+            },
+            **{("metrics", key): value for key, value in d["metrics"].items()},
+        }
 
 
 @frozen
