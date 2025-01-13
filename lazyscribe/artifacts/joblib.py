@@ -106,12 +106,13 @@ class JoblibArtifact(Artifact):
             raise RuntimeError(
                 "Please install ``joblib`` to use this handler."
             ) from err
-
+        created_at = created_at or datetime.now()
         return cls(
             name=name,
             value=value,
-            fname=fname or f"{slugify(name)}.{cls.suffix}",
-            created_at=created_at or datetime.now(),
+            fname=fname
+            or f"{slugify(name)}-{slugify(created_at.strftime('%Y%m%d%H%M%S'))}.{cls.suffix}",
+            created_at=created_at,
             writer_kwargs=writer_kwargs or {},
             package=package,
             package_version=kwargs.get("package_version") or version(distribution),

@@ -1,0 +1,291 @@
+"""Repository storing and logging."""
+
+from __future__ import annotations
+
+import getpass
+import inspect
+import json
+import logging
+import warnings
+from collections.abc import Iterator
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Literal, Optional
+from urllib.parse import urlparse
+
+import fsspec
+from attrs import asdict, define, field, fields, filters
+
+from lazyscribe._utils import serialize_artifacts
+from lazyscribe.artifacts import _get_handler
+from lazyscribe.artifacts.base import Artifact
+
+LOG = logging.getLogger(__name__)
+
+
+class Repository:
+    def __init__(
+        self,
+        fpath: str | Path = "repository.json",
+        mode: Literal["r", "a", "w", "w+"] = "w",
+        author: str | None = None,
+        **storage_options,
+    ):
+        """Init method."""
+        if isinstance(fpath, str):
+            parsed = urlparse(fpath)
+            self.fpath = Path(parsed.netloc + parsed.path)
+            self.protocol = parsed.scheme or "file"
+        else:
+            self.fpath = fpath
+            self.protocol = "file"
+        self.dir = self.fpath.parent
+        self.storage_options = storage_options
+
+        # If in ``r``, ``a``, or ``w+`` mode, read in the existing project.
+        self.artifacts: list[Artifact] = []
+        self.snapshot: dict = {}
+        self.fs = fsspec.filesystem(self.protocol, **storage_options)
+
+        if mode not in ("r", "a", "w", "w+"):
+            raise ValueError("Please provide a valid ``mode`` value.")
+        self.mode = mode
+        if mode in ("r", "a", "w+") and self.fs.isfile(self.fpath):
+            self.load()
+
+        self.author = getpass.getuser() if author is None else author
+
+    def load(self):
+        """Load existing artifacts."""
+        with self.fs.open(self.fpath, "r") as infile:
+            data = json.load(infile)
+
+        artifacts = []
+        for artifact in data:
+            handler_cls = _get_handler(artifact.pop("handler"))
+            created_at = datetime.fromisoformat(artifact.pop("created_at"))
+            artifacts.append(handler_cls.construct(**artifact, created_at=created_at))
+        self.artifacts = artifacts
+
+    def log_artifact(
+        self,
+        name: str,
+        value: Any,
+        handler: str,
+        fname: Optional[str] = None,
+        overwrite: bool = False,
+        **kwargs,
+    ):
+        """Log an artifact to the experiment.
+
+        This method associates an artifact with the experiment, but the artifact will
+        not be written until :py:meth:`lazyscribe.Project.save` is called.
+
+        Parameters
+        ----------
+        name : str
+            The name of the artifact.
+        value : Any
+            The object to persist to the filesystem.
+        handler : str
+            The name of the handler to use for the object.
+        fname : str, optional (default None)
+            The filename for the artifact. If not provided, it will be derived from the
+            name of the artifact and the builtin suffix for each handler.
+        overwrite : bool, optional (default False)
+            Whether or not to overwrite an existing artifact with the same name. If set to ``True``,
+            the previous artifact will be removed and overwritten with the current artifact.
+        **kwargs : dict
+            Keyword arguments for the write function of the handler.
+
+        Raises
+        ------
+        RuntimeError
+            Raised if an artifact is supplied with the same name as an existing artifact and
+            ``overwrite`` is set to ``False``.
+        """
+        # Retrieve and construct the handler
+        self.last_updated = datetime.now()
+        handler_cls = _get_handler(handler)
+        artifact_handler = handler_cls.construct(
+            name=name,
+            value=value,
+            fname=fname,
+            created_at=self.last_updated,
+            writer_kwargs=kwargs,
+        )
+        for index, artifact in enumerate(self.artifacts):
+            if artifact.name == name and overwrite:
+                self.artifacts[index] = artifact_handler
+                if handler_cls.output_only:
+                    warnings.warn(
+                        f"Artifact '{name}' is added. It is not meant to be read back as Python Object",
+                        UserWarning,
+                        stacklevel=2,
+                    )
+                break
+        else:
+            self.artifacts.append(artifact_handler)
+            if handler_cls.output_only:
+                warnings.warn(
+                    f"Artifact '{name}' is added. It is not meant to be read back as Python Object",
+                    UserWarning,
+                    stacklevel=2,
+                )
+
+    def load_artifact(
+        self, name: str, validate: bool = True, version: str | None = None, **kwargs
+    ) -> Any:
+        """Load a single artifact.
+
+        Parameters
+        ----------
+        name : str
+            The name of the artifact to load.
+        validate : bool, optional (default True)
+            Whether or not to validate the runtime environment against the artifact
+            metadata.
+        **kwargs : dict
+            Keyword arguments for the handler read function.
+
+        Returns
+        -------
+        object
+            The artifact.
+        """
+        artifacts_matching_name = [art for art in self.artifacts if art.name == name]
+        if not artifacts_matching_name:
+            raise ValueError(f"No artifact with name {name}") from None
+        if not version:
+            artifact = next(
+                art
+                for art in sorted(
+                    artifacts_matching_name, key=lambda x: x.created_at, reverse=True
+                )
+                if art.name == name
+            )
+        else:
+            try:
+                artifact = next(
+                    art for art in artifacts_matching_name if art.created_at == version
+                )
+            except StopIteration:
+                raise ValueError(
+                    f"No artifact named {name} with version {version}"
+                ) from None
+        # Construct the handler with relevant parameters.
+        artifact_attrs = {
+            x: y
+            for x, y in inspect.getmembers(artifact)
+            if not x.startswith("_") and not inspect.ismethod(y)
+        }
+        exclude_params = ["value", "fname", "created_at"]
+        construct_params = [
+            param
+            for param in inspect.signature(artifact.construct).parameters
+            if param not in exclude_params
+        ]
+        artifact_attrs = {
+            key: value
+            for key, value in artifact_attrs.items()
+            if key in construct_params
+        }
+
+        curr_handler = type(artifact).construct(**artifact_attrs)
+
+        # Validate the handler
+        if validate and curr_handler != artifact:
+            field_filters = filters.exclude(
+                fields(type(artifact)).name,
+                fields(type(artifact)).fname,
+                fields(type(artifact)).value,
+                fields(type(artifact)).created_at,
+            )
+            raise RuntimeError(
+                "Runtime environments do not match. Artifact parameters:\n\n"
+                f"{json.dumps(asdict(artifact, filter=field_filters))}"
+                "\n\nCurrent parameters:\n\n"
+                f"{json.dumps(asdict(curr_handler, filter=field_filters))}"
+            )
+        # Read in the artifact
+        mode = "rb" if curr_handler.binary else "r"
+        with self.fs.open(self.dir / artifact.fname, mode) as buf:
+            out = curr_handler.read(buf, **kwargs)
+        if artifact.output_only:
+            warnings.warn(
+                f"Artifact '{name}' is not the original Python Object",
+                UserWarning,
+                stacklevel=2,
+            )
+
+        return out
+
+    def save(self):
+        """Save the repository data.
+
+        This includes saving any artifact data.
+        """
+        if self.mode == "r":
+            raise RuntimeError("Repository is in read-only mode.")
+
+        data = list(self)
+        with self.fs.open(self.fpath, "w") as outfile:
+            json.dump(data, outfile, sort_keys=True, indent=4)
+
+        for artifact in self.artifacts:
+            # Write the artifact data
+            fmode = "wb" if artifact.binary else "w"
+            fpath = self.dir / artifact.fname
+            if self.fs.isfile(fpath) and artifact.created_at <= datetime.fromtimestamp(
+                self.fs.info(fpath)["created"]
+            ):
+                LOG.debug(
+                    f"Artifact '{artifact.name}' already exists and has not been updated"
+                )
+                continue
+
+            self.fs.makedirs(self.dir, exist_ok=True)
+            LOG.debug(f"Saving '{artifact.name}' to {fpath!s}...")
+            with self.fs.open(fpath, fmode) as buf:
+                artifact.write(artifact.value, buf, **artifact.writer_kwargs)
+                if artifact.output_only:
+                    warnings.warn(
+                        f"Artifact '{artifact.name}' is added. It is not meant to be read back as Python Object",
+                        UserWarning,
+                        stacklevel=2,
+                    )
+
+    def __contains__(self, item: str) -> bool:
+        """Check if the repository contains an experiment with the given slug or short slug."""
+        return any(art.name == item for art in self.artifacts)
+
+    def __getitem__(self, arg: str) -> Artifact:
+        """Use brackets to retrieve an experiment by slug.
+
+        Parameters
+        ----------
+        arg : str
+            The slug or short slug for the experiment.
+
+            .. note::
+
+                If you have multiple experiments with the same short slug, this notation
+                will retrieve the first one added to the project.
+
+        Raises
+        ------
+        KeyError
+            Raised if the slug does not exist.
+        """
+        for art in self.artifacts:
+            if art.name == arg:
+                out = art
+                break
+        else:
+            raise KeyError(f"No artifact with name {arg}")
+
+        return out
+
+    def __iter__(self) -> Iterator[list[dict[str, Any]]]:
+        """Iterate through each experiment and return the dictionary."""
+        yield from serialize_artifacts(self.artifacts)

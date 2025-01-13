@@ -1,8 +1,12 @@
 """Util methods."""
 
+from collections.abc import Iterator
 from datetime import datetime
+from typing import Any
 
 from attrs import asdict, fields, filters
+
+from lazyscribe.artifacts.base import Artifact
 
 
 def serializer(inst, field, value):
@@ -31,24 +35,28 @@ def serializer(inst, field, value):
         new = [asdict(test) for test in value]
         return new
     if field is not None and field.name == "artifacts":
-        new = [
-            {
-                **asdict(
-                    artifact,
-                    filter=filters.exclude(
-                        fields(type(artifact)).value,
-                        fields(type(artifact)).writer_kwargs,
-                    ),
-                    value_serializer=lambda _, __, value: value.isoformat(
-                        timespec="seconds"
-                    )
-                    if isinstance(value, datetime)
-                    else value,
-                ),
-                "handler": artifact.alias,
-            }
-            for artifact in value
-        ]
+        new = list(serialize_artifacts(value))
         return new
 
     return value
+
+
+def serialize_artifacts(alist: list[Artifact]) -> Iterator[dict[str, Any]]:
+    yield from (
+        {
+            **asdict(
+                artifact,
+                filter=filters.exclude(
+                    fields(type(artifact)).value,
+                    fields(type(artifact)).writer_kwargs,
+                ),
+                value_serializer=lambda _, __, value: value.isoformat(
+                    timespec="seconds"
+                )
+                if isinstance(value, datetime)
+                else value,
+            ),
+            "handler": artifact.alias,
+        }
+        for artifact in alist
+    )
