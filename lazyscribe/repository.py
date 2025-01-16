@@ -24,11 +24,34 @@ LOG = logging.getLogger(__name__)
 
 
 class Repository:
+    """Repository class for holding versioned artifacts.
+
+    Parameters
+    ----------
+    fpath : str | Path, optional (default "repository.json")
+        The location of the project file. If no project file exists, this will be the location
+        of the output JSON file when ``save`` is called.
+    mode : {"r", "a", "w", "w+"}, optional (default "w")
+        The mode for opening the project.
+
+        * ``r``: All existing experiments will be loaded as
+          :py:class:`lazyscribe.experiment.ReadOnlyExperiment` and no new experiments can be logged.
+        * ``a``: All existing experiments will be loaded as
+          :py:class:`lazyscribe.experiment.ReadOnlyExperiment` and new experiments can be added.
+        * ``w``: No existing experiments will be loaded.
+        * ``w+``: All experiments will be loaded in editable mode as
+          :py:class:`lazyscribe.experiment.Experiment`.
+
+    Attributes
+    ----------
+    artifacts : list
+        The list of artifacts in the repository.
+    """
+
     def __init__(
         self,
         fpath: str | Path = "repository.json",
         mode: Literal["r", "a", "w", "w+"] = "w",
-        author: str | None = None,
         **storage_options,
     ):
         """Init method."""
@@ -52,8 +75,6 @@ class Repository:
         self.mode = mode
         if mode in ("r", "a", "w+") and self.fs.isfile(self.fpath):
             self.load()
-
-        self.author = getpass.getuser() if author is None else author
 
     def load(self):
         """Load existing artifacts."""
@@ -106,6 +127,11 @@ class Repository:
         """
         # Retrieve and construct the handler
         self.last_updated = datetime.now()
+        version = (
+            max(art.version for art in self.artifacts if art.name == name) + 1
+            if self.artifacts
+            else 0
+        )
         handler_cls = _get_handler(handler)
         artifact_handler = handler_cls.construct(
             name=name,
@@ -113,28 +139,22 @@ class Repository:
             fname=fname,
             created_at=self.last_updated,
             writer_kwargs=kwargs,
+            version=version,
         )
-        for index, artifact in enumerate(self.artifacts):
-            if artifact.name == name and overwrite:
-                self.artifacts[index] = artifact_handler
-                if handler_cls.output_only:
-                    warnings.warn(
-                        f"Artifact '{name}' is added. It is not meant to be read back as Python Object",
-                        UserWarning,
-                        stacklevel=2,
-                    )
-                break
-        else:
-            self.artifacts.append(artifact_handler)
-            if handler_cls.output_only:
-                warnings.warn(
-                    f"Artifact '{name}' is added. It is not meant to be read back as Python Object",
-                    UserWarning,
-                    stacklevel=2,
-                )
+        self.artifacts.append(artifact_handler)
+        if handler_cls.output_only:
+            warnings.warn(
+                f"Artifact '{name}' is added. It is not meant to be read back as Python Object",
+                UserWarning,
+                stacklevel=2,
+            )
 
     def load_artifact(
-        self, name: str, validate: bool = True, version: str | None = None, **kwargs
+        self,
+        name: str,
+        validate: bool = True,
+        version: datetime | str | int | None = None,
+        **kwargs,
     ) -> Any:
         """Load a single artifact.
 
@@ -154,22 +174,32 @@ class Repository:
             The artifact.
         """
         artifacts_matching_name = [art for art in self.artifacts if art.name == name]
+        version = (
+            datetime.strptime(version, "%Y-%m-%dT%H:%M:%S")
+            if isinstance(version, str)
+            else version
+        )
         if not artifacts_matching_name:
             raise ValueError(f"No artifact with name {name}") from None
-        if not version:
-            artifact = next(
-                art
-                for art in sorted(
-                    artifacts_matching_name, key=lambda x: x.created_at, reverse=True
-                )
-                if art.name == name
-            )
-        else:
+        if version is None:
+            artifact = sorted(
+                artifacts_matching_name, key=lambda x: x.created_at, reverse=True
+            )[0]
+        elif isinstance(version, datetime):
             try:
                 artifact = next(
                     art for art in artifacts_matching_name if art.created_at == version
                 )
             except StopIteration:
+                raise ValueError(
+                    f"No artifact named {name} with version {version}"
+                ) from None
+        else:
+            try:
+                artifact = sorted(artifacts_matching_name, key=lambda x: x.created_at)[
+                    version
+                ]
+            except IndexError:
                 raise ValueError(
                     f"No artifact named {name} with version {version}"
                 ) from None
