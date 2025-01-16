@@ -35,6 +35,7 @@ class JSONArtifact(Artifact):
         fname: Optional[str] = None,
         created_at: Optional[datetime] = None,
         writer_kwargs: Optional[dict] = None,
+        version: int | None = None,
         **kwargs,
     ):
         """Construct the handler class.
@@ -70,6 +71,7 @@ class JSONArtifact(Artifact):
             or f"{slugify(name)}-{slugify(created_at.strftime('%Y%m%d%H%M%S'))}.{cls.suffix}",
             created_at=created_at,
             python_version=python_version,
+            version=version,
         )
 
     @classmethod

@@ -4,7 +4,8 @@ from datetime import datetime
 from typing import Any, ClassVar, Optional
 
 from attrs import define
-from importlib_metadata import packages_distributions, version
+from importlib_metadata import packages_distributions
+from importlib_metadata import version as importlib_version
 from slugify import slugify
 
 from lazyscribe.artifacts.base import Artifact
@@ -54,6 +55,7 @@ class JoblibArtifact(Artifact):
         fname: Optional[str] = None,
         created_at: Optional[datetime] = None,
         writer_kwargs: Optional[dict] = None,
+        version: int | None = None,
         package: Optional[str] = None,
         **kwargs,
     ):
@@ -114,8 +116,10 @@ class JoblibArtifact(Artifact):
             or f"{slugify(name)}-{slugify(created_at.strftime('%Y%m%d%H%M%S'))}.{cls.suffix}",
             created_at=created_at,
             writer_kwargs=writer_kwargs or {},
+            version=version,
             package=package,
-            package_version=kwargs.get("package_version") or version(distribution),
+            package_version=kwargs.get("package_version")
+            or importlib_version(distribution),
             joblib_version=kwargs.get("joblib_version") or joblib.__version__,
         )
 

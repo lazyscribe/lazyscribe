@@ -56,6 +56,7 @@ class Artifact(metaclass=ABCMeta):
     value: Any = field(eq=False)
     writer_kwargs: dict = field(eq=False)
     created_at: datetime = field(eq=False)
+    version: int = field(eq=False)
 
     @classmethod
     @abstractmethod
@@ -66,6 +67,7 @@ class Artifact(metaclass=ABCMeta):
         fname: Optional[str] = None,
         created_at: Optional[datetime] = None,
         writer_kwargs: Optional[dict] = None,
+        version: int | None = None,
         **kwargs,
     ):
         """Construct the artifact handler.
