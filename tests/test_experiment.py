@@ -130,10 +130,11 @@ def test_experiment_artifact_logging_basic():
         "artifacts": [
             {
                 "name": "features",
-                "fname": "features.json",
+                "fname": f"features-{today.strftime('%Y%m%d%H%M%S')}.json",
                 "handler": "json",
                 "created_at": today.strftime("%Y-%m-%dT%H:%M:%S"),
                 "python_version": ".".join(str(i) for i in sys.version_info[:2]),
+                "version": None,
             }
         ],
         "tests": [],
@@ -163,6 +164,7 @@ def test_experiment_artifact_load(tmp_path):
     location = tmp_path / "my-location"
     location.mkdir()
 
+    today = datetime.now()
     exp = Experiment(
         name="My experiment", project=location / "project.json", author="root"
     )
@@ -173,7 +175,12 @@ def test_experiment_artifact_load(tmp_path):
     with exp.fs.open(fpath, "w") as buf:
         exp.artifacts[0].write(exp.artifacts[0].value, buf)
 
-    assert (location / "my-location" / exp.path / "features.json").is_file()
+    assert (
+        location
+        / "my-location"
+        / exp.path
+        / f"features-{today.strftime('%Y%m%d%H%M%S')}.json"
+    ).is_file()
 
     out = exp.load_artifact(name="features")
 
@@ -309,8 +316,13 @@ def test_experiment_artifact_log_load_output_only(tmp_path):
     exp.fs.makedirs(exp.dir / exp.path, exist_ok=True)
     with exp.fs.open(fpath, "w") as buf:
         exp.artifacts[0].write(exp.artifacts[0].value, buf)
-
-    assert (location / "my-location" / exp.path / "features.testartifact").is_file()
+    today = datetime.now()
+    assert (
+        location
+        / "my-location"
+        / exp.path
+        / f"features-{today.strftime('%Y%m%d%H%M%S')}.testartifact"
+    ).is_file()
 
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("always")

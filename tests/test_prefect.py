@@ -78,10 +78,11 @@ def test_prefect_experiment(tmp_path):
     assert exp_dict["artifacts"] == [
         {
             "name": "features",
-            "fname": "features.json",
+            "fname": f"features-{today.strftime('%Y%m%d%H%M%S')}.json",
             "handler": "json",
             "created_at": today.strftime("%Y-%m-%dT%H:%M:%S"),
             "python_version": ".".join(str(i) for i in sys.version_info[:2]),
+            "version": None,
         }
     ]
     assert exp_dict["tags"] == ["success"]
