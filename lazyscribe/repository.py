@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import getpass
 import inspect
 import json
 import logging
@@ -10,11 +9,11 @@ import warnings
 from collections.abc import Iterator
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 from urllib.parse import urlparse
 
 import fsspec
-from attrs import asdict, define, field, fields, filters
+from attrs import asdict, fields, filters
 
 from lazyscribe._utils import serialize_artifacts
 from lazyscribe.artifacts import _get_handler
@@ -93,8 +92,7 @@ class Repository:
         name: str,
         value: Any,
         handler: str,
-        fname: Optional[str] = None,
-        overwrite: bool = False,
+        fname: str | None = None,
         **kwargs,
     ):
         """Log an artifact to the experiment.
@@ -127,9 +125,10 @@ class Repository:
         """
         # Retrieve and construct the handler
         self.last_updated = datetime.now()
+        artifacts_matching_name = [art for art in self.artifacts if art.name == name]
         version = (
-            max(art.version for art in self.artifacts if art.name == name) + 1
-            if self.artifacts
+            max(art.version for art in artifacts_matching_name) + 1
+            if artifacts_matching_name
             else 0
         )
         handler_cls = _get_handler(handler)
@@ -316,6 +315,6 @@ class Repository:
 
         return out
 
-    def __iter__(self) -> Iterator[list[dict[str, Any]]]:
+    def __iter__(self) -> Iterator[dict[str, Any]]:
         """Iterate through each experiment and return the dictionary."""
         yield from serialize_artifacts(self.artifacts)
