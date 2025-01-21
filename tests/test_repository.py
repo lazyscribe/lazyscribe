@@ -2,6 +2,7 @@
 
 import json
 import sys
+import warnings
 import zoneinfo
 from datetime import datetime
 from pathlib import Path
@@ -12,6 +13,7 @@ import time_machine
 
 from lazyscribe.artifacts.base import Artifact
 from lazyscribe.repository import Repository
+from tests.conftest import TestArtifact
 
 CURR_DIR = Path(__file__).resolve().parent
 DATA_DIR = CURR_DIR / "repository_data"
@@ -20,7 +22,7 @@ DATA_DIR = CURR_DIR / "repository_data"
 def test_logging_repository():
     """Test logging an artifact to a repository."""
     repository = Repository(
-        "file://" + (DATA_DIR / "external_fs_project.json").as_posix(),
+        "file://" + (DATA_DIR / "external_fs_repository.json").as_posix(),
     )
     repository.log_artifact("my-dict", {"a": 1}, handler="json")
     assert len(repository.artifacts) == 1
@@ -30,9 +32,19 @@ def test_logging_repository():
         repository["not a real artifact"]
 
 
-def test_not_logging_artifact_readonly():
-    repository = Repository(DATA_DIR / "repository.json", mode="r")
-    repository.log_artifact("error", {"b": 2}, handler="json")
+def test_readonly():
+    """Test trying to log an artifact and save in read only mode."""
+    repository = Repository(fpath=DATA_DIR / "repository.json", mode="r")
+
+    with pytest.raises(RuntimeError):
+        repository.log_artifact("name", [1, 2, 3], handler="json")
+
+    assert len(repository.artifacts) == 4
+
+    with pytest.raises(RuntimeError):
+        repository.save()
+
+    assert len(repository.artifacts) == 4
 
 
 @time_machine.travel(
@@ -206,6 +218,14 @@ def test_save_repository_multiple_artifact(tmp_path):
     with pytest.raises(ValueError):
         repository_read.load_artifact("my-dict2", version="2025-01-22T12:23:32")
 
+    assert "my-dict" in repository_read
+    assert "my-dict2" in repository_read
+    assert "my-dict3" not in repository_read
+
+    # Non-existing artifact raises error
+    with pytest.raises(ValueError):
+        repository_read.load_artifact("my-dict3")
+
 
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
@@ -235,3 +255,65 @@ def test_save_repository_artifact_failed_validation(mock_version, tmp_path):
     with pytest.raises(RuntimeError):
         repository2 = Repository(repository_location, mode="r")
         repository2.load_artifact(name="estimator")
+
+
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
+def test_repository_artifact_output_only(tmp_path):
+    """Test saving a repository with an output only artifact."""
+    location = tmp_path / "my-repository"
+    location.mkdir()
+    repository_location = location / "repository.testartifact"
+
+    repository = Repository(fpath=repository_location)
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        repository.log_artifact(
+            name="features", value=[0, 1, 2], handler="testartifact"
+        )
+        assert len(w) == 1
+        assert issubclass(w[-1].category, UserWarning)
+        assert (
+            "Artifact 'features' is added. It is not meant to be read back as Python Object"
+            in str(w[-1].message)
+        )
+        assert isinstance(repository.artifacts[0], TestArtifact)
+
+        expected_fname = "features-20250120132330.testartifact"
+        assert list(repository) == [
+            {
+                "created_at": "2025-01-20T13:23:30",
+                "fname": expected_fname,
+                "handler": "testartifact",
+                "name": "features",
+                "version": 0,
+            }
+        ]
+
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        repository.save()
+
+        assert len(w) == 1
+        assert issubclass(w[-1].category, UserWarning)
+        assert (
+            "Artifact 'features' is added. It is not meant to be read back as Python Object"
+            in str(w[-1].message)
+        )
+
+    assert repository_location.is_file()
+    assert (location / expected_fname).is_file()
+
+    # Test loading a read-only artifact
+
+    repository_read = Repository(fpath=repository_location, mode="r")
+
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        repository_read.load_artifact("features")
+        assert len(w) == 1
+        assert issubclass(w[-1].category, UserWarning)
+        assert "Artifact 'features' is not the original Python Object" in str(
+            w[-1].message
+        )

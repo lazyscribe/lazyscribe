@@ -123,6 +123,8 @@ class Repository:
             Raised if an artifact is supplied with the same name as an existing artifact and
             ``overwrite`` is set to ``False``.
         """
+        if self.mode == "r":
+            raise RuntimeError("Repository is in read-only mode.")
         # Retrieve and construct the handler
         self.last_updated = datetime.now()
         artifacts_matching_name = [art for art in self.artifacts if art.name == name]
@@ -265,13 +267,6 @@ class Repository:
             # Write the artifact data
             fmode = "wb" if artifact.binary else "w"
             fpath = self.dir / artifact.fname
-            if self.fs.isfile(fpath) and artifact.created_at <= datetime.fromtimestamp(
-                self.fs.info(fpath)["created"]
-            ):
-                LOG.debug(
-                    f"Artifact '{artifact.name}' already exists and has not been updated"
-                )
-                continue
 
             self.fs.makedirs(self.dir, exist_ok=True)
             LOG.debug(f"Saving '{artifact.name}' to {fpath!s}...")
