@@ -24,6 +24,8 @@ class Artifact(metaclass=ABCMeta):
     writer_kwargs : dict
         User provided keyword arguments for writing an artifact. Provided when
         the artifact is logged to an experiment.
+    version : int
+        Version of the artifact.
 
     Attributes
     ----------

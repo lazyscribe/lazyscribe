@@ -80,6 +80,8 @@ class JoblibArtifact(Artifact):
         writer_kwargs : dict, optional (default None)
             Keyword arguments for writing an artifact to the filesystem. Provided when an artifact
             is logged to an experiment.
+        version : int, optional (default None)
+            Integer version to be used for versioning artifacts.
         **kwargs : dict
             Other keyword arguments.
             Usually class attributes obtained from a project JSON.
