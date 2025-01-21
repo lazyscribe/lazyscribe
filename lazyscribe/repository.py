@@ -28,10 +28,10 @@ class Repository:
     Parameters
     ----------
     fpath : str | Path, optional (default "repository.json")
-        The location of the project file. If no project file exists, this will be the location
+        The location of the repository file. If no repository file exists, this will be the location
         of the output JSON file when ``save`` is called.
     mode : {"r", "a", "w", "w+"}, optional (default "w")
-        The mode for opening the project.
+        The mode for opening the repository.
 
         * ``r``: All existing experiments will be loaded as
           :py:class:`lazyscribe.experiment.ReadOnlyExperiment` and no new experiments can be logged.
@@ -64,7 +64,7 @@ class Repository:
         self.dir = self.fpath.parent
         self.storage_options = storage_options
 
-        # If in ``r``, ``a``, or ``w+`` mode, read in the existing project.
+        # If in ``r``, ``a``, or ``w+`` mode, read in the existing repository.
         self.artifacts: list[Artifact] = []
         self.snapshot: dict = {}
         self.fs = fsspec.filesystem(self.protocol, **storage_options)
@@ -98,7 +98,7 @@ class Repository:
         """Log an artifact to the experiment.
 
         This method associates an artifact with the experiment, but the artifact will
-        not be written until :py:meth:`lazyscribe.Project.save` is called.
+        not be written until :py:meth:`lazyscribe.Repository.save` is called.
 
         Parameters
         ----------
@@ -294,7 +294,7 @@ class Repository:
             .. note::
 
                 If you have multiple experiments with the same short slug, this notation
-                will retrieve the first one added to the project.
+                will retrieve the first one added to the repository.
 
         Raises
         ------
