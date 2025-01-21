@@ -22,7 +22,6 @@ def test_logging_repository():
     repository = Repository(
         "file://" + (DATA_DIR / "external_fs_project.json").as_posix(),
     )
-    today = datetime.now()
     repository.log_artifact("my-dict", {"a": 1}, handler="json")
     assert len(repository.artifacts) == 1
     assert isinstance(repository.artifacts[0], Artifact)
