@@ -1,5 +1,7 @@
 """Artifact handler for JSON-serializable objects."""
 
+from __future__ import annotations
+
 import sys
 from datetime import datetime
 from json import dump, load
