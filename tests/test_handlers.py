@@ -1,12 +1,11 @@
 """Test the artifact handlers."""
+from datetime import datetime
 
 import pytest
 
 from lazyscribe.artifacts import _get_handler
 from lazyscribe.artifacts.joblib import JoblibArtifact
 from lazyscribe.artifacts.json import JSONArtifact
-
-from datetime import datetime
 
 
 def test_json_handler(tmp_path):
