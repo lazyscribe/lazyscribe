@@ -1,4 +1,5 @@
 """Test the artifact handlers."""
+
 from datetime import datetime
 
 import pytest
