@@ -1,4 +1,5 @@
 """Base class for new artifact handlers."""
+
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
