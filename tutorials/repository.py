@@ -7,6 +7,7 @@ In this tutorial, we will demonstrate how you can create a repository and log ar
 A repository is an organized structure that stores and versions your artifacts.
 It makes it easy to retrieve older versions of artifacts, log new ones or time travel.
 """
+
 # %%
 import tempfile
 from pathlib import Path
