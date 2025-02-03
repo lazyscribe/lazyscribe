@@ -167,7 +167,7 @@ class Repository:
         version: datetime | str | int, optional (default None)
             The version of the artifact to load.
             Can be provided as a datetime corresponding to the ``created_at`` field,
-            a string corresponding to the ``created_at`` field,
+            a string corresponding to the ``created_at`` field in the format "%Y-%m-%dT%H:%M:%S" (e.g. "2025-01-25T12:36:22"),
             or an integer version.
             If not provided, defaults to the most recent version.
         **kwargs : dict
