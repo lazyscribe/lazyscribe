@@ -1,10 +1,12 @@
 """Test the prefect integration."""
 
 import sys
+import zoneinfo
 from datetime import datetime
 from pathlib import Path
 
 import pytest
+import time_machine
 from prefect import Flow, Parameter
 
 from lazyscribe.prefect import LazyExperiment, LazyProject
@@ -13,6 +15,9 @@ CURR_DIR = Path(__file__).resolve().parent
 DATA_DIR = CURR_DIR / "data"
 
 
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
 def test_prefect_experiment(tmp_path):
     """Test creating an experiment and logging basic parameters."""
     location = tmp_path / "my-location"
