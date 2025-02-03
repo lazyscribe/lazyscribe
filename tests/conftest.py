@@ -27,6 +27,7 @@ class TestArtifact(Artifact):
         **kwargs,
     ):
         created_at = created_at or datetime.now()
+        version = version if version is not None else 0
         return cls(
             name=name,
             value=value,
