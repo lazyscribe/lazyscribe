@@ -79,7 +79,7 @@ def test_save_repository(tmp_path):
 
     repository_read = Repository(repository_location, "r")
     artifact_loaded = repository_read.load_artifact("my-dict")
-    with open(location / expected_fname) as infile:
+    with open(location / "my-dict" / expected_fname) as infile:
         artifact_read = json.load(infile)
     assert artifact_loaded == artifact_read == {"a": 1}
 
@@ -137,12 +137,13 @@ def test_save_repository_multiple_artifact(tmp_path):
             "version": 1,
         },
     ]
-
-    with open(location / expected_my_dict_fname0) as infile:
+    my_dict_dir = location / "my-dict"
+    my_dict2_dir = location / "my-dict2"
+    with open(my_dict_dir / expected_my_dict_fname0) as infile:
         my_dict_v0_read = json.load(infile)
-    with open(location / expected_my_dict_fname1) as infile:
+    with open(my_dict_dir / expected_my_dict_fname1) as infile:
         my_dict_v1_read = json.load(infile)
-    with open(location / expected_my_dict2_fname) as infile:
+    with open(my_dict2_dir / expected_my_dict2_fname) as infile:
         my_dict2_read = json.load(infile)
 
     repository_read = Repository(repository_location, "r")
@@ -249,7 +250,7 @@ def test_save_repository_artifact_failed_validation(mock_version, tmp_path):
     repository.save()
 
     assert repository_location.is_file()
-    assert (location / "estimator-20250120132330.joblib").is_file()
+    assert (location / "estimator" / "estimator-20250120132330.joblib").is_file()
 
     # Reload repository and validate experiment
     with pytest.raises(RuntimeError):
@@ -303,7 +304,7 @@ def test_repository_artifact_output_only(tmp_path):
         )
 
     assert repository_location.is_file()
-    assert (location / expected_fname).is_file()
+    assert (location / "features" / expected_fname).is_file()
 
     # Test loading a read-only artifact
 
