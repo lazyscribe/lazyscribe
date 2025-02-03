@@ -92,9 +92,9 @@ class Repository:
         fname: str | None = None,
         **kwargs,
     ):
-        """Log an artifact to the experiment.
+        """Log an artifact to the repository.
 
-        This method associates an artifact with the experiment, but the artifact will
+        This method associates an artifact with the repository, but the artifact will
         not be written until :py:meth:`lazyscribe.Repository.save` is called.
 
         Parameters
@@ -285,20 +285,20 @@ class Repository:
                     )
 
     def __contains__(self, item: str) -> bool:
-        """Check if the repository contains an experiment with the given slug or short slug."""
+        """Check if the repository contains an artifact with the given slug or short slug."""
         return any(art.name == item for art in self.artifacts)
 
     def __getitem__(self, arg: str) -> Artifact:
-        """Use brackets to retrieve an experiment by slug.
+        """Use brackets to retrieve an artifact by slug.
 
         Parameters
         ----------
         arg : str
-            The slug or short slug for the experiment.
+            The slug or short slug for the artifact.
 
             .. note::
 
-                If you have multiple experiments with the same short slug, this notation
+                If you have multiple artifacts with the same short slug, this notation
                 will retrieve the first one added to the repository.
 
         Raises
@@ -316,5 +316,5 @@ class Repository:
         return out
 
     def __iter__(self) -> Iterator[dict[str, Any]]:
-        """Iterate through each experiment and return the dictionary."""
+        """Iterate through each artifact and return the dictionary."""
         yield from serialize_artifacts(self.artifacts)
