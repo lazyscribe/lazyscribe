@@ -113,6 +113,7 @@ class JoblibArtifact(Artifact):
                 "Please install ``joblib`` to use this handler."
             ) from err
         created_at = created_at or datetime.now()
+        version = version if version is not None else 0
         return cls(
             name=name,
             value=value,

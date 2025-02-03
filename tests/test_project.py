@@ -596,7 +596,7 @@ def test_save_project_artifact_output_only(tmp_path):
                     "fname": f"features-{today.strftime('%Y%m%d%H%M%S')}.testartifact",
                     "handler": "testartifact",
                     "created_at": today.strftime("%Y-%m-%dT%H:%M:%S"),
-                    "version": None,
+                    "version": 0,
                 }
             ],
             "tests": [],

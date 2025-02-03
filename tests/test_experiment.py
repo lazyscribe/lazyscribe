@@ -134,7 +134,7 @@ def test_experiment_artifact_logging_basic():
                 "handler": "json",
                 "created_at": today.strftime("%Y-%m-%dT%H:%M:%S"),
                 "python_version": ".".join(str(i) for i in sys.version_info[:2]),
-                "version": None,
+                "version": 0,
             }
         ],
         "tests": [],

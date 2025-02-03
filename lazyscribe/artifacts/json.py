@@ -67,6 +67,7 @@ class JSONArtifact(Artifact):
             str(i) for i in sys.version_info[:2]
         )
         created_at = created_at or datetime.now()
+        version = version if version is not None else 0
         return cls(
             name=name,
             value=value,
