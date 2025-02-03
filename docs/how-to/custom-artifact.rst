@@ -70,7 +70,7 @@ additional metadata to capture, this is where we would capture it
         def construct(
             cls,
             name: str,
-            value: Any | None = None,
+            value: Any = None,
             fname: str | None = None,
             created_at: datetime | None = None,
             writer_kwargs: dict | None = None,

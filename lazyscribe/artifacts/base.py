@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
 from datetime import datetime
-from typing import Any, ClassVar, Optional
+from typing import Any, ClassVar
 
 from attrs import define, field
 
@@ -67,10 +67,10 @@ class Artifact(metaclass=ABCMeta):
     def construct(
         cls,
         name: str,
-        value: Optional[Any] = None,
-        fname: Optional[str] = None,
-        created_at: Optional[datetime] = None,
-        writer_kwargs: Optional[dict] = None,
+        value: Any | None = None,
+        fname: str | None = None,
+        created_at: datetime | None = None,
+        writer_kwargs: dict | None = None,
         version: int | None = None,
         **kwargs,
     ):

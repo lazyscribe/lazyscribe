@@ -33,13 +33,11 @@ class Repository:
     mode : {"r", "a", "w", "w+"}, optional (default "w")
         The mode for opening the repository.
 
-        * ``r``: All existing experiments will be loaded as
-          :py:class:`lazyscribe.experiment.ReadOnlyExperiment` and no new experiments can be logged.
-        * ``a``: All existing experiments will be loaded as
-          :py:class:`lazyscribe.experiment.ReadOnlyExperiment` and new experiments can be added.
-        * ``w``: No existing experiments will be loaded.
-        * ``w+``: All experiments will be loaded in editable mode as
-          :py:class:`lazyscribe.experiment.Experiment`.
+        * ``r``: Repository loaded as read-only: no new artifacts can be logged.
+        * ``a``: All existing artifacts will be loaded as
+          read-only and new artifacts can be added.
+        * ``w``: No existing artifacts will be loaded.
+        * ``w+``: All artifacts will be loaded in editable mode.
 
     Attributes
     ----------
@@ -66,7 +64,6 @@ class Repository:
 
         # If in ``r``, ``a``, or ``w+`` mode, read in the existing repository.
         self.artifacts: list[Artifact] = []
-        self.snapshot: dict = {}
         self.fs = fsspec.filesystem(self.protocol, **storage_options)
 
         if mode not in ("r", "a", "w", "w+"):
@@ -114,6 +111,7 @@ class Repository:
         overwrite : bool, optional (default False)
             Whether or not to overwrite an existing artifact with the same name. If set to ``True``,
             the previous artifact will be removed and overwritten with the current artifact.
+            If set to ``False``, artifact will be logged with its version incremented.
         **kwargs : dict
             Keyword arguments for the write function of the handler.
 
@@ -166,13 +164,19 @@ class Repository:
         validate : bool, optional (default True)
             Whether or not to validate the runtime environment against the artifact
             metadata.
+        version: datetime | str | int, optional (default None)
+            The version of the artifact to load.
+            Can be provided as a datetime corresponding to the ``created_at`` field,
+            a string corresponding to the ``created_at`` field,
+            or an integer version.
+            If not provided, defaults to the most recent version.
         **kwargs : dict
             Keyword arguments for the handler read function.
 
         Returns
         -------
         object
-            The artifact.
+            The artifact object.
         """
         artifacts_matching_name = [art for art in self.artifacts if art.name == name]
         version = (
