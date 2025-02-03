@@ -270,9 +270,10 @@ class Repository:
         for artifact in self.artifacts:
             # Write the artifact data
             fmode = "wb" if artifact.binary else "w"
-            fpath = self.dir / artifact.fname
+            artifact_dir = self.dir / artifact.name
+            fpath = artifact_dir / artifact.fname
 
-            self.fs.makedirs(self.dir, exist_ok=True)
+            self.fs.makedirs(artifact_dir, exist_ok=True)
             LOG.debug(f"Saving '{artifact.name}' to {fpath!s}...")
             with self.fs.open(fpath, fmode) as buf:
                 artifact.write(artifact.value, buf, **artifact.writer_kwargs)
