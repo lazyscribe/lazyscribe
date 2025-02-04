@@ -1,6 +1,8 @@
+"""PyYAML-based handler for YAML-serializable artifacts."""
 
 from datetime import datetime
-from typing import Any, ClassVar, Literal, Optional
+from typing import Any, ClassVar
+
 import yaml
 
 try:
@@ -11,6 +13,7 @@ from attrs import define
 from slugify import slugify
 
 from lazyscribe.artifacts.base import Artifact
+
 
 @define(auto_attribs=True)
 class YAMLArtifact(Artifact):
@@ -30,19 +33,20 @@ class YAMLArtifact(Artifact):
         created_at: datetime | None = None,
         writer_kwargs: dict | None = None,
         version: int = 0,
-        **kwargs
+        **kwargs,
     ):
         """Construct the handler class."""
         created_at = created_at or datetime.now()
         return cls(
             name=name,
             value=value,
-            fname=fname or f"{slugify(name)}-{slugify(created_at.strftime('%Y%m%d%H%M%S'))}.{cls.suffix}",
+            fname=fname
+            or f"{slugify(name)}-{slugify(created_at.strftime('%Y%m%d%H%M%S'))}.{cls.suffix}",
             writer_kwargs=writer_kwargs or {},
             version=version,
             created_at=created_at,
         )
-    
+
     @classmethod
     def read(cls, buf, **kwargs):
         """Read in the artifact.

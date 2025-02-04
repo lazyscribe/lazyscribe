@@ -1,7 +1,7 @@
 """Test the artifact handlers."""
 
-from datetime import datetime
 import zoneinfo
+from datetime import datetime
 
 import pytest
 import time_machine
@@ -36,6 +36,7 @@ def test_json_handler(tmp_path):
 
     assert data == out
 
+
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
@@ -46,7 +47,7 @@ def test_json_handler(tmp_path):
         ([{"key": "value"}], yaml.FullLoader),
         ([{"type": float}], yaml.FullLoader),
         ({"key": "value", "type": str}, yaml.FullLoader),
-    )
+    ),
 )
 def test_yaml_handler(data, Loader, tmp_path):
     """Test reading and writing YAML files with the handler."""
@@ -68,6 +69,7 @@ def test_yaml_handler(data, Loader, tmp_path):
         out = handler.read(buf, Loader=Loader)
 
     assert data == out
+
 
 def test_yaml_handler_defaults_to_safeloader(data, Loader, tmp_path):
     """Test YAML handler defaults to safe loader."""
@@ -95,17 +97,17 @@ def test_yaml_handler_defaults_to_safeloader(data, Loader, tmp_path):
     data = [{"type": float}]
     handler = YAMLArtifact.construct(name="Unreadable")
 
-    assert (
-        handler.fname
-        == f"unreadable-{datetime.now().strftime('%Y%m%d%H%M%S')}.yaml"
-    )
+    assert handler.fname == f"unreadable-{datetime.now().strftime('%Y%m%d%H%M%S')}.yaml"
 
     with open(location / handler.fname, "w") as buf:
         handler.write(data, buf)
 
     assert (location / handler.fname).is_file()
 
-    with open(location / handler.fname) as buf, pytest.raises(yaml.ConstructorError):
+    with (
+        open(location / handler.fname) as buf,
+        pytest.raises(yaml.constructor.ConstructorError),
+    ):
         out = handler.read(buf)
 
     assert data == out
