@@ -53,7 +53,7 @@ class JoblibArtifact(Artifact):
     def construct(
         cls,
         name: str,
-        value: Any | None = None,
+        value: Any = None,
         fname: str | None = None,
         created_at: datetime | None = None,
         writer_kwargs: dict | None = None,

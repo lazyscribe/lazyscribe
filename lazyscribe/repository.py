@@ -41,7 +41,7 @@ class Repository:
 
     Attributes
     ----------
-    artifacts : list
+    artifacts : list[Artifact]
         The list of artifacts in the repository.
     """
 
@@ -175,7 +175,7 @@ class Repository:
 
         Returns
         -------
-        object
+        Any
             The artifact object.
         """
         artifacts_matching_name = [art for art in self.artifacts if art.name == name]
