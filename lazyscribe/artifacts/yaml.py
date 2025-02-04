@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime
 from typing import Any, ClassVar
 
@@ -16,6 +17,7 @@ from slugify import slugify
 
 from lazyscribe.artifacts.base import Artifact
 
+LOG = logging.getLogger(__name__)
 
 @define(auto_attribs=True)
 class YAMLArtifact(Artifact):
@@ -66,6 +68,7 @@ class YAMLArtifact(Artifact):
             The artifact.
         """
         if "Loader" not in kwargs:
+            LOG.debug("No loader provided, defaulting to SafeLoader")
             kwargs["Loader"] = SafeLoader  # default to safe loader
         return yaml.load(buf, **kwargs)
 
