@@ -94,7 +94,7 @@ def test_yaml_handler_defaults_to_safeloader(tmp_path):
 
     assert data == out
 
-    # Test that it doesn't unserialize objects that need 
+    # Test that it doesn't unserialize objects that need
     # full loader
     data = [{"type": float}]
     handler = YAMLArtifact.construct(name="Unreadable")
