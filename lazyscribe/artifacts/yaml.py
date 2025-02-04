@@ -10,7 +10,7 @@ import yaml
 try:
     from yaml import CSafeLoader as SafeLoader
 except ImportError:
-    from yaml import SafeLoader
+    from yaml import SafeLoader  # type: ignore[assignment]
 from attrs import define
 from slugify import slugify
 
