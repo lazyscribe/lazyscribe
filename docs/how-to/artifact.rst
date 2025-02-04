@@ -64,6 +64,9 @@ Below, we have included a list of currently supported artifact handlers and thei
       - joblib
       - Artifacts written using :py:meth:`joblib.dump` and read using :py:meth:`joblib.load`
       - ``joblib``
+    * - :py:class:`lazyscribe.artifacts.YAMLArtifact`
+      - yaml
+      - Artifacts written using :py:meth:`yaml.dump` and read using :py:meth:`yaml.load`. You can specify the dumper using the ``Dumper`` keyword argument and the loader using the ``Loader`` keyword argument. Defaults to :py:class:`yaml.FullDumper` and :py:class:`yaml.SafeLoader` respectively if not specified.
 
 Loading and validation
 ----------------------
