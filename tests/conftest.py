@@ -23,14 +23,19 @@ class TestArtifact(Artifact):
         fname: Optional[str] = None,
         created_at: Optional[datetime] = None,
         writer_kwargs: Optional[dict] = None,
+        version: int | None = None,
         **kwargs,
     ):
+        created_at = created_at or datetime.now()
+        version = version if version is not None else 0
         return cls(
             name=name,
             value=value,
             writer_kwargs=writer_kwargs or {},
-            fname=fname or f"{slugify(name)}.{cls.suffix}",
+            fname=fname
+            or f"{slugify(name)}-{created_at.strftime('%Y%m%d%H%M%S')}.{cls.suffix}",
             created_at=created_at or datetime.now(),
+            version=version,
         )
 
     @classmethod

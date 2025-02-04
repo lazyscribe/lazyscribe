@@ -70,10 +70,11 @@ additional metadata to capture, this is where we would capture it
         def construct(
             cls,
             name: str,
-            value: Optional[Any] = None,
-            fname: Optional[str] = None,
-            created_at: Optional[datetime] = None,
-            writer_kwargs: Optional[dict] = None,
+            value: Any = None,
+            fname: str | None = None,
+            created_at: datetime | None = None,
+            writer_kwargs: dict | None = None,
+            version: int | None = None
             **kwargs
         ):
             """Construct the handler class."""
@@ -81,6 +82,7 @@ additional metadata to capture, this is where we would capture it
                 name=name,
                 value=value,
                 writer_kwargs=writer_kwargs or {},
+                version=version,
                 fname=fname or f"{slugify(name)}.{cls.suffix}",
                 created_at=created_at or datetime.now(),
             )

@@ -1,5 +1,7 @@
 """Test the artifact handlers."""
 
+from datetime import datetime
+
 import pytest
 
 from lazyscribe.artifacts import _get_handler
@@ -15,7 +17,10 @@ def test_json_handler(tmp_path):
     data = [{"key": "value"}]
     handler = JSONArtifact.construct(name="My output file")
 
-    assert handler.fname == "my-output-file.json"
+    assert (
+        handler.fname
+        == f"my-output-file-{datetime.now().strftime('%Y%m%d%H%M%S')}.json"
+    )
 
     with open(location / handler.fname, "w") as buf:
         handler.write(data, buf)
@@ -45,7 +50,10 @@ def test_joblib_handler(tmp_path):
     location.mkdir()
     handler = JoblibArtifact.construct(name="My estimator", value=estimator)
 
-    assert handler.fname == "my-estimator.joblib"
+    assert (
+        handler.fname
+        == f"my-estimator-{datetime.now().strftime('%Y%m%d%H%M%S')}.joblib"
+    )
 
     with open(location / handler.fname, "wb") as buf:
         handler.write(estimator, buf)
@@ -69,6 +77,7 @@ def test_joblib_handler(tmp_path):
             package="sklearn",
             package_version=sklearn.__version__,
             joblib_version=joblib.__version__,
+            version=None,
         )
     ) == handler
 
