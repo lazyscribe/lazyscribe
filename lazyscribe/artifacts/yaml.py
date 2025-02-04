@@ -19,6 +19,7 @@ from lazyscribe.artifacts.base import Artifact
 
 LOG = logging.getLogger(__name__)
 
+
 @define(auto_attribs=True)
 class YAMLArtifact(Artifact):
     """Handler for YAML artifacts."""
