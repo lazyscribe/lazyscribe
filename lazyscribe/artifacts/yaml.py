@@ -5,10 +5,8 @@ import yaml
 
 try:
     from yaml import CSafeLoader as SafeLoader
-    from yaml import CFullLoader as FullLoader
 except ImportError:
     from yaml import SafeLoader
-    from yaml import FullLoader
 from attrs import define
 from slugify import slugify
 
@@ -22,7 +20,6 @@ class YAMLArtifact(Artifact):
     suffix: ClassVar[str] = "yaml"
     binary: ClassVar[bool] = False
     output_only: ClassVar[bool] = False
-    loader: Literal["safe", "full"]
 
     @classmethod
     def construct(
@@ -63,13 +60,9 @@ class YAMLArtifact(Artifact):
         Any
             The artifact.
         """
-        if cls.loader == "safe":
-            loader = SafeLoader
-        elif cls.loader == "full":
-            loader = FullLoader
-        else:
-            raise ValueError("Loader must be 'safe' or 'full'")
-        return yaml.load(buf, Loader=loader, **kwargs)
+        if "Loader" not in kwargs:
+            kwargs["Loader"] = SafeLoader  # default to safe loader
+        return yaml.load(buf, **kwargs)
 
     @classmethod
     def write(cls, obj, buf, **kwargs):
