@@ -33,11 +33,11 @@ class JSONArtifact(Artifact):
     def construct(
         cls,
         name: str,
-        value: Any | None = None,
+        value: Any = None,
         fname: str | None = None,
         created_at: datetime | None = None,
         writer_kwargs: dict | None = None,
-        version: int | None = None,
+        version: int = 0,
         **kwargs,
     ):
         """Construct the handler class.
@@ -57,7 +57,7 @@ class JSONArtifact(Artifact):
         writer_kwargs : dict, optional (default None)
             Keyword arguments for writing an artifact to the filesystem. Provided when an artifact
             is logged to an experiment.
-        version : int, optional (default None)
+        version : int, optional (default 0)
             Integer version to be used for versioning artifacts.
         **kwargs : dict
             Other keyword arguments.
@@ -67,7 +67,6 @@ class JSONArtifact(Artifact):
             str(i) for i in sys.version_info[:2]
         )
         created_at = created_at or datetime.now()
-        version = version if version is not None else 0
         return cls(
             name=name,
             value=value,

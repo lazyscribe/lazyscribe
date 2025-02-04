@@ -67,11 +67,11 @@ class Artifact(metaclass=ABCMeta):
     def construct(
         cls,
         name: str,
-        value: Any | None = None,
+        value: Any = None,
         fname: str | None = None,
         created_at: datetime | None = None,
         writer_kwargs: dict | None = None,
-        version: int | None = None,
+        version: int = 0,
         **kwargs,
     ):
         """Construct the artifact handler.
@@ -94,6 +94,8 @@ class Artifact(metaclass=ABCMeta):
         writer_kwargs : dict, optional (default None)
             Keyword arguments for writing an artifact to the filesystem. Provided when an artifact
             is logged to an experiment.
+        version : int, optional (default 0)
+            Integer version to be used for versioning artifacts.
         **kwargs : dict
             Other keyword arguments.
             Usually class attributes obtained from a project JSON.
