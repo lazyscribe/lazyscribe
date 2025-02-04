@@ -71,7 +71,7 @@ def test_yaml_handler(data, Loader, tmp_path):
     assert data == out
 
 
-def test_yaml_handler_defaults_to_safeloader(data, Loader, tmp_path):
+def test_yaml_handler_defaults_to_safeloader(tmp_path):
     """Test YAML handler defaults to safe loader."""
     location = tmp_path / "my-location"
     location.mkdir()
