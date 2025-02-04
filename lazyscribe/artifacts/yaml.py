@@ -9,7 +9,7 @@ import yaml
 
 try:
     from yaml import CSafeLoader as SafeLoader
-except ImportError:  # pragma: no branch
+except ImportError:  # pragma: no cover
     from yaml import SafeLoader  # type: ignore[assignment]
 from attrs import define
 from slugify import slugify
