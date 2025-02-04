@@ -94,6 +94,8 @@ def test_yaml_handler_defaults_to_safeloader(tmp_path):
 
     assert data == out
 
+    # Test that it doesn't unserialize objects that need 
+    # full loader
     data = [{"type": float}]
     handler = YAMLArtifact.construct(name="Unreadable")
 
@@ -108,9 +110,7 @@ def test_yaml_handler_defaults_to_safeloader(tmp_path):
         open(location / handler.fname) as buf,
         pytest.raises(yaml.constructor.ConstructorError),
     ):
-        out = handler.read(buf)
-
-    assert data == out
+        handler.read(buf)
 
 
 def test_joblib_handler(tmp_path):
