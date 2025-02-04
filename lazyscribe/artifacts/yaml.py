@@ -33,15 +33,14 @@ class YAMLArtifact(Artifact):
         **kwargs
     ):
         """Construct the handler class."""
-        created_at = created_at or datetime.now(),
+        created_at = created_at or datetime.now()
         return cls(
             name=name,
             value=value,
             fname=fname or f"{slugify(name)}-{slugify(created_at.strftime('%Y%m%d%H%M%S'))}.{cls.suffix}",
             writer_kwargs=writer_kwargs or {},
             version=version,
-            created_at=created_at or datetime.now(),
-            loader=kwargs.get("loader") or "safe"
+            created_at=created_at,
         )
     
     @classmethod
