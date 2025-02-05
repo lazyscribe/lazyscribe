@@ -25,8 +25,8 @@ dynamic = ["readme", "version"]
 [project.optional-dependencies]
 build = ["build", "bumpver", "twine", "wheel"]
 docs = ["furo", "matplotlib", "pandas", "pillow", "prefect<2,>=1.0", "scikit-learn", "sphinx", "sphinx-gallery", "sphinx-inline-tabs"]
-qa = ["ruff==0.7.3", "edgetest", "mypy", "pip-tools", "types-python-slugify"]
-tests = ["scikit-learn", "prefect<2,>=1.0", "pytest", "pytest-cov", "time-machine"]
+qa = ["ruff==0.7.3", "edgetest", "mypy", "pip-tools", "types-python-slugify", "types-PyYAML"]
+tests = ["scikit-learn", "prefect<2,>=1.0", "pytest", "pytest-cov", "time-machine", "PyYAML"]
 dev = ["lazyscribe[build]", "lazyscribe[docs]", "lazyscribe[qa]", "lazyscribe[tests]"]
 
 [project.urls]
@@ -42,6 +42,7 @@ build-backend = "setuptools.build_meta"
 base = "lazyscribe.artifacts.base:Artifact"
 joblib = "lazyscribe.artifacts.joblib:JoblibArtifact"
 json = "lazyscribe.artifacts.json:JSONArtifact"
+yaml = "lazyscribe.artifacts.yaml:YAMLArtifact"
 
 ##############################################################################
 # Setuptools configuration
