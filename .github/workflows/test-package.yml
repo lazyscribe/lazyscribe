@@ -38,7 +38,7 @@ jobs:
             - name: Check formatting
               run: python -m ruff format . --check
             - name: Check static typing
-              run: python -m mypy lazyscribe
+              run: python -m mypy lazyscribe tests
             - name: Run unit testing
               run: python -m pytest tests --cov=./ --cov-report=xml
             - name: Run Codecov
