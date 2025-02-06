@@ -20,7 +20,7 @@ CURR_DIR = Path(__file__).resolve().parent
 DATA_DIR = CURR_DIR / "repository_data"
 
 
-def test_logging_repository():
+def test_logging_repository() -> None:
     """Test logging an artifact to a repository."""
     repository = Repository(
         "file://" + (DATA_DIR / "external_fs_repository.json").as_posix(),
@@ -33,7 +33,7 @@ def test_logging_repository():
         repository["not a real artifact"]
 
 
-def test_readonly():
+def test_readonly() -> None:
     """Test trying to log an artifact and save in read only mode."""
     repository = Repository(fpath=DATA_DIR / "repository.json", mode="r")
 
@@ -51,7 +51,7 @@ def test_readonly():
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
-def test_save_repository(tmp_path):
+def test_save_repository(tmp_path: Path) -> None:
     """Test saving repository to output JSON."""
     location = tmp_path / "my-repository"
     location.mkdir()
@@ -90,7 +90,7 @@ def test_save_repository(tmp_path):
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
-def test_save_repository_multi(tmp_path):
+def test_save_repository_multi(tmp_path: Path) -> None:
     """Test saving a repository, reading it in, logging, saving again."""
     location = tmp_path / "my-repository"
     location.mkdir()
@@ -149,7 +149,7 @@ def test_save_repository_multi(tmp_path):
     assert artifact_read == artifact_loaded == {"b": 2}
 
 
-def test_save_repository_multiple_artifact(tmp_path):
+def test_save_repository_multiple_artifact(tmp_path: Path) -> None:
     """Test saving repository with multiple artifacts."""
     location = tmp_path / "my-repository"
     location.mkdir()
@@ -297,7 +297,9 @@ def test_save_repository_multiple_artifact(tmp_path):
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
 @patch("lazyscribe.artifacts.joblib.importlib_version", side_effect=["1.2.2", "0.0.0"])
-def test_save_repository_artifact_failed_validation(mock_version, tmp_path):
+def test_save_repository_artifact_failed_validation(
+    mock_version: str, tmp_path: Path
+) -> None:
     """Test saving and loading repository with an artifact."""
     location = tmp_path / "my-repository"
     location.mkdir()
@@ -326,7 +328,7 @@ def test_save_repository_artifact_failed_validation(mock_version, tmp_path):
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
-def test_repository_artifact_output_only(tmp_path):
+def test_repository_artifact_output_only(tmp_path: Path) -> None:
     """Test saving a repository with an output only artifact."""
     location = tmp_path / "my-repository"
     location.mkdir()
@@ -385,18 +387,20 @@ def test_repository_artifact_output_only(tmp_path):
         )
 
 
-def test_invalid_match_strategy():
+def test_invalid_match_strategy() -> None:
     """Test raising an error with an invalid value for ``match``."""
     repository = Repository()
     repository.log_artifact("my-dict", {"a": 1}, handler="json")
 
     with pytest.raises(ValueError):
         repository._search_artifact_versions(
-            "my-dict", version=datetime(2025, 1, 1), match="fake"
+            "my-dict",
+            version=datetime(2025, 1, 1),
+            match="fake",  # type: ignore[arg-type]
         )
 
 
-def test_repository_asof_search(tmp_path):
+def test_repository_asof_search(tmp_path: Path) -> None:
     """Test retrieving artifacts using ``asof``."""
     location = tmp_path / "my-repository"
     location.mkdir()
@@ -455,7 +459,7 @@ def test_repository_asof_search(tmp_path):
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
-def test_retrieve_artifact_meta():
+def test_retrieve_artifact_meta() -> None:
     """Test retrieving artifact metadata."""
     repository = Repository()
     repository.log_artifact("my-dict", {"a": 1}, handler="json")

@@ -17,6 +17,9 @@
 # relative to the documentation root, use os.path.abspath to make it
 # absolute, like shown here.
 #
+
+"""Documentation configuration."""
+
 import os
 import sys
 

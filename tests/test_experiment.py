@@ -19,7 +19,7 @@ from lazyscribe.test import ReadOnlyTest, Test
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
-def test_attrs_default():
+def test_attrs_default() -> None:
     """Test any non-trivial experiment attributes."""
     today = datetime.now()
     exp = Experiment(name="My experiment", project=Path("project.json"))
@@ -32,7 +32,7 @@ def test_attrs_default():
     assert exp.dirty is True
 
 
-def test_experiment_logging():
+def test_experiment_logging() -> None:
     """Test logging metrics and parameters."""
     exp = Experiment(name="My experiment", project=Path("project.json"))
     exp.log_metric("name", 0.5)
@@ -65,7 +65,7 @@ def test_experiment_logging():
     assert exp.tags == ["actually a failure"]
 
 
-def test_not_logging_test():
+def test_not_logging_test() -> None:
     """Test not logging a test when raising an error."""
     exp = Experiment(name="My experiment", project=Path("project.json"))
     with pytest.raises(ValueError), exp.log_test(name="My test") as test:
@@ -78,7 +78,7 @@ def test_not_logging_test():
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
-def test_experiment_serialization():
+def test_experiment_serialization() -> None:
     """Test serializing the experiment to a dictionary."""
     today = datetime.now()
     exp = Experiment(name="My experiment", project=Path("project.json"), author="root")
@@ -113,7 +113,7 @@ def test_experiment_serialization():
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
-def test_experiment_to_tabular():
+def test_experiment_to_tabular() -> None:
     """Test converting an experiment to a pandas-ready list."""
     today = datetime.now()
     exp = Experiment(name="My experiment", project=Path("project.json"), author="root")
@@ -136,7 +136,7 @@ def test_experiment_to_tabular():
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
-def test_experiment_artifact_logging_basic():
+def test_experiment_artifact_logging_basic() -> None:
     """Test logging an artifact to the experiment."""
     today = datetime.now()
 
@@ -172,7 +172,7 @@ def test_experiment_artifact_logging_basic():
     assert exp.dirty is True
 
 
-def test_experiment_artifact_logging_overwrite():
+def test_experiment_artifact_logging_overwrite() -> None:
     """Test overwriting an artifact."""
     exp = Experiment(name="My experiment", project=Path("project.json"), author="root")
     exp.log_artifact(name="features", value=[0, 1, 2], handler="json")
@@ -192,7 +192,7 @@ def test_experiment_artifact_logging_overwrite():
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
-def test_experiment_artifact_load(tmp_path):
+def test_experiment_artifact_load(tmp_path: Path) -> None:
     """Test loading an experiment artifact from the disk."""
     location = tmp_path / "my-location"
     location.mkdir()
@@ -220,7 +220,7 @@ def test_experiment_artifact_load(tmp_path):
     assert out == [0, 1, 2]
 
 
-def test_experiment_artifact_load_keyerror(tmp_path):
+def test_experiment_artifact_load_keyerror(tmp_path: Path) -> None:
     """Test trying to load an artifact that doesn't exist."""
     location = tmp_path / "my-location"
     location.mkdir()
@@ -233,7 +233,7 @@ def test_experiment_artifact_load_keyerror(tmp_path):
         exp.load_artifact(name="features")
 
 
-def test_experiment_artifact_load_validation():
+def test_experiment_artifact_load_validation() -> None:
     """Test the handler validation."""
     datasets = pytest.importorskip("sklearn.datasets")
     svm = pytest.importorskip("sklearn.svm")
@@ -247,7 +247,7 @@ def test_experiment_artifact_load_validation():
     exp.log_artifact(name="estimator", value=estimator, handler="joblib")
 
     # Edit the experiment parameters to make sure the validation fails
-    exp.artifacts[0].package_version = "0.0.0"
+    exp.artifacts[0].package_version = "0.0.0"  # type: ignore
 
     with pytest.raises(ArtifactLoadError):
         exp.load_artifact(name="estimator")
@@ -256,7 +256,7 @@ def test_experiment_artifact_load_validation():
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
-def test_experiment_serialization_dependencies():
+def test_experiment_serialization_dependencies() -> None:
     """Test serializing an experiment with a dependency."""
     today = datetime.now()
     upstream = Experiment(
@@ -288,7 +288,7 @@ def test_experiment_serialization_dependencies():
     }
 
 
-def test_experiment_comparison():
+def test_experiment_comparison() -> None:
     """Test comparing two experiments."""
     exp = Experiment(name="My experiment", project=Path("project.json"))
     # Create a second experiment with the same slug and same created_at time
@@ -311,20 +311,20 @@ def test_experiment_comparison():
     assert exp_diff > exp
 
 
-def test_frozen_experiment():
+def test_frozen_experiment() -> None:
     """Test raising errors with a read-only experiment."""
     exp = ReadOnlyExperiment(name="My experiment", project=Path("project.json"))
     with pytest.raises(FrozenInstanceError):
-        exp.name = "Let's change the name"
+        exp.name = "Let's change the name"  # type: ignore
 
     assert "lazyscribe.experiment.ReadOnlyExperiment" in str(exp)
 
 
-def test_frozen_test():
+def test_frozen_test() -> None:
     """Test raising errors with a read-only test."""
     test = ReadOnlyTest(name="my test", description="my description")
     with pytest.raises(FrozenInstanceError):
-        test.name = "actually the test is not that"
+        test.name = "actually the test is not that"  # type: ignore
 
     assert "lazyscribe.test.ReadOnlyTest" in str(test)
 
@@ -332,7 +332,7 @@ def test_frozen_test():
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
-def test_experiment_artifact_log_load_output_only(tmp_path):
+def test_experiment_artifact_log_load_output_only(tmp_path: Path) -> None:
     """Test loading an experiment artifact from the disk."""
     location = tmp_path / "my-location"
     location.mkdir()

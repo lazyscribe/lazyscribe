@@ -5,6 +5,7 @@ import warnings
 import zoneinfo
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch
 
 import fsspec
@@ -34,7 +35,7 @@ DATA_DIR = CURR_DIR / "data"
         },
     ],
 )
-def test_logging_experiment(project_kwargs):
+def test_logging_experiment(project_kwargs: dict[str, Any]) -> None:
     """Test logging an experiment to a project."""
     project = Project(**project_kwargs)
     today = datetime.now()
@@ -70,13 +71,16 @@ def test_logging_experiment(project_kwargs):
         project["not a real experiment"]
 
 
-def test_invalid_project_mode():
+def test_invalid_project_mode() -> None:
     """Test instantiating a project with an invalid mode."""
     with pytest.raises(ValueError):
-        _ = Project(author="root", mode="fake-mode")
+        _ = Project(
+            author="root",
+            mode="fake-mode",  # type: ignore[arg-type]
+        )
 
 
-def test_not_logging_experiment():
+def test_not_logging_experiment() -> None:
     """Test not logging an experiment when raising an error."""
     project = Project(author="root")
     with pytest.raises(ValueError), project.log(name="My experiment") as exp:
@@ -86,7 +90,7 @@ def test_not_logging_experiment():
     assert len(project.experiments) == 0
 
 
-def test_not_logging_experiment_readonly():
+def test_not_logging_experiment_readonly() -> None:
     """Test trying to log an experiment in read only mode."""
     project = Project(fpath=DATA_DIR / "project.json", mode="r")
     context_manager = project.log(name="New experiment")
@@ -102,7 +106,7 @@ def test_not_logging_experiment_readonly():
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
-def test_save_project(tmp_path):
+def test_save_project(tmp_path: Path) -> None:
     """Test saving a project to an output JSON."""
     location = tmp_path / "my-project"
     project_location = location / "project.json"
@@ -151,7 +155,7 @@ def test_save_project(tmp_path):
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
-def test_save_project_artifact(tmp_path):
+def test_save_project_artifact(tmp_path: Path) -> None:
     """Test saving a project with an artifact."""
     location = tmp_path / "my-project"
     project_location = location / "project.json"
@@ -181,7 +185,7 @@ def test_save_project_artifact(tmp_path):
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
-def test_save_project_artifact_str_path(tmp_path):
+def test_save_project_artifact_str_path(tmp_path: Path) -> None:
     """Test saving a project with an artifact."""
     location = tmp_path / "my-project"
     project_location = str(location / "project.json")
@@ -212,7 +216,9 @@ def test_save_project_artifact_str_path(tmp_path):
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
 @patch("lazyscribe.artifacts.joblib.importlib_version", side_effect=["1.2.2", "0.0.0"])
-def test_save_project_artifact_failed_validation(mock_version, tmp_path):
+def test_save_project_artifact_failed_validation(
+    mock_version: str, tmp_path: Path
+) -> None:
     """Test saving and loading project with an artifact."""
     location = tmp_path / "my-project"
     project_location = location / "project.json"
@@ -245,10 +251,10 @@ def test_save_project_artifact_failed_validation(mock_version, tmp_path):
     with pytest.raises(ArtifactLoadError):
         project2 = Project(project_location, mode="r")
         exp2 = project2["my-experiment"]
-        model_load = exp2.load_artifact(name="estimator")
+        exp2.load_artifact(name="estimator")
 
 
-def test_save_project_artifact_multi_experiment(tmp_path):
+def test_save_project_artifact_multi_experiment(tmp_path: Path) -> None:
     """Test running save on a project twice with multiple experiments and artifacts.
 
     The goal of this test is to ensure that an experiment opened in read-only mode or
@@ -323,7 +329,7 @@ def test_save_project_artifact_multi_experiment(tmp_path):
     assert not second_art_path.is_file()
 
 
-def test_save_project_artifact_updated(tmp_path):
+def test_save_project_artifact_updated(tmp_path: Path) -> None:
     """Test running save twice with an updated experiment.
 
     The goal of this test is to ensure that an artifact is not overwritten unnecessarily.
@@ -373,7 +379,7 @@ def test_save_project_artifact_updated(tmp_path):
     assert not art_path.is_file()
 
 
-def test_load_project():
+def test_load_project() -> None:
     """Test loading a project back into python."""
     project = Project(fpath=DATA_DIR / "project.json", mode="w+")
 
@@ -396,7 +402,7 @@ def test_load_project():
     assert project.experiments == [expected]
 
 
-def test_load_project_edit(tmp_path):
+def test_load_project_edit(tmp_path: Path) -> None:
     """Test loading a project and editing an experiment."""
     location = tmp_path / "my-location"
     project_location = location / "project.json"
@@ -423,7 +429,7 @@ def test_load_project_edit(tmp_path):
     assert exp.last_updated_by == "friend"
 
 
-def test_load_project_readonly():
+def test_load_project_readonly() -> None:
     """Test loading a project in read-only or append mode."""
     project = Project(fpath=DATA_DIR / "project.json", mode="r")
 
@@ -448,7 +454,7 @@ def test_load_project_readonly():
         project.save()
 
 
-def test_load_project_dependencies():
+def test_load_project_dependencies() -> None:
     """Test loading a project where an experiment has dependencies."""
     project = Project(fpath=DATA_DIR / "down-project.json", mode="a")
 
@@ -473,7 +479,7 @@ def test_load_project_dependencies():
     assert project.experiments == [expected]
 
 
-def test_merge_append():
+def test_merge_append() -> None:
     """Test merging a project with one that has an extra experiment."""
     current = Project(fpath=DATA_DIR / "project.json", mode="r")
     newer = Project(fpath=DATA_DIR / "merge_append.json", mode="r")
@@ -507,7 +513,7 @@ def test_merge_append():
     ]
 
 
-def test_merge_distinct():
+def test_merge_distinct() -> None:
     """Test merging two projects with the no overlapping data."""
     current = Project(fpath=DATA_DIR / "project.json", mode="r")
     newer = Project(fpath=DATA_DIR / "merge_distinct.json", mode="r")
@@ -541,7 +547,7 @@ def test_merge_distinct():
     ]
 
 
-def test_merge_update():
+def test_merge_update() -> None:
     """Test merging projects with an updated experiment."""
     current = Project(fpath=DATA_DIR / "project.json", mode="r")
     newer = Project(fpath=DATA_DIR / "merge_update.json", mode="r")
@@ -577,7 +583,7 @@ def test_merge_update():
     ]
 
 
-def test_to_tabular():
+def test_to_tabular() -> None:
     """Test converting a project to a pandas-ready list."""
     project = Project(fpath=DATA_DIR / "merge_update.json", mode="r")
     experiments, tests = project.to_tabular()
@@ -617,7 +623,7 @@ def test_to_tabular():
     ]
 
 
-def test_filter_project():
+def test_filter_project() -> None:
     """Test iterating through experiments based on a filter."""
     project = Project(fpath=DATA_DIR / "merge_update.json", mode="r")
     out = list(project.filter(func=lambda x: x.last_updated_by == "friend"))
@@ -648,7 +654,7 @@ def test_filter_project():
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
-def test_save_project_artifact_output_only(tmp_path):
+def test_save_project_artifact_output_only(tmp_path: Path) -> None:
     """Test saving a project with an output only artifact."""
     location = tmp_path / "my-project"
     project_location = location / "project.testartifact"

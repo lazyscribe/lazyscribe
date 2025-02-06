@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
+from io import IOBase
 from typing import Any, ClassVar
 
 import yaml
@@ -24,7 +25,26 @@ LOG = logging.getLogger(__name__)
 
 @define(auto_attribs=True)
 class YAMLArtifact(Artifact):
-    """Handler for YAML artifacts."""
+    """Handler for YAML-serializable objects.
+
+    .. important::
+
+        This class is not meant to be initialized directly. Please use the ``construct``
+        method.
+
+    Class Attributes
+    ----------------
+    See also "Class Attributes" of :py:class:`lazyscribe.artifacts.base.Artifact`.
+
+    alias : str = "yaml"
+    suffix : str = "yaml"
+    binary : bool = False
+    output_only : bool = False
+
+    Attributes
+    ----------
+    See also "Attributes" of :py:class:`lazyscribe.artifacts.base.Artifact`.
+    """
 
     alias: ClassVar[str] = "yaml"
     suffix: ClassVar[str] = "yaml"
@@ -38,12 +58,36 @@ class YAMLArtifact(Artifact):
         value: Any = None,
         fname: str | None = None,
         created_at: datetime | None = None,
-        writer_kwargs: dict | None = None,
+        writer_kwargs: dict[str, Any] | None = None,
         version: int = 0,
         dirty: bool = True,
-        **kwargs,
-    ):
-        """Construct the handler class."""
+        **kwargs: Any,
+    ) -> YAMLArtifact:
+        """Construct the handler class.
+
+        Parameters
+        ----------
+        name : str
+            The name of the artifact.
+        value : Any, optional (default None)
+            The value for the artifact. The default value of ``None`` is used when
+            an experiment is loaded from the project JSON.
+        fname : str, optional (default None)
+            The filename for the artifact. If set to ``None`` or not provided, it will be derived from
+            the name of the artifact and the suffix for the class.
+        created_at : datetime.datetime, optional (default ``lazyscribe._utils.utcnow()``)
+            When the artifact was created.
+        writer_kwargs : dict[str, Any], optional (default {})
+            Keyword arguments for writing an artifact to the filesystem. Provided when an artifact
+            is logged to an experiment.
+        version : int, optional (default 0)
+            Integer version to be used for versioning artifacts.
+
+        Returns
+        -------
+        YAMLArtifact
+            The artifact.
+        """
         created_at = created_at or utcnow()
         return cls(
             name=name,
@@ -57,7 +101,7 @@ class YAMLArtifact(Artifact):
         )
 
     @classmethod
-    def read(cls, buf, **kwargs):
+    def read(cls, buf: IOBase, **kwargs: Any) -> Any:
         """Read in the artifact.
 
         Parameters
@@ -70,20 +114,21 @@ class YAMLArtifact(Artifact):
         Returns
         -------
         Any
-            The artifact.
+            The artifact object.
         """
         if "Loader" not in kwargs:
             LOG.debug("No loader provided, defaulting to SafeLoader")
             kwargs["Loader"] = SafeLoader  # default to safe loader
+
         return yaml.load(buf, **kwargs)
 
     @classmethod
-    def write(cls, obj, buf, **kwargs):
+    def write(cls, obj: Any, buf: IOBase, **kwargs: Any) -> None:
         """Write the content to a YAML file.
 
         Parameters
         ----------
-        obj : object
+        obj : Any
             The YAML-serializable object.
         buf : file-like object
             The buffer from a ``fsspec`` filesystem.
