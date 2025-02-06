@@ -1,19 +1,19 @@
 Version artifacts
 =================
 
-This guide will walk you through the process of using :py:class:`lazyscribe.Repository`
+This guide will walk you through the process of using :py:class:`lazyscribe.repository.Repository`
 to access and version artifacts across projects.
 
-    A :py:class:`lazyscribe.Repository` is an organized structure that stores and versions
+    A :py:class:`lazyscribe.repository.Repository` is an organized structure that stores and versions
     your artifacts.
 
 Using a repository as a standalone structure
 --------------------------------------------
 
 If you have artifacts and/or objects that were generated outside of the ``lazyscribe`` ecosystem,
-you can still use them with the :py:class:`lazyscribe.Repository` structure. Similar to the guide
+you can still use them with the :py:class:`lazyscribe.repository.Repository` structure. Similar to the guide
 on :doc:`saving artifacts with experiments <artifact>`, we will use
-:py:meth:`lazyscribe.Repository.log_artifact`:
+:py:meth:`lazyscribe.repository.Repository.log_artifact`:
 
 .. code-block:: python
 
@@ -24,10 +24,10 @@ on :doc:`saving artifacts with experiments <artifact>`, we will use
 
     repository.save()
 
-After :py:meth:`lazyscribe.Repository.log_artifact`, the value ``[0, 1, 2]`` will be associated
+After :py:meth:`lazyscribe.repository.Repository.log_artifact`, the value ``[0, 1, 2]`` will be associated
 with the repository. However, it won't appear as a JSON file until you call
-:py:meth:`lazyscribe.Repository.save`. You can retrieve the artifact using
-:py:meth:`lazyscribe.Repository.load_artifact`:
+:py:meth:`lazyscribe.repository.Repository.save`. You can retrieve the artifact using
+:py:meth:`lazyscribe.repository.Repository.load_artifact`:
 
 .. code-block:: python
 
@@ -78,7 +78,7 @@ Promote artifacts from experiments to the repository
 Model experimentation is meant to be ephemeral. The Repository provides us with a structure to deploy
 and track versions of artifacts over time. So, how do these systems interact?
 
-We can use :py:meth:`lazyscribe.Experiment.promote_artifact` to associate an artifact with a repository.
+We can use :py:meth:`lazyscribe.experiment.Experiment.promote_artifact` to associate an artifact with a repository.
 The notion is that you may want to deploy/version the artifacts from the most successful experiment in
 a project. Here's how you use it.
 
@@ -105,13 +105,13 @@ Now, let's reload that project and promote the artifact to the repository:
 
     project["my-experiment"].promote_artifact(repository, "features")
 
-If you are calling :py:meth:`lazyscribe.Experiment.promote_artifact` after re-loading a project,
+If you are calling :py:meth:`lazyscribe.experiment.Experiment.promote_artifact` after re-loading a project,
 the method
 
 #. copies the artifact from the experiment filesystem location to the repository filesystem location, and
-#. calls :py:meth:`lazyscribe.Repository.save` to ensure ``repository.json`` is "in sync" with the filesystem.
+#. calls :py:meth:`lazyscribe.repository.Repository.save` to ensure ``repository.json`` is "in sync" with the filesystem.
 
-If you log the artifact to an experiment and call :py:meth:`lazyscribe.Experiment.promote_artifact` *before*
-calling :py:meth:`lazyscribe.Project.save`, it will behave exactly as if you called
-:py:meth:`lazyscribe.Repository.log_artifact` -- *you* will be responsible for calling
-:py:meth:`lazyscribe.Repository.save`.
+If you log the artifact to an experiment and call :py:meth:`lazyscribe.experiment.Experiment.promote_artifact` *before*
+calling :py:meth:`lazyscribe.project.Project.save`, it will behave exactly as if you called
+:py:meth:`lazyscribe.repository.Repository.log_artifact` -- *you* will be responsible for calling
+:py:meth:`lazyscribe.repository.Repository.save`.

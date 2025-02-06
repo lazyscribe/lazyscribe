@@ -8,7 +8,7 @@ same underlying project.
 TL;DR
 -----
 
-To perform a project merge, run :py:class:`lazyscribe.Project.merge`:
+To perform a project merge, run :py:class:`lazyscribe.project.Project.merge`:
 
 .. code-block:: python
     :emphasize-lines: 6
