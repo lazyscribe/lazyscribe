@@ -1,8 +1,8 @@
 Tag experiments
-==========================
+===============
 
 In this guide, we will discuss how you can add tags to your experiment. First,
-let's create a :py:class:`lazyscribe.Project`.
+let's create a :py:class:`lazyscribe.project.Project`.
 
 .. code-block:: python
 
@@ -10,7 +10,7 @@ let's create a :py:class:`lazyscribe.Project`.
 
     project = Project(fpath="project.json", mode="w")
 
-Then, while logging an experiment, we can add our tag using :py:meth:`lazyscribe.Experiment.tag`:
+Then, while logging an experiment, we can add our tag using :py:meth:`lazyscribe.experiment.Experiment.tag`:
 
 .. code-block:: python
 
@@ -38,10 +38,10 @@ or through multiple calls.
         if metric > 0.75:
             exp.tag("best-model")
 
-When you call :py:meth:`lazyscribe.Experiment.tag`, you can use ``overwrite=True`` to overwrite
+When you call :py:meth:`lazyscribe.experiment.Experiment.tag`, you can use ``overwrite=True`` to overwrite
 any existing tags.
 
 .. important::
 
-    If you call :py:meth:`lazyscribe.Experiment.tag` with no supplied tags and ``overwrite=True``, you
+    If you call :py:meth:`lazyscribe.experiment.Experiment.tag` with no supplied tags and ``overwrite=True``, you
     will delete all existing tags on the experiment.

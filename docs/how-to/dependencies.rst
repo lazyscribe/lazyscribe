@@ -30,7 +30,7 @@ name "My experiment", you would have
     The path to ``other-project.json`` is relative to the path to the current project JSON.
 
 
-When you load the experiment through :py:class:`lazyscribe.Project`, the dependencies
+When you load the experiment through :py:class:`lazyscribe.project.Project`, the dependencies
 will be accessible through a dictionary, using the ``short_slug`` as a key:
 
 .. code-block:: python

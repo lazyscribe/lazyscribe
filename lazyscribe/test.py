@@ -1,6 +1,8 @@
 """Sub-population tests."""
 
-from typing import Any, Optional, Union
+from __future__ import annotations
+
+from typing import Any
 
 from attrs import Factory, asdict, define, field, frozen
 
@@ -21,9 +23,9 @@ class Test:
         The name of the test.
     description : str, optional (default None)
         A description of the test.
-    metrics : dict, optional (default {})
+    metrics : dict[str, float | int], optional (default {})
         A dictionary of metric values. Each metric value can be an individual value or a list.
-    parameters : dict, optional (default {})
+    parameters : dict[str, Any], optional (default {})
         A dictionary of test parameters. The key must be a string but the value can be anything.
     """
 
@@ -31,11 +33,11 @@ class Test:
     __test__ = False
 
     name: str = field()
-    description: Optional[str] = Factory(lambda: None)
-    metrics: dict = Factory(lambda: {})
-    parameters: dict = Factory(lambda: {})
+    description: str | None = Factory(lambda: None)
+    metrics: dict[str, float | int] = Factory(lambda: {})
+    parameters: dict[str, Any] = Factory(lambda: {})
 
-    def log_metric(self, name: str, value: Union[float, int]):
+    def log_metric(self, name: str, value: float | int) -> None:
         """Log a metric to the test.
 
         This method will overwrite existing keys.
@@ -44,16 +46,16 @@ class Test:
         ----------
         name : str
             Name of the metric.
-        value : int or float
+        value : int | float
             Value of the metric.
         """
         self.metrics[name] = value
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Shortened string representation."""
         return f"<lazyscribe.test.Test at {hex(id(self))}>"
 
-    def log_parameter(self, name: str, value: Any):
+    def log_parameter(self, name: str, value: Any) -> None:
         """Log a parameter to the test.
 
         This method will overwrite existing keys.
@@ -62,17 +64,17 @@ class Test:
         ----------
         name : str
             The name of the parameter.
-        value : any
+        value : Any
             The parameter itself.
         """
         self.parameters[name] = value
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize the test to a dictionary.
 
         Returns
         -------
-        dict
+        dict[str, Any]
             The test dictionary.
         """
         return asdict(
@@ -80,7 +82,7 @@ class Test:
             value_serializer=serializer,
         )
 
-    def to_tabular(self) -> dict:
+    def to_tabular(self) -> dict[tuple[str] | tuple[str, str], Any]:
         """Create a dictionary that can be fed into ``pandas``.
 
         Returns
@@ -119,6 +121,6 @@ class Test:
 class ReadOnlyTest(Test):
     """Immutable version of the test."""
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Shortened string representation."""
         return f"<lazyscribe.test.ReadOnlyTest at {hex(id(self))}>"

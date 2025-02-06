@@ -2,7 +2,7 @@ Log non-global metrics
 ======================
 
 Sometimes, it's helpful to log non-global metrics to an experimenent. To do so, create a
-:py:class:`lazyscribe.Test` using :py:meth:`lazyscribe.Experiment.log_test`:
+:py:class:`lazyscribe.test.Test` using :py:meth:`lazyscribe.experiment.Experiment.log_test`:
 
 .. code-block:: python
 
@@ -17,9 +17,9 @@ Sometimes, it's helpful to log non-global metrics to an experimenent. To do so, 
 
 The test's parameter has been also stored here.
 
-The :py:meth:`Experiment.log_test` context handler creates a :py:class:`Test` object and
+The :py:meth:`lazyscribe.experiment.Experiment.log_test` context handler creates a :py:class:`lazyscribe.test.Test` object and
 logs it back to the experiment when the handler exits. If you want to avoid using the context
-handler, instantiate your own test and append it to the ``tests`` list:
+handler, instantiate your own test and append it to the :py:attr:`lazyscribe.experiment.Experiment.tests` list:
 
 .. code-block:: python
 

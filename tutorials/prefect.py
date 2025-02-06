@@ -33,9 +33,9 @@ def generate_data(
 
     Returns
     -------
-    np.ndarray
+    numpy.ndarray
         The feature space.
-    np.ndarray
+    numpy.ndarray
         The response vector.
     """
     return make_classification(n_samples=1000, n_features=10)
@@ -47,15 +47,15 @@ def fit_model(X: np.ndarray, y: np.ndarray) -> SVC:
 
     Parameters
     ----------
-    X : np.ndarray
+    X : numpy.ndarray
         The feature space.
-    y : np.ndarray
+    y : numpy.ndarray
         The response vector.
 
     Returns
     -------
-    SVC
-        Fitted ``SVC`` object.
+    sklearn.svm.SVC
+        Fitted object.
     """
     return SVC(kernel="linear").fit(X, y)
 
@@ -66,11 +66,11 @@ def score_model(estimator: SVC, X: np.ndarray, y: np.ndarray) -> float:
 
     Parameters
     ----------
-    estimator : SVC
+    estimator : sklearn.svm.SVC
         Fitted estimator.
-    X : np.ndarray
+    X : numpy.ndarray
         Feature space.
-    y : np.ndarray
+    y : numpy.ndarray
         Response vector.
 
     Returns
