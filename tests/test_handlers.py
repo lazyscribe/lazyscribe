@@ -157,7 +157,7 @@ def test_joblib_handler(tmp_path):
 
     # Check that the handler correctly captures the environment variables
     assert (
-        JoblibArtifact(
+        JoblibArtifact.construct(
             name="EXCLUDED FROM COMPARISON",
             fname="EXCLUDED FROM COMPARISON",
             value=None,
@@ -166,7 +166,7 @@ def test_joblib_handler(tmp_path):
             package="sklearn",
             package_version=sklearn.__version__,
             joblib_version=joblib.__version__,
-            version=None,
+            version=0,
             dirty=False,
         )
     ) == handler
@@ -210,6 +210,7 @@ from unittest.mock import Mock, patch
 
 @patch("lazyscribe.artifacts.entry_points")
 def test_get_handler_type_error(mock_entry_points):
+    """TODO."""
     mock_plugin = Mock()
     mock_plugin.name = "dummy"
 
@@ -220,6 +221,7 @@ def test_get_handler_type_error(mock_entry_points):
 
 @patch("lazyscribe.artifacts.entry_points")
 def test_get_handler_import_error(mock_entry_points):
+    """TODO."""
     mock_plugin_import = Mock()
     mock_plugin_import.name = "dummy"
     mock_plugin_import.load.side_effect = ImportError()

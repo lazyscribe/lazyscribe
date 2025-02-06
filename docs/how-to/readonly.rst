@@ -28,5 +28,5 @@ into an editable :py:class:`lazyscribe.Experiment` class and you can make any ch
 
 .. note::
 
-    When you save the updated JSON, the ``last_updated_by`` experiment attribute will be updated to
+    When you save the project, the ``last_updated_by`` experiment attribute will be updated to
     match the ``author`` that opened the project in editable mode.

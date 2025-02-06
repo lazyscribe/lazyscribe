@@ -38,10 +38,14 @@ class Repository:
         * ``a``: The same as ``w+`` (deprecated).
         * ``w``: No existing artifacts will be loaded.
         * ``w+``: All artifacts will be loaded.
+        * ``w+``: All artifacts will be loaded in editable mode.
+    **storage_options
+        Storage options to pass to the filesystem initialization. Will be passed to
+        :py:meth:`fsspec.filesystem`.
 
     Attributes
     ----------
-    artifacts : list[Artifact]
+    artifacts : list[lazyscribe.artifact.Artifact]
         The list of artifacts in the repository.
     """
 
@@ -51,9 +55,15 @@ class Repository:
         mode: Literal[
             "r", "a", "w", "w+"
         ] = "w",  # TODO: remove `mode="a"` in version 2.0
-        **storage_options,
-    ):
-        """Init method."""
+        **storage_options: Any,
+    ) -> None:
+        """Init method.
+
+        Raises
+        ------
+        ValueError
+            Raises on invalid ``mode`` value.
+        """
         if isinstance(fpath, str):
             parsed = urlparse(fpath)
             self.fpath = Path(parsed.netloc + parsed.path)
@@ -80,12 +90,12 @@ class Repository:
         if mode in ("r", "w+") and self.fs.isfile(str(self.fpath)):
             self.load()
 
-    def load(self):
+    def load(self) -> None:
         """Load existing artifacts."""
         with self.fs.open(str(self.fpath), "r") as infile:
             data = json.load(infile)
 
-        artifacts = []
+        artifacts: list[Artifact] = []
         for artifact in data:
             handler_cls = _get_handler(artifact.pop("handler"))
             created_at = datetime.fromisoformat(artifact.pop("created_at"))
@@ -100,12 +110,12 @@ class Repository:
         value: Any,
         handler: str,
         fname: str | None = None,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> None:
         """Log an artifact to the repository.
 
         This method associates an artifact with the repository, but the artifact will
-        not be written until :py:meth:`lazyscribe.Repository.save` is called.
+        not be written until :py:meth:`lazyscribe.repository.Repository.save` is called.
 
         Parameters
         ----------
@@ -118,19 +128,21 @@ class Repository:
         fname : str, optional (default None)
             The filename for the artifact. If set to ``None`` or not provided, it will be derived
             from the name of the artifact and the builtin suffix for each handler.
-        **kwargs : dict
+        **kwargs
             Keyword arguments for the write function of the handler.
 
         Raises
         ------
-        ReadOnlyError
+        lazyscribe.exception.ReadOnlyError
             If repository is in read-only mode.
         """
         if self.mode == "r":
             raise ReadOnlyError("Repository is in read-only mode.")
         # Retrieve and construct the handler
         self.last_updated = utcnow()
-        artifacts_matching_name = [art for art in self.artifacts if art.name == name]
+        artifacts_matching_name: list[Artifact] = [
+            art for art in self.artifacts if art.name == name
+        ]
         version = (
             max(art.version for art in artifacts_matching_name) + 1
             if artifacts_matching_name
@@ -159,7 +171,7 @@ class Repository:
         validate: bool = True,
         version: datetime | str | int | None = None,
         match: Literal["asof", "exact"] = "exact",
-        **kwargs,
+        **kwargs: Any,
     ) -> Any:
         """Load a single artifact.
 
@@ -176,31 +188,37 @@ class Repository:
             a string corresponding to the ``created_at`` field in the format ``"%Y-%m-%dT%H:%M:%S"``
             (e.g. ``"2025-01-25T12:36:22"``), or an integer version.
             If set to ``None`` or not provided, defaults to the most recent version.
-        match : "asof" | "exact", optional (default "exact")
+        match : {"asof", "exact"}, optional (default "exact")
             Matching logic. Only relevant for ``str`` and ``datetime.datetime`` values for
             ``version``. ``exact`` will provide an artifact with the exact ``created_at``
             value provided. ``asof`` will provide the most recent version as of the
             ``version`` value.
-        **kwargs : dict
+        **kwargs
             Keyword arguments for the handler read function.
 
         Returns
         -------
         Any
             The artifact object.
+
+        Raises
+        ------
+        lazyscribe.exception.ArtifactLoadError
+            Raised if ``validate`` and runtime environment does not match artifact metadata.
+            Raised if there is no artifact found with the name provided.
         """
         # Search for the artifact
         artifact = self._search_artifact_versions(
             name=name, version=version, match=match
         )
         # Construct the handler with relevant parameters.
-        artifact_attrs = {
+        artifact_attrs: dict[str, Any] = {
             x: y
             for x, y in inspect.getmembers(artifact)
             if not x.startswith("_") and not inspect.ismethod(y)
         }
-        exclude_params = ["value", "fname", "created_at", "dirty"]
-        construct_params = [
+        exclude_params: list[str] = ["value", "fname", "created_at", "dirty"]
+        construct_params: list[str] = [
             param
             for param in inspect.signature(artifact.construct).parameters
             if param not in exclude_params
@@ -259,7 +277,7 @@ class Repository:
             a string corresponding to the ``created_at`` field in the format ``"%Y-%m-%dT%H:%M:%S"``
             (e.g. ``"2025-01-25T12:36:22"``), or an integer version.
             If set to ``None`` or not provided, defaults to the most recent version.
-        match : "asof" | "exact", optional (default "exact")
+        match : {"asof", "exact"}, optional (default "exact")
             Matching logic. Only relevant for ``str`` and ``datetime.datetime`` values for
             ``version``. ``exact`` will provide an artifact with the exact ``created_at``
             value provided. ``asof`` will provide the most recent version as of the
@@ -267,21 +285,28 @@ class Repository:
 
         Returns
         -------
-        dict
+        dict[str, Any]
             The artifact metadata.
+
+        Raises
+        ------
+        ValueError
+            Raises if no valid artifact was found.
+        lazyscribe.exception.ReadOnlyError
+            Raised when trying to save when the project is in read-only mode.
         """
         artifact = self._search_artifact_versions(name, version, match)
 
         return next(serialize_artifacts([artifact]))
 
-    def save(self):
+    def save(self) -> None:
         """Save the repository data.
 
         This includes saving any artifact data.
 
         Raises
         ------
-        SaveError
+        lazyscribe.exception.SaveError
             Raised when writing to the filesystem fails.
         """
         if self.mode == "r":
@@ -345,23 +370,28 @@ class Repository:
             a string corresponding to the ``created_at`` field in the format ``"%Y-%m-%dT%H:%M:%S"``
             (e.g. ``"2025-01-25T12:36:22"``), or an integer version.
             If set to ``None`` or not provided, defaults to the most recent version.
-        match : "asof" | "exact", optional (default "exact")
+        match : {"asof", "exact"}, optional (default "exact")
             Matching logic. Only relevant for ``str`` and ``datetime.datetime`` values for
             ``version``. ``exact`` will provide an artifact with the exact ``created_at``
             value provided. ``asof`` will provide the most recent version as of the
             ``version`` value.
+
+        Raises
+        ------
+        ValueError
+            Raises if no valid artifact was found.
         """
         artifacts_matching_name = sorted(
             [art for art in self.artifacts if art.name == name],
             key=lambda x: x.created_at,
         )
+        if not artifacts_matching_name:
+            raise ValueError(f"No artifact with name {name}")
         version = (
             datetime.strptime(version, "%Y-%m-%dT%H:%M:%S")
             if isinstance(version, str)
             else version
         )
-        if not artifacts_matching_name:
-            raise ValueError(f"No artifact with name {name}") from None
         if version is None:
             artifact = artifacts_matching_name[-1]
         elif isinstance(version, datetime):
@@ -398,7 +428,7 @@ class Repository:
             else:
                 raise ValueError(
                     "Please provide ``exact`` or ``asof`` as the value for ``match``"
-                ) from None
+                )
         else:
             try:
                 # Integer version is 0-indexed

@@ -18,7 +18,7 @@ to a unique folder based on experiment slug:
     with project.log("My experiment") as exp:
         exp.path
 
-This will return ``Path("./my-experiment-YYYYMMDDHHMMSS")``, where the datetime
+This will return ``pathlib.Path("./my-experiment-YYYYMMDDHHMMSS")``, where the datetime
 corresponds to the ``created_at`` attribute.
 
 .. important::

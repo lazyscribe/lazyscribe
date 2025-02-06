@@ -245,7 +245,7 @@ def test_save_project_artifact_failed_validation(mock_version, tmp_path):
     with pytest.raises(ArtifactLoadError):
         project2 = Project(project_location, mode="r")
         exp2 = project2["my-experiment"]
-        model_load = exp2.load_artifact(name="estimator")
+        exp2.load_artifact(name="estimator")
 
 
 def test_save_project_artifact_multi_experiment(tmp_path):

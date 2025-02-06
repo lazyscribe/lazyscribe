@@ -17,6 +17,9 @@
 # relative to the documentation root, use os.path.abspath to make it
 # absolute, like shown here.
 #
+
+"""Documentation configuration."""
+
 import os
 import sys
 
@@ -32,6 +35,7 @@ sys.path.insert(0, os.path.abspath(".."))
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
     "sphinx_gallery.gen_gallery",
     "sphinx_inline_tabs",
@@ -76,6 +80,21 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
 
+
+# -- Extension configuration -------------------------------------------------
+
+# Autodoc default options
+
+autodoc_default_options = {
+    # Do not use __all__ when analysing the module to document.
+    'ignore-module-all': True,
+}
+
+# Napoleon settings
+
+napoleon_google_docstring = False
+napoleon_numpy_docstring = True
+
 # Sphinx gallery configuration
 
 sphinx_gallery_conf = {
@@ -83,6 +102,7 @@ sphinx_gallery_conf = {
     "filename_pattern": "",
     "gallery_dirs": "tutorials",
 }
+
 
 # -- Options for HTML output -------------------------------------------
 
@@ -101,73 +121,3 @@ html_theme_options = {}
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
-
-
-# -- Options for HTMLHelp output ---------------------------------------
-
-# Output file base name for HTML help builder.
-htmlhelp_basename = "lazyscribedoc"
-
-
-# -- Options for LaTeX output ------------------------------------------
-
-latex_elements = {
-    # The paper size ('letterpaper' or 'a4paper').
-    #
-    # 'papersize': 'letterpaper',
-    # The font size ('10pt', '11pt' or '12pt').
-    #
-    # 'pointsize': '10pt',
-    # Additional stuff for the LaTeX preamble.
-    #
-    # 'preamble': '',
-    # Latex figure (float) alignment
-    #
-    # 'figure_align': 'htbp',
-}
-
-# Grouping the document tree into LaTeX files. List of tuples
-# (source start file, target name, title, author, documentclass
-# [howto, manual, or own class]).
-latex_documents = [
-    (
-        master_doc,
-        "lazyscribe.tex",
-        "Lightweight experiment tracking Documentation",
-        "Akshay Gupta",
-        "manual",
-    ),
-]
-
-
-# -- Options for manual page output ------------------------------------
-
-# One entry per manual page. List of tuples
-# (source start file, name, description, authors, manual section).
-man_pages = [
-    (
-        master_doc,
-        "lazyscribe",
-        "Lightweight experiment tracking Documentation",
-        [author],
-        1,
-    )
-]
-
-
-# -- Options for Texinfo output ----------------------------------------
-
-# Grouping the document tree into Texinfo files. List of tuples
-# (source start file, target name, title, author,
-#  dir menu entry, description, category)
-texinfo_documents = [
-    (
-        master_doc,
-        "lazyscribe",
-        "Lightweight experiment tracking Documentation",
-        author,
-        "lazyscribe",
-        "One line description of project.",
-        "Miscellaneous",
-    ),
-]

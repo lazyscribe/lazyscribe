@@ -10,12 +10,13 @@ from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 from urllib.parse import urlparse
 
 import fsspec
 
 from lazyscribe.artifacts import _get_handler
+from lazyscribe.artifacts.base import Artifact
 from lazyscribe.exception import ReadOnlyError, SaveError
 from lazyscribe.experiment import Experiment, ReadOnlyExperiment
 from lazyscribe.linked import LinkedList, merge
@@ -29,14 +30,14 @@ class Project:
 
     Parameters
     ----------
-    fpath : str, optional (default "project.json")
+    fpath : str | pathlib.Path, optional (default "project.json")
         The location of the project file. If no project file exists, this will be the location
         of the output JSON file when ``save`` is called.
     mode : {"r", "a", "w", "w+"}, optional (default "w")
         The mode for opening the project.
 
         * ``r``: All existing experiments will be loaded as
-          :py:class:`lazyscribe.experiment.ReadOnlyExperiment` and no new experiments can be logged.
+          :py:class:`lazyscribe.experiment.ReadOnlyExperiment` and no new experiments can be added.
         * ``a``: All existing experiments will be loaded as
           :py:class:`lazyscribe.experiment.ReadOnlyExperiment` and new experiments can be added.
         * ``w``: No existing experiments will be loaded.
@@ -45,14 +46,19 @@ class Project:
     author : str, optional (default None)
         The project author. This author will be used for any new experiments or modifications to
         existing experiments. If not supplied, ``getpass.getuser()`` will be used.
-    storage_options : dict, optional (default None)
+    **storage_options
         Storage options to pass to the filesystem initialization. Will be passed to
-        fsspec.filesystem.
+        :py:meth:`fsspec.filesystem`.
 
     Attributes
     ----------
-    experiments : list
+    experiments : list[lazyscribe.experiment.Experiment]
         The list of experiments in the project.
+
+    Raises
+    ------
+    ValueError
+        Raises on invalid ``mode`` value.
     """
 
     def __init__(
@@ -60,8 +66,8 @@ class Project:
         fpath: str | Path = "project.json",
         mode: Literal["r", "a", "w", "w+"] = "w",
         author: str | None = None,
-        **storage_options,
-    ):
+        **storage_options: Any,
+    ) -> None:
         """Init method."""
         if isinstance(fpath, str):
             parsed = urlparse(fpath)
@@ -73,7 +79,7 @@ class Project:
         self.storage_options = storage_options
 
         # If in ``r``, ``a``, or ``w+`` mode, read in the existing project.
-        self.experiments: list[Experiment | ReadOnlyExperiment] = []
+        self.experiments: list[Experiment] = []
         self.fs = fsspec.filesystem(self.protocol, **storage_options)
 
         if mode not in ("r", "a", "w", "w+"):
@@ -84,7 +90,7 @@ class Project:
 
         self.author = getpass.getuser() if author is None else author
 
-    def load(self):
+    def load(self) -> None:
         """Load existing experiments.
 
         If the project is in read-only or append mode, existing experiments will
@@ -100,7 +106,7 @@ class Project:
         parent = self.fpath.parent
         upstream_projects: dict[str, Project] = {}
         for exp in data:
-            dependencies = {}
+            dependencies: dict[str, Experiment] = {}
             if "dependencies" in exp:
                 deplist = exp.pop("dependencies")
                 for dep in deplist:
@@ -110,6 +116,7 @@ class Project:
                         project = Project(
                             fpath=parent / project_name,
                             mode="r",
+                            author=None,
                             **self.storage_options,
                         )
                         project.load()
@@ -117,7 +124,7 @@ class Project:
                     depexp = project[exp_name]
                     dependencies[depexp.short_slug] = depexp
 
-            tests: list[Test | ReadOnlyTest] = []
+            tests: list[Test] = []
             if "tests" in exp:
                 testlist = exp.pop("tests")
                 for test in testlist:
@@ -126,7 +133,7 @@ class Project:
                     else:
                         tests.append(Test(**test))
 
-            artifacts = []
+            artifacts: list[Artifact] = []
             if "artifacts" in exp:
                 artifactlist = exp.pop("artifacts")
                 for artifact in artifactlist:
@@ -163,14 +170,16 @@ class Project:
                     )
                 )
 
-    def save(self):
+    def save(self) -> None:
         """Save the project data.
 
         This includes saving any artifact data.
 
         Raises
         ------
-        SaveError
+        lazyscribe.exception.ReadOnlyError
+            Raised when trying to save when the project is in read-only mode.
+        lazyscribe.exception.SaveError
             Raised when writing to the filesystem fails.
         """
         if self.mode == "r":
@@ -237,16 +246,16 @@ class Project:
 
         Returns
         -------
-        Project
+        lazyscribe.project.Project
             A new project.
         """
         # Create linked lists of experiments
         cexp = LinkedList.from_list(self.experiments)
         oexp = LinkedList.from_list(other.experiments)
         # Get the merged list of experiments
-        merged = merge(cexp.head, oexp.head).to_list()
+        merged = merge(cexp.head, oexp.head).to_list()  # type: ignore[arg-type]
         # De-dupe the merged list based on slug
-        slugs = [exp.slug for exp in merged]
+        slugs: list[str] = [exp.slug for exp in merged]
 
         new = Project(
             fpath=self.fpath,
@@ -260,19 +269,19 @@ class Project:
 
         return new
 
-    def append(self, other: Experiment):
+    def append(self, other: Experiment) -> None:
         """Append an experiment to the project.
 
         For details on the merging process, see :ref:`here <Project Appending>`.
 
         Parameters
         ----------
-        other : Experiment
+        other : lazyscribe.experiment.Experiment
             The experiment to add.
 
         Raises
         ------
-        ReadOnlyError
+        lazyscribe.exception.ReadOnlyError
             Raised when trying to log a new experiment when the project is in
             read-only mode.
         """
@@ -291,12 +300,12 @@ class Project:
 
         Yields
         ------
-        Experiment
-            A new ``Experiment`` data class.
+        lazyscribe.experiment.Experiment
+            A new :py:class:`lazyscribe.experiment.Experiment` object.
 
         Raises
         ------
-        ReadOnlyError
+        lazyscribe.exception.ReadOnlyError
             Raised when trying to log a new experiment when the project is in
             read-only mode.
         """
@@ -310,25 +319,30 @@ class Project:
 
         self.append(experiment)
 
-    def filter(self, func: Callable) -> Iterator[Experiment | ReadOnlyExperiment]:
+    def filter(self, func: Callable[[Experiment], bool]) -> Iterator[Experiment]:
         """Filter the experiments in the project.
 
         Parameters
         ----------
-        func : Callable
-            A callable that takes in a :py:class:`lazyscribe.Experiment` object
+        func : Callable[[lazyscribe.experiment.Experiment], bool]
+            A callable that takes in a :py:class:`lazyscribe.experiment.Experiment` object
             and returns a boolean indicating whether or not it passes the filter.
 
         Yields
         ------
-        Experiment
+        lazyscribe.experiment.Experiment
             An experiment.
         """
         for exp in self.experiments:
             if func(exp):
                 yield exp
 
-    def to_tabular(self) -> tuple[list[dict], list[dict]]:
+    def to_tabular(
+        self,
+    ) -> tuple[
+        list[dict[tuple[str] | tuple[str, str], Any]],
+        list[dict[tuple[str] | tuple[str, str], Any]],
+    ]:
         """Create a dictionary that can be fed into ``pandas``.
 
         This method depends on the user consistently logging
@@ -338,10 +352,10 @@ class Project:
         Returns
         -------
         list[dict]
-            The ``experiments`` list. Each entry is a result of :py:method:`lazyscribe.Experiment.to_tabular`
-            per project's experiment.
+            The ``experiments`` list. Each entry is a result of
+            :py:meth:`lazyscribe.experiment.Experiment.to_tabular` per project's experiment.
         list[dict]
-            The ``tests`` list. Each entry is a result of :py:method:`lazyscribe.Test.to_tabular`
+            The ``tests`` list. Each entry is a result of :py:meth:`lazyscribe.test.Test.to_tabular`
             per test per project's experiment, with the following additional keys:
 
             +-------------------------------------+--------------------------------------+
@@ -359,8 +373,8 @@ class Project:
             | ``("description",)``                | Test description                     |
             +-------------------------------------+--------------------------------------+
         """
-        exp_output: list[dict] = []
-        test_output: list[dict] = []
+        exp_output: list[dict[tuple[str] | tuple[str, str], Any]] = []
+        test_output: list[dict[tuple[str] | tuple[str, str], Any]] = []
 
         for exp in self.experiments:
             exp_item = exp.to_tabular()
@@ -380,7 +394,18 @@ class Project:
         return exp_output, test_output
 
     def __contains__(self, item: str) -> bool:
-        """Check if the project contains an experiment with the given slug or short slug."""
+        """Check if the project contains an experiment with the given slug or short slug.
+
+        Parameters
+        ----------
+        item : str
+            The slug or short slug for the experiment.
+
+        Returns
+        -------
+        bool
+            Whether the item exists.
+        """
         for exp in self.experiments:
             if exp.slug == item or exp.short_slug == item:
                 out = True
@@ -390,7 +415,7 @@ class Project:
 
         return out
 
-    def __getitem__(self, arg: str) -> Experiment | ReadOnlyExperiment:
+    def __getitem__(self, arg: str) -> Experiment:
         """Use brackets to retrieve an experiment by slug.
 
         Parameters
@@ -417,7 +442,13 @@ class Project:
 
         return out
 
-    def __iter__(self):
-        """Iterate through each experiment and return the dictionary."""
+    def __iter__(self) -> Iterator[dict[str, Any]]:
+        """Iterate through each experiment and return the dictionary.
+
+        Yields
+        ------
+        dict[str, Any]
+            An experiment dict.
+        """
         for exp in self.experiments:
             yield exp.to_dict()

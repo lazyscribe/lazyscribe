@@ -20,9 +20,8 @@ def _get_handler(alias: str) -> type[Artifact]:
 
     Returns
     -------
-    Artifact
-        The artifact handler class object. This object will need to be constructed
-        using :py:meth:`lazyscribe.artifacts.Artifact.construct`.
+    type[lazyscribe.artifacts.base.Artifact]
+        The artifact handler class.
     """
     entry = entry_points(group="lazyscribe.artifact_type")
 

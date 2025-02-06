@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from io import IOBase
 from typing import Any, ClassVar
 
 from attrs import define, field
@@ -32,8 +33,19 @@ class JoblibArtifact(Artifact):
         This class is not meant to be initialized directly. Please use the ``construct``
         method.
 
-    Parameters
+    Class Attributes
+    ----------------
+    See also "Class Attributes" of :py:class:`lazyscribe.artifacts.base.Artifact`.
+
+    alias : str = "json"
+    suffix : str = "json"
+    binary : bool = False
+    output_only : bool = False
+
+    Attributes
     ----------
+    See also "Attributes" of :py:class:`lazyscribe.artifacts.base.Artifact`.
+
     package : str
         The root module name of the python object to be serialized.
     package_version : str
@@ -58,31 +70,27 @@ class JoblibArtifact(Artifact):
         value: Any = None,
         fname: str | None = None,
         created_at: datetime | None = None,
-        writer_kwargs: dict | None = None,
+        writer_kwargs: dict[str, Any] | None = None,
         version: int = 0,
         dirty: bool = True,
         package: str | None = None,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> JoblibArtifact:
         """Construct the class with the version information.
 
         Parameters
         ----------
         name : str
             The name of the artifact.
-        value : object, optional (default None)
+        value : Any, optional (default None)
             The value for the artifact. The default value of ``None`` is used when
             an experiment is loaded from the project JSON.
         fname : str, optional (default None)
-            The filename of the artifact. If not provided, this value will be derived from
+            The filename for the artifact. If set to ``None`` or not provided, it will be derived from
             the name of the artifact and the suffix for the class.
-        created_at : datetime, optional (default None)
-            When the artifact was created. If not supplied, :py:meth:`datetime.now` will be used.
-        package: str, optional (default None)
-            The package name or root module name of the serializable python object.
-            Note: this may be different from the distribution name. e.g ``scikit-learn`` is
-            a distribution name, where as ``sklearn`` is the corresponding package name.
-        writer_kwargs : dict, optional (default None)
+        created_at : datetime.datetime, optional (default ``lazyscribe._utils.utcnow()``)
+            When the artifact was created.
+        writer_kwargs : dict[str, Any], optional (default {})
             Keyword arguments for writing an artifact to the filesystem. Provided when an artifact
             is logged to an experiment.
         version : int, optional (default 0)
@@ -91,9 +99,28 @@ class JoblibArtifact(Artifact):
             Whether or not this artifact should be saved when :py:meth:`lazyscribe.project.Project.save`
             or :py:meth:`lazyscribe.repository.Repository.save` is called. This decision is based
             on whether the artifact is new or has been updated.
-        **kwargs : dict
-            Other keyword arguments.
-            Usually class attributes obtained from a project JSON.
+        package : str, optional
+            The package name or root module name of the serializable python object.
+            Note: this may be different from the distribution name. e.g ``scikit-learn`` is
+            a distribution name, where as ``sklearn`` is the corresponding package name.
+        package_version : str, optional
+            TODO
+        joblib_version : str, optional
+            TODO
+
+        Returns
+        -------
+        JoblibArtifact
+            The artifact.
+
+        Raises
+        ------
+        ValueError
+            TODO
+        AttributeError
+            TODO
+        ArtifactError
+            TODO
         """
         if package is None:
             if value is None:
@@ -136,14 +163,14 @@ class JoblibArtifact(Artifact):
         )
 
     @classmethod
-    def read(cls, buf, **kwargs):
+    def read(cls, buf: IOBase, **kwargs: Any) -> Any:
         """Read the python object.
 
         Parameters
         ----------
         buf : file-like object
             The buffer from the ``fsspec`` filesystem.
-        **kwargs : dict
+        **kwargs
             Keyword arguments for ``joblib.load``.
 
         Returns
@@ -156,16 +183,16 @@ class JoblibArtifact(Artifact):
         return load(buf, **kwargs)
 
     @classmethod
-    def write(cls, obj, buf, **kwargs):
+    def write(cls, obj: Any, buf: IOBase, **kwargs: Any) -> None:
         """Write the python object to the filesystem.
 
         Parameters
         ----------
-        obj : object
+        obj : Any
             The python object to write.
         buf : file-like object
             The buffer from the ``fsspec`` filesystem.
-        **kwargs : dict
+        **kwargs
             Keyword arguments for :py:meth:`joblib.load`.
         """
         from joblib import dump
