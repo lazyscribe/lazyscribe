@@ -145,7 +145,7 @@ class LazyExperiment(Task):
         The path to the project JSON associated with the project.
     author : str, optional (default ``getpass.getuser()``)
         The author of the experiment.
-    **kwargs
+    kwargs : dict
         Keyword arguments for :py:class:`prefect.Task`.
     """
 

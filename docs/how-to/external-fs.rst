@@ -9,13 +9,14 @@ for example usage and available protocols.
 .. code-block:: python
 
     from lazyscribe import Project
+    from typing import Any
 
     fpath = "s3://path/to/my/project.json"
-    storage_options = {
+    storage_options: dict[str, Any] = {
         "username": "user",
         "password": "pswrd"
     }
-    
+
     project = Project(fpath=fpath, **storage_options)
 
 From there, you can use your project as normal.

@@ -49,7 +49,7 @@ class LazyTest(Task):
     ----------
     description : str, optional (default None)
         Description of the test.
-    **kwargs
+    kwargs : dict
         Keyword arguments for :py:class:`prefect.Task`.
     """
 
