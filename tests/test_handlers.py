@@ -74,6 +74,9 @@ def test_yaml_handler(data, Loader, tmp_path):
     assert data == out
 
 
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
 def test_yaml_handler_defaults_to_safeloader(tmp_path):
     """Test YAML handler defaults to safe loader."""
     location = tmp_path / "my-location"
