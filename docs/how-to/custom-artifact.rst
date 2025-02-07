@@ -50,7 +50,7 @@ additional metadata to capture, this is where we would capture it
 
 .. code-block:: python
 
-    from datetime import datetime
+    from datetime import datetime, timezone
     from typing import Any, ClassVar, Optional
 
     from attrs import define
@@ -78,7 +78,7 @@ additional metadata to capture, this is where we would capture it
             **kwargs
         ):
             """Construct the handler class."""
-            created_at = created_at or datetime.now()
+            created_at = created_at or datetime.now(timezone.utc)
             return cls(
                 name=name,
                 value=value,

@@ -10,6 +10,7 @@ from importlib_metadata import packages_distributions
 from importlib_metadata import version as importlib_version
 from slugify import slugify
 
+from lazyscribe._utils import utcnow
 from lazyscribe.artifacts.base import Artifact
 
 
@@ -112,7 +113,7 @@ class JoblibArtifact(Artifact):
             raise RuntimeError(
                 "Please install ``joblib`` to use this handler."
             ) from err
-        created_at = created_at or datetime.now()
+        created_at = created_at or utcnow()
         return cls(
             name=name,
             value=value,

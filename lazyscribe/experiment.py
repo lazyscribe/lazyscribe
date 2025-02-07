@@ -16,7 +16,7 @@ from fsspec.implementations.local import LocalFileSystem
 from fsspec.spec import AbstractFileSystem
 from slugify import slugify
 
-from lazyscribe._utils import serializer
+from lazyscribe._utils import serializer, utcnow
 from lazyscribe.artifacts import Artifact, _get_handler
 from lazyscribe.test import ReadOnlyTest, Test
 
@@ -43,9 +43,9 @@ class Experiment:
     parameters : dict, optional (default {})
         A dictionary of experiment parameters. The key must be a string but the value can be
         anything.
-    created_at : datetime, optional (default ``datetime.now()``)
+    created_at : datetime, optional (default ``utcnow()``)
         When the experiment was created.
-    last_updated : datetime, optional (default ``datetime.now()``)
+    last_updated : datetime, optional (default ``utcnow()``)
         When the experiment was last updated.
     dependencies : dict, optional (default None)
         A dictionary of upstream project experiments. The key is the short slug for the upstream
@@ -60,8 +60,8 @@ class Experiment:
     last_updated_by: str = field()
     metrics: dict = Factory(lambda: {})
     parameters: dict = Factory(lambda: {})
-    created_at: datetime = Factory(datetime.now)
-    last_updated: datetime = Factory(datetime.now)
+    created_at: datetime = Factory(utcnow)
+    last_updated: datetime = Factory(utcnow)
     dependencies: dict = field(eq=False, factory=lambda: {})
     short_slug: str = field()
     slug: str = field()
@@ -144,7 +144,7 @@ class Experiment:
         value : int or float
             Value of the metric.
         """
-        self.last_updated = datetime.now()
+        self.last_updated = utcnow()
         self.metrics[name] = value
 
     def log_parameter(self, name: str, value: Any):
@@ -159,7 +159,7 @@ class Experiment:
         value : Any
             The parameter itself.
         """
-        self.last_updated = datetime.now()
+        self.last_updated = utcnow()
         self.parameters[name] = value
 
     def tag(self, *args, overwrite: bool = False):
@@ -178,7 +178,7 @@ class Experiment:
         overwrite : bool, optional (default False)
             Whether to add or overwrite the new tags.
         """
-        self.last_updated = datetime.now()
+        self.last_updated = utcnow()
         new_tags_ = list(args)
         if overwrite:
             self.tags = new_tags_
@@ -223,7 +223,7 @@ class Experiment:
             ``overwrite`` is set to ``False``.
         """
         # Retrieve and construct the handler
-        self.last_updated = datetime.now()
+        self.last_updated = utcnow()
         handler_cls = _get_handler(handler)
         artifact_handler = handler_cls.construct(
             name=name,

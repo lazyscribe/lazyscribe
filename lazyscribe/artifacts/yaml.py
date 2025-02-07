@@ -8,6 +8,8 @@ from typing import Any, ClassVar
 
 import yaml
 
+from lazyscribe._utils import utcnow
+
 try:
     from yaml import CSafeLoader as SafeLoader
 except ImportError:  # pragma: no cover
@@ -41,7 +43,7 @@ class YAMLArtifact(Artifact):
         **kwargs,
     ):
         """Construct the handler class."""
-        created_at = created_at or datetime.now()
+        created_at = created_at or utcnow()
         return cls(
             name=name,
             value=value,
