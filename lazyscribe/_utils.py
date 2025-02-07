@@ -70,4 +70,4 @@ def utcnow() -> datetime:
     Any
         Converted value for easy serialization.
     """
-    return datetime.now(timezone.utc)
+    return datetime.now(timezone.utc).repalce(tzinfo=None)
