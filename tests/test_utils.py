@@ -13,20 +13,14 @@ def test_utcnow():
     with time_machine.travel(
         datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
     ):
-        assert utcnow() == datetime(
-            2025, 1, 20, 13, 23, 30
-        )
+        assert utcnow() == datetime(2025, 1, 20, 13, 23, 30)
 
     with time_machine.travel(
         datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("EST")), tick=False
     ):
-        assert utcnow() == datetime(
-            2025, 1, 20, 18, 23, 30
-        )
-        
+        assert utcnow() == datetime(2025, 1, 20, 18, 23, 30)
+
     with time_machine.travel(
         datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("MST")), tick=False
     ):
-        assert utcnow() == datetime(
-            2025, 1, 20, 20, 23, 30
-        )
+        assert utcnow() == datetime(2025, 1, 20, 20, 23, 30)

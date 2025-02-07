@@ -1,12 +1,15 @@
 """Test the project class."""
 
 import json
+import warnings
+import zoneinfo
 from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
 
 import fsspec
 import pytest
+import time_machine
 
 from lazyscribe import Project
 from lazyscribe.experiment import Experiment, ReadOnlyExperiment
@@ -17,6 +20,9 @@ CURR_DIR = Path(__file__).resolve().parent
 DATA_DIR = CURR_DIR / "data"
 
 
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
 @pytest.mark.parametrize(
     "project_kwargs",
     [
@@ -80,6 +86,9 @@ def test_not_logging_experiment_readonly():
         assert len(project.experiments) == 0
 
 
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
 def test_save_project(tmp_path):
     """Test saving a project to an output JSON."""
     location = tmp_path / "my-project"
@@ -125,6 +134,9 @@ def test_save_project(tmp_path):
     ]
 
 
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
 def test_save_project_artifact(tmp_path):
     """Test saving a project with an artifact."""
     location = tmp_path / "my-project"
@@ -186,6 +198,9 @@ def test_save_project_artifact_failed_validation(mock_version, tmp_path):
         model_load = exp2.load_artifact(name="estimator")
 
 
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
 def test_save_project_artifact_multi_experiment(tmp_path):
     """Test running save on a project twice with multiple experiments and artifacts.
 
@@ -252,6 +267,9 @@ def test_save_project_artifact_multi_experiment(tmp_path):
     )
 
 
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
 def test_save_project_artifact_updated(tmp_path):
     """Test running save twice with an updated experiment.
 
@@ -555,9 +573,9 @@ def test_filter_project():
     assert out == expected
 
 
-import warnings
-
-
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
 def test_save_project_artifact_output_only(tmp_path):
     """Test saving a project with an output only artifact."""
     location = tmp_path / "my-project"

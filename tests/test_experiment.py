@@ -2,17 +2,18 @@
 
 import sys
 import warnings
+import zoneinfo
 from datetime import datetime
 from pathlib import Path
 
 import pytest
 import time_machine
-import zoneinfo
 from attrs.exceptions import FrozenInstanceError
 
 from lazyscribe.artifacts import _get_handler
 from lazyscribe.experiment import Experiment, ReadOnlyExperiment
 from lazyscribe.test import ReadOnlyTest, Test
+
 
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
@@ -60,6 +61,7 @@ def test_experiment_logging():
     exp.tag("actually a failure", overwrite=True)
     assert exp.tags == ["actually a failure"]
 
+
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
@@ -94,6 +96,7 @@ def test_experiment_serialization():
         "tags": [],
     }
 
+
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
@@ -115,6 +118,7 @@ def test_experiment_to_tabular():
         ("short_slug", ""): "my-experiment",
         ("slug", ""): "my-experiment-" + today.strftime("%Y%m%d%H%M%S"),
     }
+
 
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
@@ -167,6 +171,7 @@ def test_experiment_artifact_logging_overwrite():
     exp.log_artifact(name="features", value=[3, 4, 5], handler="json", overwrite=True)
 
     assert exp.artifacts[0].value == [3, 4, 5]
+
 
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
@@ -230,6 +235,7 @@ def test_experiment_artifact_load_validation():
 
     with pytest.raises(RuntimeError):
         exp.load_artifact(name="estimator")
+
 
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
@@ -305,6 +311,7 @@ def test_frozen_test():
         test.name = "actually the test is not that"
 
     assert "lazyscribe.test.ReadOnlyTest" in str(test)
+
 
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
