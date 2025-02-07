@@ -93,6 +93,9 @@ def test_prefect_experiment(tmp_path):
     assert exp_dict["tags"] == ["success"]
 
 
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
 @pytest.mark.parametrize("parametrized", [True, False])
 def test_prefect_project(parametrized, tmp_path):
     """Test lazyscribe project integration with projects."""

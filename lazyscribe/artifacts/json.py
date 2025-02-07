@@ -10,6 +10,7 @@ from typing import Any, ClassVar
 from attrs import define
 from slugify import slugify
 
+from lazyscribe._utils import utcnow
 from lazyscribe.artifacts.base import Artifact
 
 
@@ -66,7 +67,7 @@ class JSONArtifact(Artifact):
         python_version = kwargs.get("python_version") or ".".join(
             str(i) for i in sys.version_info[:2]
         )
-        created_at = created_at or datetime.now()
+        created_at = created_at or utcnow()
         return cls(
             name=name,
             value=value,

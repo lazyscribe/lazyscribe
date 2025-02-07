@@ -3,6 +3,7 @@ from typing import Any, ClassVar, Optional
 
 from slugify import slugify
 
+from lazyscribe._utils import utcnow
 from lazyscribe.artifacts import Artifact
 
 
@@ -26,7 +27,7 @@ class TestArtifact(Artifact):
         version: int | None = None,
         **kwargs,
     ):
-        created_at = created_at or datetime.now()
+        created_at = created_at or utcnow()
         version = version if version is not None else 0
         return cls(
             name=name,
@@ -34,7 +35,7 @@ class TestArtifact(Artifact):
             writer_kwargs=writer_kwargs or {},
             fname=fname
             or f"{slugify(name)}-{created_at.strftime('%Y%m%d%H%M%S')}.{cls.suffix}",
-            created_at=created_at or datetime.now(),
+            created_at=created_at,
             version=version,
         )
 

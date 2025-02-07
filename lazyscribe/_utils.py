@@ -1,7 +1,7 @@
 """Util methods."""
 
 from collections.abc import Iterator
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from attrs import asdict, fields, filters
@@ -60,3 +60,14 @@ def serialize_artifacts(alist: list[Artifact]) -> Iterator[dict[str, Any]]:
         }
         for artifact in alist
     )
+
+
+def utcnow() -> datetime:
+    """Return the naive datetime now in UTC.
+
+    Returns
+    -------
+    datetime
+        Now in UTC, without timezone info.
+    """
+    return datetime.now(timezone.utc).replace(tzinfo=None)

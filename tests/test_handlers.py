@@ -13,6 +13,9 @@ from lazyscribe.artifacts.json import JSONArtifact
 from lazyscribe.artifacts.yaml import YAMLArtifact
 
 
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
 def test_json_handler(tmp_path):
     """Test reading and writing JSON files with the handler."""
     location = tmp_path / "my-location"
@@ -71,6 +74,9 @@ def test_yaml_handler(data, Loader, tmp_path):
     assert data == out
 
 
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
 def test_yaml_handler_defaults_to_safeloader(tmp_path):
     """Test YAML handler defaults to safe loader."""
     location = tmp_path / "my-location"
@@ -113,6 +119,9 @@ def test_yaml_handler_defaults_to_safeloader(tmp_path):
         handler.read(buf)
 
 
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
 def test_joblib_handler(tmp_path):
     """Test reading and writing scikit-learn estimators with the joblib handler."""
     joblib = pytest.importorskip("joblib")

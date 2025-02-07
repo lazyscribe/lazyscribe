@@ -15,7 +15,7 @@ from urllib.parse import urlparse
 import fsspec
 from attrs import asdict, fields, filters
 
-from lazyscribe._utils import serialize_artifacts
+from lazyscribe._utils import serialize_artifacts, utcnow
 from lazyscribe.artifacts import _get_handler
 from lazyscribe.artifacts.base import Artifact
 
@@ -124,7 +124,7 @@ class Repository:
         if self.mode == "r":
             raise RuntimeError("Repository is in read-only mode.")
         # Retrieve and construct the handler
-        self.last_updated = datetime.now()
+        self.last_updated = utcnow()
         artifacts_matching_name = [art for art in self.artifacts if art.name == name]
         version = (
             max(art.version for art in artifacts_matching_name) + 1
