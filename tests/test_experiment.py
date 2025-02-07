@@ -6,13 +6,17 @@ from datetime import datetime
 from pathlib import Path
 
 import pytest
+import time_machine
+import zoneinfo
 from attrs.exceptions import FrozenInstanceError
 
 from lazyscribe.artifacts import _get_handler
 from lazyscribe.experiment import Experiment, ReadOnlyExperiment
 from lazyscribe.test import ReadOnlyTest, Test
 
-
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
 def test_attrs_default():
     """Test any non-trivial experiment attributes."""
     today = datetime.now()
@@ -56,7 +60,9 @@ def test_experiment_logging():
     exp.tag("actually a failure", overwrite=True)
     assert exp.tags == ["actually a failure"]
 
-
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
 def test_experiment_serialization():
     """Test serializing the experiment to a dictionary."""
     today = datetime.now()
@@ -88,7 +94,9 @@ def test_experiment_serialization():
         "tags": [],
     }
 
-
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
 def test_experiment_to_tabular():
     """Test converting an experiment to a pandas-ready list."""
     today = datetime.now()
@@ -108,7 +116,9 @@ def test_experiment_to_tabular():
         ("slug", ""): "my-experiment-" + today.strftime("%Y%m%d%H%M%S"),
     }
 
-
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
 def test_experiment_artifact_logging_basic():
     """Test logging an artifact to the experiment."""
     today = datetime.now()
@@ -158,7 +168,9 @@ def test_experiment_artifact_logging_overwrite():
 
     assert exp.artifacts[0].value == [3, 4, 5]
 
-
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
 def test_experiment_artifact_load(tmp_path):
     """Test loading an experiment artifact from the disk."""
     location = tmp_path / "my-location"
@@ -219,7 +231,9 @@ def test_experiment_artifact_load_validation():
     with pytest.raises(RuntimeError):
         exp.load_artifact(name="estimator")
 
-
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
 def test_experiment_serialization_dependencies():
     """Test serializing an experiment with a dependency."""
     today = datetime.now()
@@ -292,7 +306,9 @@ def test_frozen_test():
 
     assert "lazyscribe.test.ReadOnlyTest" in str(test)
 
-
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
 def test_experiment_artifact_log_load_output_only(tmp_path):
     """Test loading an experiment artifact from the disk."""
     location = tmp_path / "my-location"
