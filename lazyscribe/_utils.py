@@ -63,11 +63,11 @@ def serialize_artifacts(alist: list[Artifact]) -> Iterator[dict[str, Any]]:
 
 
 def utcnow() -> datetime:
-    """Return the time now in UTC.
+    """Return the naive datetime now in UTC.
 
     Returns
     -------
-    Any
-        Converted value for easy serialization.
+    datetime
+        Now in UTC, without timezone info.
     """
-    return datetime.now(timezone.utc).repalce(tzinfo=None)
+    return datetime.now(timezone.utc).replace(tzinfo=None)
