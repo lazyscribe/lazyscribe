@@ -167,7 +167,7 @@ in the module where you are logging experiments:
 
     project = Project(...)
 
-    with project.log_experiment(...) as exp:
+    with project.log(...) as exp:
         exp.log_artifact(..., handler="text")
 
 This method works by looking for all available subclasses of :py:class:`lazyscribe.artifacts.base.Artifact`
