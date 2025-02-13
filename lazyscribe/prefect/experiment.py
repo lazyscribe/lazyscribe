@@ -1,9 +1,10 @@
 """Prefect experiment tasks."""
 
 import getpass
+from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Iterator, Optional, Tuple, Union
+from typing import Any, Optional, Union
 
 import prefect
 from prefect import Flow, Task, task
@@ -118,7 +119,7 @@ def append_test(experiment: Experiment, test: Test):
 
 
 @task(name="Add tag")
-def add_tag(experiment: Experiment, tags: Tuple[str], overwrite: bool):
+def add_tag(experiment: Experiment, tags: tuple[str], overwrite: bool):
     """Add tags to the experiment.
 
     Parameters

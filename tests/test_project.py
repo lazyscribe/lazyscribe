@@ -1,12 +1,15 @@
 """Test the project class."""
 
 import json
+import warnings
+import zoneinfo
 from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
 
 import fsspec
 import pytest
+import time_machine
 
 from lazyscribe import Project
 from lazyscribe.experiment import Experiment, ReadOnlyExperiment
@@ -17,6 +20,9 @@ CURR_DIR = Path(__file__).resolve().parent
 DATA_DIR = CURR_DIR / "data"
 
 
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
 @pytest.mark.parametrize(
     "project_kwargs",
     [
@@ -80,6 +86,9 @@ def test_not_logging_experiment_readonly():
         assert len(project.experiments) == 0
 
 
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
 def test_save_project(tmp_path):
     """Test saving a project to an output JSON."""
     location = tmp_path / "my-project"
@@ -125,6 +134,9 @@ def test_save_project(tmp_path):
     ]
 
 
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
 def test_save_project_artifact(tmp_path):
     """Test saving a project with an artifact."""
     location = tmp_path / "my-project"
@@ -139,17 +151,19 @@ def test_save_project_artifact(tmp_path):
     project.save()
 
     assert project_location.is_file()
+
+    features_fname = f"features-{today.strftime('%Y%m%d%H%M%S')}.json"
     assert (
-        location / f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}" / "features.json"
+        location / f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}" / features_fname
     ).is_file()
 
-    with open(location / exp.path / "features.json") as infile:
+    with open(location / exp.path / features_fname) as infile:
         artifact = json.load(infile)
 
     assert artifact == [0, 1, 2]
 
 
-@patch("lazyscribe.artifacts.joblib.version", side_effect=["1.2.2", "0.0.0"])
+@patch("lazyscribe.artifacts.joblib.importlib_version", side_effect=["1.2.2", "0.0.0"])
 def test_save_project_artifact_failed_validation(mock_version, tmp_path):
     """Test saving and loading project with an artifact."""
     location = tmp_path / "my-project"
@@ -174,7 +188,7 @@ def test_save_project_artifact_failed_validation(mock_version, tmp_path):
     assert (
         location
         / f"my-experiment-{exp.last_updated.strftime('%Y%m%d%H%M%S')}"
-        / "estimator.joblib"
+        / f"estimator-{exp.last_updated.strftime('%Y%m%d%H%M%S')}.joblib"
     ).is_file()
 
     # Reload project and validate experiment
@@ -207,14 +221,17 @@ def test_save_project_artifact_multi_experiment(tmp_path):
 
     # Check that the first experiment artifact was not overwritten
     fs = fsspec.filesystem("file")
-
+    first_exp = project["my-first-experiment"]
+    second_exp = reload_project["my-second-experiment"]
     assert (
         datetime.fromtimestamp(
-            fs.info(location / project["my-first-experiment"].path / "features.json")[
-                "created"
-            ]
+            fs.info(
+                location
+                / first_exp.path
+                / f"features-{first_exp.last_updated.strftime('%Y%m%d%H%M%S')}.json"
+            )["created"]
         )
-        < reload_project["my-second-experiment"].created_at
+        < second_exp.created_at
     )
 
     # Reload the project in editable mode and add another experiment
@@ -226,16 +243,21 @@ def test_save_project_artifact_multi_experiment(tmp_path):
     # Check that the first and second experiment artifacts were not overwritten
     assert (
         datetime.fromtimestamp(
-            fs.info(location / project["my-first-experiment"].path / "features.json")[
-                "created"
-            ]
+            fs.info(
+                location
+                / first_exp.path
+                / f"features-{first_exp.last_updated.strftime('%Y%m%d%H%M%S')}.json"
+            )["created"]
         )
-        < reload_project["my-second-experiment"].created_at
+        < second_exp.created_at
     )
+
     assert (
         datetime.fromtimestamp(
             fs.info(
-                location / reload_project["my-second-experiment"].path / "features.json"
+                location
+                / second_exp.path
+                / f"features-{second_exp.last_updated.strftime('%Y%m%d%H%M%S')}.json"
             )["created"]
         )
         < final_project["my-third-experiment"].created_at
@@ -265,12 +287,14 @@ def test_save_project_artifact_updated(tmp_path):
     new_project.save()
 
     fs = fsspec.filesystem("file")
-
+    experiment = project["my-experiment"]
     assert (
         datetime.fromtimestamp(
-            fs.info(location / project["my-experiment"].path / "features.json")[
-                "created"
-            ]
+            fs.info(
+                location
+                / experiment.path
+                / f"features-{experiment.last_updated.strftime('%Y%m%d%H%M%S')}.json"
+            )["created"]
         )
         < new_project["my-experiment"].last_updated
     )
@@ -543,9 +567,9 @@ def test_filter_project():
     assert out == expected
 
 
-import warnings
-
-
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
 def test_save_project_artifact_output_only(tmp_path):
     """Test saving a project with an output only artifact."""
     location = tmp_path / "my-project"
@@ -581,9 +605,10 @@ def test_save_project_artifact_output_only(tmp_path):
             "artifacts": [
                 {
                     "name": "features",
-                    "fname": "features.testartifact",
+                    "fname": f"features-{today.strftime('%Y%m%d%H%M%S')}.testartifact",
                     "handler": "testartifact",
                     "created_at": today.strftime("%Y-%m-%dT%H:%M:%S"),
+                    "version": 0,
                 }
             ],
             "tests": [],
@@ -605,5 +630,5 @@ def test_save_project_artifact_output_only(tmp_path):
     assert (
         location
         / f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}"
-        / "features.testartifact"
+        / f"features-{today.strftime('%Y%m%d%H%M%S')}.testartifact"
     ).is_file()

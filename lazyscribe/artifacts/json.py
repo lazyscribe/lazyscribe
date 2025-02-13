@@ -1,13 +1,16 @@
 """Artifact handler for JSON-serializable objects."""
 
+from __future__ import annotations
+
 import sys
 from datetime import datetime
 from json import dump, load
-from typing import Any, ClassVar, Dict, Optional
+from typing import Any, ClassVar
 
 from attrs import define
 from slugify import slugify
 
+from lazyscribe._utils import utcnow
 from lazyscribe.artifacts.base import Artifact
 
 
@@ -31,10 +34,11 @@ class JSONArtifact(Artifact):
     def construct(
         cls,
         name: str,
-        value: Optional[Any] = None,
-        fname: Optional[str] = None,
-        created_at: Optional[datetime] = None,
-        writer_kwargs: Optional[Dict] = None,
+        value: Any = None,
+        fname: str | None = None,
+        created_at: datetime | None = None,
+        writer_kwargs: dict | None = None,
+        version: int = 0,
         **kwargs,
     ):
         """Construct the handler class.
@@ -51,23 +55,28 @@ class JSONArtifact(Artifact):
             the name of the artifact and the suffix for the class.
         created_at : datetime, optional (default None)
             When the artifact was created. If not supplied, :py:meth:`datetime.now` will be used.
-        writer_kwargs : Dict, optional (default None)
+        writer_kwargs : dict, optional (default None)
             Keyword arguments for writing an artifact to the filesystem. Provided when an artifact
             is logged to an experiment.
-        **kwargs : Dict
+        version : int, optional (default 0)
+            Integer version to be used for versioning artifacts.
+        **kwargs : dict
             Other keyword arguments.
             Usually class attributes obtained from a project JSON.
         """
         python_version = kwargs.get("python_version") or ".".join(
             str(i) for i in sys.version_info[:2]
         )
+        created_at = created_at or utcnow()
         return cls(
             name=name,
             value=value,
             writer_kwargs=writer_kwargs or {},
-            fname=fname or f"{slugify(name)}.{cls.suffix}",
-            created_at=created_at or datetime.now(),
+            fname=fname
+            or f"{slugify(name)}-{slugify(created_at.strftime('%Y%m%d%H%M%S'))}.{cls.suffix}",
+            created_at=created_at,
             python_version=python_version,
+            version=version,
         )
 
     @classmethod

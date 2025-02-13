@@ -2,10 +2,12 @@
 
 import sys
 import warnings
+import zoneinfo
 from datetime import datetime
 from pathlib import Path
 
 import pytest
+import time_machine
 from attrs.exceptions import FrozenInstanceError
 
 from lazyscribe.artifacts import _get_handler
@@ -13,6 +15,9 @@ from lazyscribe.experiment import Experiment, ReadOnlyExperiment
 from lazyscribe.test import ReadOnlyTest, Test
 
 
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
 def test_attrs_default():
     """Test any non-trivial experiment attributes."""
     today = datetime.now()
@@ -57,6 +62,9 @@ def test_experiment_logging():
     assert exp.tags == ["actually a failure"]
 
 
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
 def test_experiment_serialization():
     """Test serializing the experiment to a dictionary."""
     today = datetime.now()
@@ -89,6 +97,32 @@ def test_experiment_serialization():
     }
 
 
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
+def test_experiment_to_tabular():
+    """Test converting an experiment to a pandas-ready list."""
+    today = datetime.now()
+    exp = Experiment(name="My experiment", project=Path("project.json"), author="root")
+    exp.log_metric("name", 0.5)
+    with exp.log_test(name="My test") as test:
+        test.log_metric("name-subpop", 0.3)
+
+    assert exp.to_tabular() == {
+        ("name", ""): "My experiment",
+        ("author", ""): "root",
+        ("last_updated_by", ""): "root",
+        ("metrics", "name"): 0.5,
+        ("created_at", ""): today.strftime("%Y-%m-%dT%H:%M:%S"),
+        ("last_updated", ""): today.strftime("%Y-%m-%dT%H:%M:%S"),
+        ("short_slug", ""): "my-experiment",
+        ("slug", ""): "my-experiment-" + today.strftime("%Y%m%d%H%M%S"),
+    }
+
+
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
 def test_experiment_artifact_logging_basic():
     """Test logging an artifact to the experiment."""
     today = datetime.now()
@@ -110,10 +144,11 @@ def test_experiment_artifact_logging_basic():
         "artifacts": [
             {
                 "name": "features",
-                "fname": "features.json",
+                "fname": f"features-{today.strftime('%Y%m%d%H%M%S')}.json",
                 "handler": "json",
                 "created_at": today.strftime("%Y-%m-%dT%H:%M:%S"),
                 "python_version": ".".join(str(i) for i in sys.version_info[:2]),
+                "version": 0,
             }
         ],
         "tests": [],
@@ -138,11 +173,15 @@ def test_experiment_artifact_logging_overwrite():
     assert exp.artifacts[0].value == [3, 4, 5]
 
 
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
 def test_experiment_artifact_load(tmp_path):
     """Test loading an experiment artifact from the disk."""
     location = tmp_path / "my-location"
     location.mkdir()
 
+    today = datetime.now()
     exp = Experiment(
         name="My experiment", project=location / "project.json", author="root"
     )
@@ -153,7 +192,12 @@ def test_experiment_artifact_load(tmp_path):
     with exp.fs.open(fpath, "w") as buf:
         exp.artifacts[0].write(exp.artifacts[0].value, buf)
 
-    assert (location / "my-location" / exp.path / "features.json").is_file()
+    assert (
+        location
+        / "my-location"
+        / exp.path
+        / f"features-{today.strftime('%Y%m%d%H%M%S')}.json"
+    ).is_file()
 
     out = exp.load_artifact(name="features")
 
@@ -193,6 +237,9 @@ def test_experiment_artifact_load_validation():
         exp.load_artifact(name="estimator")
 
 
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
 def test_experiment_serialization_dependencies():
     """Test serializing an experiment with a dependency."""
     today = datetime.now()
@@ -266,6 +313,9 @@ def test_frozen_test():
     assert "lazyscribe.test.ReadOnlyTest" in str(test)
 
 
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
 def test_experiment_artifact_log_load_output_only(tmp_path):
     """Test loading an experiment artifact from the disk."""
     location = tmp_path / "my-location"
@@ -289,8 +339,13 @@ def test_experiment_artifact_log_load_output_only(tmp_path):
     exp.fs.makedirs(exp.dir / exp.path, exist_ok=True)
     with exp.fs.open(fpath, "w") as buf:
         exp.artifacts[0].write(exp.artifacts[0].value, buf)
-
-    assert (location / "my-location" / exp.path / "features.testartifact").is_file()
+    today = datetime.now()
+    assert (
+        location
+        / "my-location"
+        / exp.path
+        / f"features-{today.strftime('%Y%m%d%H%M%S')}.testartifact"
+    ).is_file()
 
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("always")

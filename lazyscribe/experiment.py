@@ -5,69 +5,22 @@ import inspect
 import json
 import logging
 import warnings
+from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Union
+from typing import Any, Optional, Union
 
 from attrs import Factory, asdict, define, field, fields, filters, frozen
 from fsspec.implementations.local import LocalFileSystem
 from fsspec.spec import AbstractFileSystem
 from slugify import slugify
 
+from lazyscribe._utils import serializer, utcnow
 from lazyscribe.artifacts import Artifact, _get_handler
 from lazyscribe.test import ReadOnlyTest, Test
 
 LOG = logging.getLogger(__name__)
-
-
-def serializer(inst, field, value):
-    """Datetime and dependencies converter for :meth:`attrs.asdict`.
-
-    Parameters
-    ----------
-    inst
-        Included for compatibility.
-    field
-        The field name.
-    value
-        The field value.
-
-    Returns
-    -------
-    Any
-        Converted value for easy serialization.
-    """
-    if isinstance(value, datetime):
-        return value.isoformat(timespec="seconds")
-    if field is not None and field.name == "dependencies":
-        new = [f"{exp.project}|{exp.slug}" for exp in value.values()]
-        return new
-    if field is not None and field.name == "tests":
-        new = [asdict(test) for test in value]
-        return new
-    if field is not None and field.name == "artifacts":
-        new = [
-            {
-                **asdict(
-                    artifact,
-                    filter=filters.exclude(
-                        fields(type(artifact)).value,
-                        fields(type(artifact)).writer_kwargs,
-                    ),
-                    value_serializer=lambda _, __, value: value.isoformat(
-                        timespec="seconds"
-                    )
-                    if isinstance(value, datetime)
-                    else value,
-                ),
-                "handler": artifact.alias,
-            }
-            for artifact in value
-        ]
-        return new
-
-    return value
 
 
 @define
@@ -90,9 +43,9 @@ class Experiment:
     parameters : dict, optional (default {})
         A dictionary of experiment parameters. The key must be a string but the value can be
         anything.
-    created_at : datetime, optional (default ``datetime.now()``)
+    created_at : datetime, optional (default ``utcnow()``)
         When the experiment was created.
-    last_updated : datetime, optional (default ``datetime.now()``)
+    last_updated : datetime, optional (default ``utcnow()``)
         When the experiment was last updated.
     dependencies : dict, optional (default None)
         A dictionary of upstream project experiments. The key is the short slug for the upstream
@@ -105,16 +58,16 @@ class Experiment:
     fs: AbstractFileSystem = field(eq=False)
     author: str = Factory(getpass.getuser)
     last_updated_by: str = field()
-    metrics: Dict = Factory(lambda: {})
-    parameters: Dict = Factory(lambda: {})
-    created_at: datetime = Factory(datetime.now)
-    last_updated: datetime = Factory(datetime.now)
-    dependencies: Dict = field(eq=False, factory=lambda: {})
+    metrics: dict = Factory(lambda: {})
+    parameters: dict = Factory(lambda: {})
+    created_at: datetime = Factory(utcnow)
+    last_updated: datetime = Factory(utcnow)
+    dependencies: dict = field(eq=False, factory=lambda: {})
     short_slug: str = field()
     slug: str = field()
-    tests: List[Union[Test, ReadOnlyTest]] = Factory(lambda: [])
-    artifacts: List[Artifact] = Factory(factory=lambda: [])
-    tags: List[str] = Factory(factory=lambda: [])
+    tests: list[Union[Test, ReadOnlyTest]] = Factory(lambda: [])
+    artifacts: list[Artifact] = Factory(factory=lambda: [])
+    tags: list[str] = Factory(factory=lambda: [])
 
     @dir.default
     def _dir_factory(self) -> Path:
@@ -191,7 +144,7 @@ class Experiment:
         value : int or float
             Value of the metric.
         """
-        self.last_updated = datetime.now()
+        self.last_updated = utcnow()
         self.metrics[name] = value
 
     def log_parameter(self, name: str, value: Any):
@@ -206,7 +159,7 @@ class Experiment:
         value : Any
             The parameter itself.
         """
-        self.last_updated = datetime.now()
+        self.last_updated = utcnow()
         self.parameters[name] = value
 
     def tag(self, *args, overwrite: bool = False):
@@ -225,7 +178,7 @@ class Experiment:
         overwrite : bool, optional (default False)
             Whether to add or overwrite the new tags.
         """
-        self.last_updated = datetime.now()
+        self.last_updated = utcnow()
         new_tags_ = list(args)
         if overwrite:
             self.tags = new_tags_
@@ -270,7 +223,7 @@ class Experiment:
             ``overwrite`` is set to ``False``.
         """
         # Retrieve and construct the handler
-        self.last_updated = datetime.now()
+        self.last_updated = utcnow()
         handler_cls = _get_handler(handler)
         artifact_handler = handler_cls.construct(
             name=name,
@@ -400,12 +353,12 @@ class Experiment:
         except Exception as exc:
             raise exc
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Serialize the experiment to a dictionary.
 
         Returns
         -------
-        Dict
+        dict
             The experiment dictionary.
         """
         return asdict(
@@ -417,6 +370,55 @@ class Experiment:
                 fields(Experiment).fs,
             ),
         )
+
+    def to_tabular(self) -> dict:
+        """Create a dictionary that can be fed into ``pandas``.
+
+        Returns
+        -------
+        dict
+            Represent the experiment, with the following keys:
+
+            +--------------------------+-------------------------------+
+            | Field                    | Description                   |
+            |                          |                               |
+            +==========================+===============================+
+            | ``("name",)``            | Name of the experiment        |
+            +--------------------------+-------------------------------+
+            | ``("short_slug",)``      | Short slug for the experiment |
+            +--------------------------+-------------------------------+
+            | ``("slug",)``            | Full slug for the experiment  |
+            +--------------------------+-------------------------------+
+            | ``("author",)``          | Experiment author             |
+            +--------------------------+-------------------------------+
+            | ``("last_updated_by",)`` | Last author                   |
+            +--------------------------+-------------------------------+
+            | ``("created_at",)``      | Created timestamp             |
+            +--------------------------+-------------------------------+
+            | ``("last_updated",)``    | Last update timestammp        |
+            +--------------------------+-------------------------------+
+
+            as well as one key per parameter in the ``parameters`` dictionary
+            (with the format ``("parameters", <parameter_name>)``) and one key
+            per metric in the ``metrics`` dictionary (with the format
+            ``("metrics", <metric_name>)``) for each experiment.
+        """
+        d = self.to_dict()
+        return {
+            ("name", ""): d["name"],
+            ("slug", ""): d["slug"],
+            ("short_slug", ""): d["short_slug"],
+            ("author", ""): d["author"],
+            ("created_at", ""): d["created_at"],
+            ("last_updated", ""): d["last_updated"],
+            ("last_updated_by", ""): d["last_updated_by"],
+            **{
+                ("parameters", key): value
+                for key, value in d["parameters"].items()
+                if not isinstance(value, (tuple, list, dict))
+            },
+            **{("metrics", key): value for key, value in d["metrics"].items()},
+        }
 
     def __str__(self):
         """Shortened string representation."""

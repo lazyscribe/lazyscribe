@@ -1,6 +1,6 @@
 [project]
 name = "lazyscribe"
-requires-python = ">=3.8.0"
+requires-python = ">=3.9.0"
 description = "Lightweight and lazy experiment logging"
 authors = [
     {name = "Akshay Gupta", email="akgcodes@gmail.com"}
@@ -12,22 +12,21 @@ classifiers = [
 	"Natural Language :: English",
 	"Programming Language :: Python :: 3",
 	"Programming Language :: Python :: 3 :: Only",
-	"Programming Language :: Python :: 3.8",
 	"Programming Language :: Python :: 3.9",
 	"Programming Language :: Python :: 3.10",
 	"Programming Language :: Python :: 3.11",
 	"Programming Language :: Python :: 3.12",
 	"Programming Language :: Python :: 3.13",
 ]
-dependencies = ["attrs<=24.2.0,>=21.2.0", "importlib-metadata<=6.6.0,>=6.0", "python-slugify<=8.0.4,>=5.0.0", "fsspec<=2024.10.0,>=0.4.0"]
+dependencies = ["attrs<=25.1.0,>=21.2.0", "importlib-metadata<=8.5.0,>=6.0", "python-slugify<=8.0.4,>=5.0.0", "fsspec<=2025.2.0,>=0.4.0"]
 
 dynamic = ["readme", "version"]
 
 [project.optional-dependencies]
-build = ["build", "bumpver", "twine", "wheel"]
+build = ["build", "commitizen", "twine", "wheel"]
 docs = ["furo", "matplotlib", "pandas", "pillow", "prefect<2,>=1.0", "scikit-learn", "sphinx", "sphinx-gallery", "sphinx-inline-tabs"]
-qa = ["ruff==0.3.7", "edgetest", "mypy", "pip-tools", "types-python-slugify"]
-tests = ["scikit-learn", "prefect<2,>=1.0", "pytest", "pytest-cov"]
+qa = ["ruff==0.7.3", "edgetest", "mypy", "pip-tools", "pre-commit", "types-python-slugify", "types-PyYAML"]
+tests = ["scikit-learn", "prefect<2,>=1.0", "pytest", "pytest-cov", "time-machine", "PyYAML"]
 dev = ["lazyscribe[build]", "lazyscribe[docs]", "lazyscribe[qa]", "lazyscribe[tests]"]
 
 [project.urls]
@@ -43,6 +42,7 @@ build-backend = "setuptools.build_meta"
 base = "lazyscribe.artifacts.base:Artifact"
 joblib = "lazyscribe.artifacts.joblib:JoblibArtifact"
 json = "lazyscribe.artifacts.json:JSONArtifact"
+yaml = "lazyscribe.artifacts.yaml:YAMLArtifact"
 
 ##############################################################################
 # Setuptools configuration
@@ -61,21 +61,16 @@ readme = {file = ["README.md"], content-type = "text/markdown"}
 # Tooling
 ##############################################################################
 
-# BUMPVER --------------------------------------------------------------------
+# COMMITIZEN -----------------------------------------------------------------
 
-[bumpver]
-current_version = "0.6.0"
-version_pattern = "MAJOR.MINOR.PATCH"
-
-[bumpver.file_patterns]
-"pyproject.toml" = [
-	'current_version = "{version}"',
-]
-"lazyscribe/_meta.py" = [
-	'__version__ = "{version}"',
-]
-"docs/conf.py" = [
-	'version = "{version}"',
+[tool.commitizen]
+version = "0.7.0"
+tag_format = "v$version"
+update_changelog_on_bump = true
+major_version_zero = true
+version_files = [
+    "lazyscribe/_meta.py:__version__",
+	"docs/conf.py:version",
 ]
 
 # EDGETEST -------------------------------------------------------------------
@@ -89,12 +84,10 @@ command = "pytest tests"
 # RUFF -----------------------------------------------------------------------
 
 [tool.ruff]
-extend-include = ["*.ipynb"]
-target-version = "py38"
+target-version = "py39"
 
 [tool.ruff.lint]
 preview = true
-ignore-init-module-imports = true
 select = [
 	"E",  # pycodestyle errors
 	"W",  # pycodestyle warnings
@@ -111,18 +104,8 @@ select = [
 	"RUF",  # Ruff errors
 ]
 ignore = [
-	"C901",  # Add back in later
-	"E111",  # Check indentation level. Using formatter instead.
-	"E114",  # Check indentation level. Using formatter instead.
-	"E117",  # Check indentation level. Using formatter instead.
-	"E203",  # Check whitespace. Using formatter instead.
+	"C901",  # Function/method is too complex. (Add back in later.)
 	"E501",  # Line too long. Using formatter instead.
-	"D206",  # Docstring indentation. Using formatter instead.
-	"D300",  # Use triple single quotes. Using formatter instead.
-	"SIM108",  # Use ternary operator instead of if-else blocks.
-	"SIM105",  # Use ``contextlib.suppress(FileNotFoundError)`` insetad of try - execpt - pass.
-	"UP035",  # ``typing.x`` is deprecated, use ``x`` instead
-	"UP006",  # ``typing.x`` is deprecated, use ``x`` instead
 ]
 
 [tool.ruff.lint.per-file-ignores]

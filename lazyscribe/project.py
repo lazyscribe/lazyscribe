@@ -6,10 +6,11 @@ import getpass
 import json
 import logging
 import warnings
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, Dict, Iterator, List, Literal, Tuple
+from typing import Literal
 from urllib.parse import urlparse
 
 import fsspec
@@ -43,7 +44,7 @@ class Project:
     author : str, optional (default None)
         The project author. This author will be used for any new experiments or modifications to
         existing experiments. If not supplied, ``getpass.getuser()`` will be used.
-    storage_options : Dict, optional (default None)
+    storage_options : dict, optional (default None)
         Storage options to pass to the filesystem initialization. Will be passed to
         fsspec.filesystem.
 
@@ -75,8 +76,8 @@ class Project:
         self.storage_options = storage_options
 
         # If in ``r``, ``a``, or ``w+`` mode, read in the existing project.
-        self.experiments: List[Experiment | ReadOnlyExperiment] = []
-        self.snapshot: Dict = {}
+        self.experiments: list[Experiment | ReadOnlyExperiment] = []
+        self.snapshot: dict = {}
         self.fs = fsspec.filesystem(self.protocol, **storage_options)
 
         if mode not in ("r", "a", "w", "w+"):
@@ -223,7 +224,7 @@ class Project:
         The new project will inherit the current project ``fpath``,
         ``author``, and ``mode``.
 
-        For details on the merging process, see :doc:`here<../how-to/merge#updating>`.
+        For details on the merging process, see :ref:`here <Project Updating>`.
 
         Returns
         -------
@@ -253,7 +254,7 @@ class Project:
     def append(self, other: Experiment):
         """Append an experiment to the project.
 
-        For details on the merging process, see :doc:`here<../how-to/merge#appending>`.
+        For details on the merging process, see :ref:`here <Project Appending>`.
 
         Parameters
         ----------
@@ -321,7 +322,7 @@ class Project:
             if func(exp):
                 yield exp
 
-    def to_tabular(self) -> Tuple[List, List]:
+    def to_tabular(self) -> tuple[list[dict], list[dict]]:
         """Create a dictionary that can be fed into ``pandas``.
 
         This method depends on the user consistently logging
@@ -330,99 +331,45 @@ class Project:
 
         Returns
         -------
-        List
-            The ``experiments`` list. Each entry will represent an experiment,
-            with the following keys:
+        list[dict]
+            The ``experiments`` list. Each entry is a result of :py:method:`lazyscribe.Experiment.to_tabular`
+            per project's experiment.
+        list[dict]
+            The ``tests`` list. Each entry is a result of :py:method:`lazyscribe.Test.to_tabular`
+            per test per project's experiment, with the following additional keys:
 
-            +--------------------------+-------------------------------+
-            | Field                    | Description                   |
-            |                          |                               |
-            +==========================+===============================+
-            | ``("name",)``            | Name of the experiment        |
-            +--------------------------+-------------------------------+
-            | ``("short_slug",)``      | Short slug for the experiment |
-            +--------------------------+-------------------------------+
-            | ``("slug",)``            | Full slug for the experiment  |
-            +--------------------------+-------------------------------+
-            | ``("author",)``          | Experiment author             |
-            +--------------------------+-------------------------------+
-            | ``("last_updated_by",)`` | Last author                   |
-            +--------------------------+-------------------------------+
-            | ``("created_at",)``      | Created timestamp             |
-            +--------------------------+-------------------------------+
-            | ``("last_updated",)``    | Last update timestammp        |
-            +--------------------------+-------------------------------+
-
-            as well as one key per parameter in the ``parameters`` dictionary
-            (with the format ``("parameters", <parameter_name>)``) and one key
-            per metric in the ``metrics`` dictionary (with the format
-            ``("metrics", <metric_name>)``) for each experiment.
-        List
-            The ``tests`` list. Each entry will represent a test, with the
-            following keys:
-
-            +-------------------------------------+-------------------------------+
-            | Field                               | Description                   |
-            |                                     |                               |
-            +=====================================+===============================+
-            | ``("experiment_name",)``            | Name of the experiment        |
-            +-------------------------------------+-------------------------------+
-            | ``("experiment_short_slug",)``      | Short slug for the experiment |
-            +-------------------------------------+-------------------------------+
-            | ``("experiment_slug",)``            | Full slug for the experiment  |
-            +-------------------------------------+-------------------------------+
-            | ``("test",)``                       | Test name                     |
-            +-------------------------------------+-------------------------------+
-            | ``("description",)``                | Test description              |
-            +-------------------------------------+-------------------------------+
-
-            as well as one key per parameter in the ``parameters`` dictionary
-            (with the format ``("parameters", <parameter_name>)``) and one key
-            per metric in the ``metrics`` dictionary (with the format
-            ``("metrics", <metric_name>)``) for each test.
+            +-------------------------------------+--------------------------------------+
+            | Field                               | Description                          |
+            |                                     |                                      |
+            +=====================================+======================================+
+            | ``("experiment_name",)``            | Name of the test's experiment        |
+            +-------------------------------------+--------------------------------------+
+            | ``("experiment_short_slug",)``      | Short slug for the test's experiment |
+            +-------------------------------------+--------------------------------------+
+            | ``("experiment_slug",)``            | Full slug for the test's experiment  |
+            +-------------------------------------+--------------------------------------+
+            | ``("test",)``                       | Test name                            |
+            +-------------------------------------+--------------------------------------+
+            | ``("description",)``                | Test description                     |
+            +-------------------------------------+--------------------------------------+
         """
-        exp_output: List = []
-        test_output: List = []
+        exp_output: list[dict] = []
+        test_output: list[dict] = []
 
-        for exp in self:
-            exp_output.append(
-                {
-                    ("name", ""): exp["name"],
-                    ("short_slug", ""): exp["short_slug"],
-                    ("slug", ""): exp["slug"],
-                    ("author", ""): exp["author"],
-                    ("last_updated_by", ""): exp["last_updated_by"],
-                    ("created_at", ""): exp["created_at"],
-                    ("last_updated", ""): exp["last_updated"],
-                    **{
-                        ("metrics", key): value for key, value in exp["metrics"].items()
-                    },
-                    **{
-                        ("parameters", key): value
-                        for key, value in exp["parameters"].items()
-                        if not isinstance(value, (tuple, list, dict))
-                    },
-                }
-            )
-            for test in exp["tests"]:
-                test_output.append(
+        for exp in self.experiments:
+            exp_item = exp.to_tabular()
+            exp_output.append(exp_item)
+            d = exp.to_dict()
+            for test in exp.tests:
+                test_item = test.to_tabular()
+                test_item.update(
                     {
-                        ("experiment_name", ""): exp["name"],
-                        ("experiment_short_slug", ""): exp["short_slug"],
-                        ("experiment_slug", ""): exp["slug"],
-                        ("test", ""): test["name"],
-                        ("description", ""): test["description"],
-                        **{
-                            ("metrics", key): value
-                            for key, value in test["metrics"].items()
-                        },
-                        **{
-                            ("parameters", key): value
-                            for key, value in test["parameters"].items()
-                            if not isinstance(value, (tuple, list, dict))
-                        },
+                        ("experiment_name", ""): d["name"],
+                        ("experiment_short_slug", ""): d["short_slug"],
+                        ("experiment_slug", ""): d["slug"],
                     }
                 )
+                test_output.append(test_item)
 
         return exp_output, test_output
 

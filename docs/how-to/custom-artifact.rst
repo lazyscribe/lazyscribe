@@ -23,7 +23,7 @@ the following mandatory class variables:
    Python object on read.
 
 Additional class variables are used to capture metadata about the environment
-or artifact. Let's create a handler for YAML files to demonstrate.
+or artifact. Let's create a handler for text files to demonstrate.
 
 .. code-block:: python
 
@@ -35,11 +35,11 @@ or artifact. Let's create a handler for YAML files to demonstrate.
     from lazyscribe.artifacts.base import Artifact
 
     @define(auto_attribs=True)
-    class YAMLArtifact(Artifact):
-        """Handler for YAML artifacts."""
+    class TextArtifact(Artifact):
+        """Handler for Text artifacts."""
 
-        alias: ClassVar[str] = "yaml"
-        suffix: ClassVar[str] = "yaml"
+        alias: ClassVar[str] = "text"
+        suffix: ClassVar[str] = "txt"
         binary: ClassVar[bool] = False
         output_only: ClassVar[bool] = False
 
@@ -50,19 +50,19 @@ additional metadata to capture, this is where we would capture it
 
 .. code-block:: python
 
-    from datetime import datetime
-    from typing import Any, ClassVar, Dict, Optional
+    from datetime import datetime, timezone
+    from typing import Any, ClassVar, Optional
 
     from attrs import define
 
     from lazyscribe.artifacts.base import Artifact
 
     @define(auto_attribs=True)
-    class YAMLArtifact(Artifact):
-        """Handler for YAML artifacts."""
+    class TextArtifact(Artifact):
+        """Handler for Text artifacts."""
 
-        alias: ClassVar[str] = "yaml"
-        suffix: ClassVar[str] = "yaml"
+        alias: ClassVar[str] = "text"
+        suffix: ClassVar[str] = "txt"
         binary: ClassVar[bool] = False
         output_only: ClassVar[bool] = False
 
@@ -70,19 +70,22 @@ additional metadata to capture, this is where we would capture it
         def construct(
             cls,
             name: str,
-            value: Optional[Any] = None,
-            fname: Optional[str] = None,
-            created_at: Optional[datetime] = None,
-            writer_kwargs: Optional[Dict] = None,
+            value: Any = None,
+            fname: str | None = None,
+            created_at: datetime | None = None,
+            writer_kwargs: dict | None = None,
+            version: int | None = None
             **kwargs
         ):
             """Construct the handler class."""
+            created_at = created_at or datetime.now(timezone.utc)
             return cls(
                 name=name,
                 value=value,
                 writer_kwargs=writer_kwargs or {},
-                fname=fname or f"{slugify(name)}.{cls.suffix}",
-                created_at=created_at or datetime.now(),
+                version=version,
+                fname=fname or f"{slugify(name)}-{slugify(created_at.strftime('%Y%m%d%H%M%S'))}.{cls.suffix}",
+                created_at=created_at,
             )
 
 Finally, we have to write the I/O methods, ``read`` and ``write``. Both of these
@@ -90,10 +93,9 @@ methods should expect a file buffer from the ``fsspec`` filesystem.
 
 .. code-block:: python
 
-    import yaml
 
     @define(auto_attribs=True)
-    class YAMLArtifact(Artifact):
+    class TextArtifact(Artifact):
         ...
         @classmethod
         def read(cls, buf, **kwargs):
@@ -104,29 +106,29 @@ methods should expect a file buffer from the ``fsspec`` filesystem.
             buf : file-like object
                 The buffer from a ``fsspec`` filesystem.
             **kwargs
-                Keyword arguments for the read method.
+                Keyword arguments for compatibility.
 
             Returns
             -------
             Any
                 The artifact.
             """
-            return yaml.load(buf, Loader=yaml.SafeLoader, **kwargs)
+            return buf.read()
 
         @classmethod
         def write(cls, obj, buf, **kwargs):
-            """Write the content to a YAML file.
+            """Write the content to a Text file.
 
             Parameters
             ----------
             obj : object
-                The YAML-serializable object.
+                The Text-serializable object.
             buf : file-like object
                 The buffer from a ``fsspec`` filesystem.
             **kwargs
-                Keyword arguments for :py:meth:`yaml.dump`.
+                Keyword arguments for compatibility.
             """
-            yaml.dump(obj, buf, **kwargs)
+            buf.write(obj)
 
 You have a new custom handler!
 
@@ -140,15 +142,15 @@ Entry points (for packages)
 
 You can register your artifact handler using entry points in the
 ``lazyscribe.artifact_type`` group. For example, suppose we distributed our
-``YAMLArtifact`` class as ``myproject.artifacts.YAMLArtifact``. In the ``pyproject.toml``
+``TextArtifact`` class as ``myproject.artifacts.TextArtifact``. In the ``pyproject.toml``
 for ``myproject``, we can include the following:
 
 .. code-block:: toml
 
     [project.entry-points."lazyscribe.artifact_type"]
-    yaml = "myproject.artifacts:YAMLArtifact"
+    text = "myproject.artifacts:TextArtifact"
 
-Then, you can use :py:meth:`lazyscribe.Experiment.log_artifact` with ``handler="yaml"``.
+Then, you can use :py:meth:`lazyscribe.Experiment.log_artifact` with ``handler="text"``.
 
 Subclass scanning
 ~~~~~~~~~~~~~~~~~
@@ -159,14 +161,14 @@ in the module where you are logging experiments:
 
 .. code-block:: python
 
-    from mymodule import YAMLArtifact
+    from mymodule import TextArtifact
 
     from lazyscribe import Project
 
     project = Project(...)
 
-    with project.log_experiment(...) as exp:
-        exp.log_artifact(..., handler="yaml")
+    with project.log(...) as exp:
+        exp.log_artifact(..., handler="text")
 
 This method works by looking for all available subclasses of :py:class:`lazyscribe.artifacts.base.Artifact`
 at runtime.
