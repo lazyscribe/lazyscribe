@@ -2,7 +2,7 @@
 #    uv pip compile pyproject.toml -o requirements.txt
 attrs==25.1.0
     # via lazyscribe (pyproject.toml)
-fsspec==2024.12.0
+fsspec==2025.2.0
     # via lazyscribe (pyproject.toml)
 importlib-metadata==8.5.0
     # via lazyscribe (pyproject.toml)
