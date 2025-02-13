@@ -106,8 +106,8 @@ class Repository:
         handler : str
             The name of the handler to use for the object.
         fname : str, optional (default None)
-            The filename for the artifact. If not provided, it will be derived from the
-            name of the artifact and the builtin suffix for each handler.
+            The filename for the artifact. If set to ``None`` or not provided, it will be derived
+            from the name of the artifact and the builtin suffix for each handler.
         overwrite : bool, optional (default False)
             Whether or not to overwrite an existing artifact with the same name. If set to ``True``,
             the previous artifact will be removed and overwritten with the current artifact.
@@ -120,6 +120,7 @@ class Repository:
         RuntimeError
             Raised if an artifact is supplied with the same name as an existing artifact and
             ``overwrite`` is set to ``False``.
+            Also raised if the repository is in read-only mode.
         """
         if self.mode == "r":
             raise RuntimeError("Repository is in read-only mode.")
@@ -164,12 +165,12 @@ class Repository:
         validate : bool, optional (default True)
             Whether or not to validate the runtime environment against the artifact
             metadata.
-        version: datetime | str | int, optional (default None)
+        version: datetime.datetime | str | int, optional (default None)
             The version of the artifact to load.
             Can be provided as a datetime corresponding to the ``created_at`` field,
-            a string corresponding to the ``created_at`` field in the format "%Y-%m-%dT%H:%M:%S" (e.g. "2025-01-25T12:36:22"),
-            or an integer version.
-            If not provided, defaults to the most recent version.
+            a string corresponding to the ``created_at`` field in the format ``"%Y-%m-%dT%H:%M:%S"``
+            (e.g. ``"2025-01-25T12:36:22"``), or an integer version.
+            If set to ``None`` or not provided, defaults to the most recent version.
         **kwargs : dict
             Keyword arguments for the handler read function.
 
