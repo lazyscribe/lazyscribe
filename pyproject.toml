@@ -73,23 +73,6 @@ version_files = [
 	"docs/conf.py:version",
 ]
 
-# BUMPVER --------------------------------------------------------------------
-
-[bumpver]
-current_version = "0.6.0"
-version_pattern = "MAJOR.MINOR.PATCH"
-
-[bumpver.file_patterns]
-"pyproject.toml" = [
-	'current_version = "{version}"',
-]
-"lazyscribe/_meta.py" = [
-	'__version__ = "{version}"',
-]
-"docs/conf.py" = [
-	'version = "{version}"',
-]
-
 # EDGETEST -------------------------------------------------------------------
 
 [edgetest.envs.core]
