@@ -30,13 +30,14 @@ class Repository:
     fpath : str | Path, optional (default "repository.json")
         The location of the repository file. If no repository file exists, this will be the location
         of the output JSON file when ``save`` is called.
-    mode : {"r", "a", "w"}, optional (default "w")
+    mode : {"r", "a", "w", "w+"}, optional (default "w")
         The mode for opening the repository.
 
         * ``r``: Repository loaded as read-only: no new artifacts can be logged.
         * ``a``: All existing artifacts will be loaded as
           read-only and new artifacts can be added.
         * ``w``: No existing artifacts will be loaded.
+        * ``w+``: All artifacts will be loaded in editable mode.
 
     Attributes
     ----------
@@ -47,7 +48,7 @@ class Repository:
     def __init__(
         self,
         fpath: str | Path = "repository.json",
-        mode: Literal["r", "a", "w"] = "w",
+        mode: Literal["r", "a", "w", "w+"] = "w",
         **storage_options,
     ):
         """Init method."""
@@ -61,14 +62,14 @@ class Repository:
         self.dir = self.fpath.parent
         self.storage_options = storage_options
 
-        # If in ``r`` or ``a`` mode, read in the existing repository.
+        # If in ``r``, ``a``, or ``w+`` mode, read in the existing repository.
         self.artifacts: list[Artifact] = []
         self.fs = fsspec.filesystem(self.protocol, **storage_options)
 
-        if mode not in ("r", "a", "w"):
+        if mode not in ("r", "a", "w", "w+"):
             raise ValueError("Please provide a valid ``mode`` value.")
         self.mode = mode
-        if mode in ("r", "a") and self.fs.isfile(self.fpath):
+        if mode in ("r", "a", "w+") and self.fs.isfile(self.fpath):
             self.load()
 
     def load(self):
