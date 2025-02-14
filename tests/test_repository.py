@@ -84,6 +84,62 @@ def test_save_repository(tmp_path):
     assert artifact_loaded == artifact_read == {"a": 1}
 
 
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
+def test_save_repository_multi(tmp_path):
+    """Test saving a repository, reading it in, logging, saving again."""
+    location = tmp_path / "my-repository"
+    location.mkdir()
+    repository_location = location / "repository.json"
+
+    repository = Repository(repository_location)
+    repository.log_artifact("my-dict", {"a": 1}, handler="json")
+
+    repository.save()
+    assert repository_location.is_file()
+
+    # Read in the repository again and log a separate artifact
+    repository_read = Repository(repository_location, mode="a")
+    repository_read.log_artifact("my-dict-2", {"b": 2}, handler="json")
+
+    repository_read.save()
+
+    with open(repository_location) as infile:
+        serialized = json.load(infile)
+
+    assert serialized == [
+        {
+            "created_at": "2025-01-20T13:23:30",
+            "fname": "my-dict-20250120132330.json",
+            "handler": "json",
+            "name": "my-dict",
+            "python_version": ".".join(str(i) for i in sys.version_info[:2]),
+            "version": 0,
+        },
+        {
+            "created_at": "2025-01-20T13:23:30",
+            "fname": "my-dict-2-20250120132330.json",
+            "handler": "json",
+            "name": "my-dict-2",
+            "python_version": ".".join(str(i) for i in sys.version_info[:2]),
+            "version": 0,
+        },
+    ]
+
+    artifact_loaded = repository_read.load_artifact("my-dict")
+    with open(location / "my-dict" / "my-dict-20250120132330.json") as infile:
+        artifact_read = json.load(infile)
+
+    assert artifact_loaded == artifact_read == {"a": 1}
+
+    artifact_loaded = repository_read.load_artifact("my-dict-2")
+    with open(location / "my-dict-2" / "my-dict-2-20250120132330.json") as infile:
+        artifact_read = json.load(infile)
+
+    assert artifact_read == artifact_loaded == {"b": 2}
+
+
 def test_save_repository_multiple_artifact(tmp_path):
     """Test saving repository with multiple artifacts."""
     location = tmp_path / "my-repository"

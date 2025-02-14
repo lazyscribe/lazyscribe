@@ -273,6 +273,13 @@ class Repository:
             fmode = "wb" if artifact.binary else "w"
             artifact_dir = self.dir / artifact.name
             fpath = artifact_dir / artifact.fname
+            if self.fs.isfile(fpath) and artifact.created_at <= datetime.fromtimestamp(
+                self.fs.info(fpath)["created"]
+            ):
+                LOG.debug(
+                    f"Artifact {artifact.name} v{artifact.version} already exists and has not been updated"
+                )
+                continue
 
             self.fs.makedirs(artifact_dir, exist_ok=True)
             LOG.debug(f"Saving '{artifact.name}' to {fpath!s}...")
