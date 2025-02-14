@@ -273,6 +273,11 @@ class Repository:
             fmode = "wb" if artifact.binary else "w"
             artifact_dir = self.dir / artifact.name
             fpath = artifact_dir / artifact.fname
+            if self.fs.isfile(fpath):
+                LOG.debug(
+                    f"Artifact {artifact.name} v{artifact.version} already exists. Skipping..."
+                )
+                continue
 
             self.fs.makedirs(artifact_dir, exist_ok=True)
             LOG.debug(f"Saving '{artifact.name}' to {fpath!s}...")
