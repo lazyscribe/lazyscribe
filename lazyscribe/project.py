@@ -83,7 +83,7 @@ class Project:
         if mode not in ("r", "a", "w", "w+"):
             raise ValueError("Please provide a valid ``mode`` value.")
         self.mode = mode
-        if mode in ("r", "a", "w+") and self.fs.isfile(self.fpath):
+        if mode in ("r", "a", "w+") and self.fs.isfile(str(self.fpath)):
             self.load()
 
         self.author = getpass.getuser() if author is None else author
@@ -95,7 +95,7 @@ class Project:
         be loaded in read-only mode. If opened in editable mode, existing experiments
         will be loaded in editable mode.
         """
-        with self.fs.open(self.fpath, "r") as infile:
+        with self.fs.open(str(self.fpath), "r") as infile:
             data = json.load(infile)
         for idx, entry in enumerate(data):
             data[idx]["created_at"] = datetime.fromisoformat(entry["created_at"])
@@ -181,7 +181,7 @@ class Project:
                     self[slug].last_updated_by = self.author
 
         data = list(self)
-        with self.fs.open(self.fpath, "w") as outfile:
+        with self.fs.open(str(self.fpath), "w") as outfile:
             json.dump(data, outfile, sort_keys=True, indent=4)
 
         for exp in self.experiments:
@@ -205,9 +205,9 @@ class Project:
                     )
                     continue
 
-                self.fs.makedirs(exp.dir / exp.path, exist_ok=True)
+                self.fs.makedirs(str(exp.dir / exp.path), exist_ok=True)
                 LOG.debug(f"Saving '{artifact.name}' to {fpath!s}...")
-                with self.fs.open(fpath, fmode) as buf:
+                with self.fs.open(str(fpath), fmode) as buf:
                     artifact.write(artifact.value, buf, **artifact.writer_kwargs)
                     if artifact.output_only:
                         warnings.warn(
