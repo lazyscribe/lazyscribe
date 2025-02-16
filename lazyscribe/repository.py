@@ -81,7 +81,9 @@ class Repository:
         for artifact in data:
             handler_cls = _get_handler(artifact.pop("handler"))
             created_at = datetime.fromisoformat(artifact.pop("created_at"))
-            artifacts.append(handler_cls.construct(**artifact, created_at=created_at))
+            artifacts.append(
+                handler_cls.construct(**artifact, created_at=created_at, dirty=False)
+            )
         self.artifacts = artifacts
 
     def log_artifact(
@@ -140,6 +142,7 @@ class Repository:
             created_at=self.last_updated,
             writer_kwargs=kwargs,
             version=version,
+            dirty=True,
         )
         self.artifacts.append(artifact_handler)
         if handler_cls.output_only:
@@ -273,9 +276,7 @@ class Repository:
             fmode = "wb" if artifact.binary else "w"
             artifact_dir = self.dir / artifact.name
             fpath = artifact_dir / artifact.fname
-            if self.fs.isfile(fpath) and artifact.created_at <= datetime.fromtimestamp(
-                self.fs.info(fpath)["created"]
-            ):
+            if not artifact.dirty:
                 LOG.debug(
                     f"Artifact {artifact.name} v{artifact.version} already exists and has not been updated"
                 )

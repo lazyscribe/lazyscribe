@@ -231,6 +231,7 @@ class Experiment:
             fname=fname,
             created_at=self.last_updated,
             writer_kwargs=kwargs,
+            dirty=True,
         )
         for index, artifact in enumerate(self.artifacts):
             if artifact.name == name:

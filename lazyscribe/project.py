@@ -137,7 +137,9 @@ class Project:
                     handler_cls = _get_handler(artifact.pop("handler"))
                     created_at = datetime.fromisoformat(artifact.pop("created_at"))
                     artifacts.append(
-                        handler_cls.construct(**artifact, created_at=created_at)
+                        handler_cls.construct(
+                            **artifact, created_at=created_at, dirty=False
+                        )
                     )
 
             if self.mode in ("r", "a"):
@@ -197,11 +199,7 @@ class Project:
             for artifact in exp.artifacts:
                 fmode = "wb" if artifact.binary else "w"
                 fpath = exp.dir / exp.path / artifact.fname
-                if self.fs.isfile(
-                    fpath
-                ) and artifact.created_at <= datetime.fromtimestamp(
-                    self.fs.info(fpath)["created"]
-                ):
+                if not artifact.dirty:
                     LOG.debug(
                         f"Artifact '{artifact.name}' already exists and has not been updated"
                     )

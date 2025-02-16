@@ -167,6 +167,7 @@ def test_joblib_handler(tmp_path):
             package_version=sklearn.__version__,
             joblib_version=joblib.__version__,
             version=None,
+            dirty=False,
         )
     ) == handler
 

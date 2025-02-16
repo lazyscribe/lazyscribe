@@ -40,6 +40,7 @@ class YAMLArtifact(Artifact):
         created_at: datetime | None = None,
         writer_kwargs: dict | None = None,
         version: int = 0,
+        dirty: bool = False,
         **kwargs,
     ):
         """Construct the handler class."""
@@ -49,9 +50,10 @@ class YAMLArtifact(Artifact):
             value=value,
             fname=fname
             or f"{slugify(name)}-{slugify(created_at.strftime('%Y%m%d%H%M%S'))}.{cls.suffix}",
+            created_at=created_at,
             writer_kwargs=writer_kwargs or {},
             version=version,
-            created_at=created_at,
+            dirty=dirty,
         )
 
     @classmethod
