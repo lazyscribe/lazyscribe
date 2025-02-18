@@ -1,3 +1,9 @@
+## v0.7.1 (2025-02-15)
+
+### Fix
+
+- adding a check to ensure existing artifacts are not overwritten with null data and removing the w+ mode (#96)
+
 ## v0.7.0 (2025-02-13)
 
 ### Feat
