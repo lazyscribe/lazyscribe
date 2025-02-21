@@ -383,3 +383,71 @@ def test_repository_artifact_output_only(tmp_path):
         assert "Artifact 'features' is not the original Python Object" in str(
             w[-1].message
         )
+
+
+def test_invalid_match_strategy():
+    """Test raising an error with an invalid value for ``match``."""
+    repository = Repository()
+    repository.log_artifact("my-dict", {"a": 1}, handler="json")
+
+    with pytest.raises(ValueError):
+        repository._search_artifact_versions(
+            "my-dict", version=datetime(2025, 1, 1), match="fake"
+        )
+
+
+def test_repository_asof_search(tmp_path):
+    """Test retrieving artifacts using ``asof``."""
+    location = tmp_path / "my-repository"
+    location.mkdir()
+    repository_location = location / "repository.json"
+
+    repository = Repository(repository_location)
+
+    # Log artifacts using time-travel to get different creation dates
+    with time_machine.travel(
+        datetime(2025, 1, 1, 0, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+    ):
+        repository.log_artifact("my-dict", {"a": 1}, handler="json")
+    with time_machine.travel(
+        datetime(2025, 2, 1, 0, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+    ):
+        repository.log_artifact("my-dict", {"a": 2}, handler="json")
+    with time_machine.travel(
+        datetime(2025, 3, 1, 0, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+    ):
+        repository.log_artifact("my-dict", {"a": 3}, handler="json")
+
+    repository.save()
+
+    art = repository.load_artifact(
+        name="my-dict", version=datetime(2025, 1, 15), match="asof"
+    )
+
+    assert art == repository.load_artifact(name="my-dict", version=datetime(2025, 1, 1))
+
+    art = repository.load_artifact(
+        name="my-dict", version=datetime(2025, 3, 15), match="asof"
+    )
+
+    assert art == repository.load_artifact(name="my-dict", version=datetime(2025, 3, 1))
+
+
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
+def test_retrieve_artifact_meta():
+    """Test retrieving artifact metadata."""
+    repository = Repository()
+    repository.log_artifact("my-dict", {"a": 1}, handler="json")
+
+    data = repository.get_artifact_metadata("my-dict")
+
+    assert data == {
+        "created_at": "2025-01-20T13:23:30",
+        "fname": "my-dict-20250120132330.json",
+        "handler": "json",
+        "name": "my-dict",
+        "python_version": ".".join(str(i) for i in sys.version_info[:2]),
+        "version": 0,
+    }

@@ -42,7 +42,7 @@ cloudpickle==3.1.1
     #   prefect
 colorama==0.4.6
     # via commitizen
-commitizen==4.2.1
+commitizen==4.2.2
     # via lazyscribe (pyproject.toml)
 contourpy==1.3.0
     # via matplotlib
@@ -211,7 +211,7 @@ prefect==1.4.1
     # via lazyscribe (pyproject.toml)
 prompt-toolkit==3.0.50
     # via questionary
-psutil==6.1.1
+psutil==7.0.0
     # via distributed
 pycparser==2.22
     # via cffi
