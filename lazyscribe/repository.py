@@ -286,6 +286,8 @@ class Repository:
             LOG.debug(f"Saving '{artifact.name}' to {fpath!s}...")
             with self.fs.open(str(fpath), fmode) as buf:
                 artifact.write(artifact.value, buf, **artifact.writer_kwargs)
+                # Reset the `dirty` flag since we have the updated artifact on disk
+                artifact.dirty = False
                 if artifact.output_only:
                     warnings.warn(
                         f"Artifact '{artifact.name}' is added. It is not meant to be read back as Python Object",

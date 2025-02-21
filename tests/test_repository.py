@@ -60,6 +60,8 @@ def test_save_repository(tmp_path):
     repository.log_artifact("my-dict", {"a": 1}, handler="json")
 
     repository.save()
+
+    assert repository["my-dict"].dirty is False
     assert repository_location.is_file()
 
     with open(repository_location) as infile:
@@ -97,14 +99,20 @@ def test_save_repository_multi(tmp_path):
     repository.log_artifact("my-dict", {"a": 1}, handler="json")
 
     repository.save()
+
+    assert repository["my-dict"].dirty is False
     assert repository_location.is_file()
 
     # Read in the repository again and log a separate artifact
     repository_read = Repository(repository_location, mode="a")
     repository_read.log_artifact("my-dict-2", {"b": 2}, handler="json")
 
+    assert repository_read["my-dict"].dirty is False
+    assert repository_read["my-dict-2"].dirty
+
     repository_read.save()
 
+    assert repository_read["my-dict"].dirty is False
     with open(repository_location) as infile:
         serialized = json.load(infile)
 

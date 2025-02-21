@@ -150,6 +150,7 @@ def test_save_project_artifact(tmp_path):
 
     project.save()
 
+    assert project["my-experiment"].artifacts[0].dirty is False
     assert project_location.is_file()
 
     features_fname = f"features-{today.strftime('%Y%m%d%H%M%S')}.json"
@@ -169,7 +170,6 @@ def test_save_project_artifact_failed_validation(mock_version, tmp_path):
     location = tmp_path / "my-project"
     location.mkdir()
     project_location = location / "project.json"
-    today = datetime.now()
 
     datasets = pytest.importorskip("sklearn.datasets")
     svm = pytest.importorskip("sklearn.svm")
@@ -184,6 +184,7 @@ def test_save_project_artifact_failed_validation(mock_version, tmp_path):
 
     project.save()
 
+    assert project["my-experiment"].artifacts[0].dirty is False
     assert project_location.is_file()
     assert (
         location
