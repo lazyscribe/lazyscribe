@@ -192,9 +192,7 @@ class Project:
                 fmode = "wb" if artifact.binary else "w"
                 fpath = exp.path / artifact.fname
                 if not artifact.dirty:
-                    LOG.debug(
-                        f"Artifact '{artifact.name}' already exists and has not been updated"
-                    )
+                    LOG.debug(f"Artifact '{artifact.name}' has not been updated")
                     continue
 
                 self.fs.makedirs(str(exp.path), exist_ok=True)
