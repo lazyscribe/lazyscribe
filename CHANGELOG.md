@@ -1,3 +1,20 @@
+## v1.0.0 (2025-02-21)
+
+### Feat
+
+- **repository**: `asof` version matching to allow users to get the latest version of an artifact as of a given datetime (#110)
+- Replace `RuntimeError` with custom errors (#108)
+- using a new `dirty` flag to describe whether an artifact or experiment needs to be persisted (#98)
+
+### Fix
+
+- make objects dirty by default
+- handle string project filepaths (#107)
+
+### Refactor
+
+- refactor exceptions hierarchy (#112)
+
 ## v0.7.1 (2025-02-15)
 
 ### Fix

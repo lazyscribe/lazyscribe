@@ -47,4 +47,4 @@ repos:
     hooks:
       - id: conventional-pre-commit
         stages: [commit-msg]
-        args: [feat, fix, test, refactor, perf, docs, style, build, ci, revert, chore, upgrade, review]
+        args: [feat, fix, test, refactor, perf, docs, style, build, ci, revert, chore, upgrade, review, bump]

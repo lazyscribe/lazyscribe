@@ -64,7 +64,7 @@ readme = {file = ["README.md"], content-type = "text/markdown"}
 # COMMITIZEN -----------------------------------------------------------------
 
 [tool.commitizen]
-version = "0.7.1"
+version = "1.0.0"
 tag_format = "v$version"
 update_changelog_on_bump = true
 version_files = [
