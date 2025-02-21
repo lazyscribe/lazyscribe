@@ -208,6 +208,9 @@ def test_save_project_artifact_str_path(tmp_path):
     assert artifact == [0, 1, 2]
 
 
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
 @patch("lazyscribe.artifacts.joblib.importlib_version", side_effect=["1.2.2", "0.0.0"])
 def test_save_project_artifact_failed_validation(mock_version, tmp_path):
     """Test saving and loading project with an artifact."""
