@@ -69,19 +69,21 @@ class Repository:
         if mode not in ("r", "a", "w", "w+"):
             raise ValueError("Please provide a valid ``mode`` value.")
         self.mode = mode
-        if mode in ("r", "a", "w+") and self.fs.isfile(self.fpath):
+        if mode in ("r", "a", "w+") and self.fs.isfile(str(self.fpath)):
             self.load()
 
     def load(self):
         """Load existing artifacts."""
-        with self.fs.open(self.fpath, "r") as infile:
+        with self.fs.open(str(self.fpath), "r") as infile:
             data = json.load(infile)
 
         artifacts = []
         for artifact in data:
             handler_cls = _get_handler(artifact.pop("handler"))
             created_at = datetime.fromisoformat(artifact.pop("created_at"))
-            artifacts.append(handler_cls.construct(**artifact, created_at=created_at))
+            artifacts.append(
+                handler_cls.construct(**artifact, created_at=created_at, dirty=False)
+            )
         self.artifacts = artifacts
 
     def log_artifact(
@@ -140,6 +142,7 @@ class Repository:
             created_at=self.last_updated,
             writer_kwargs=kwargs,
             version=version,
+            dirty=True,
         )
         self.artifacts.append(artifact_handler)
         if handler_cls.output_only:
@@ -245,7 +248,7 @@ class Repository:
             )
         # Read in the artifact
         mode = "rb" if curr_handler.binary else "r"
-        with self.fs.open(self.dir / artifact.name / artifact.fname, mode) as buf:
+        with self.fs.open(str(self.dir / artifact.name / artifact.fname), mode) as buf:
             out = curr_handler.read(buf, **kwargs)
         if artifact.output_only:
             warnings.warn(
@@ -265,7 +268,7 @@ class Repository:
             raise RuntimeError("Repository is in read-only mode.")
 
         data = list(self)
-        with self.fs.open(self.fpath, "w") as outfile:
+        with self.fs.open(str(self.fpath), "w") as outfile:
             json.dump(data, outfile, sort_keys=True, indent=4)
 
         for artifact in self.artifacts:
@@ -273,18 +276,18 @@ class Repository:
             fmode = "wb" if artifact.binary else "w"
             artifact_dir = self.dir / artifact.name
             fpath = artifact_dir / artifact.fname
-            if self.fs.isfile(fpath) and artifact.created_at <= datetime.fromtimestamp(
-                self.fs.info(fpath)["created"]
-            ):
+            if not artifact.dirty:
                 LOG.debug(
                     f"Artifact {artifact.name} v{artifact.version} already exists and has not been updated"
                 )
                 continue
 
-            self.fs.makedirs(artifact_dir, exist_ok=True)
+            self.fs.makedirs(str(artifact_dir), exist_ok=True)
             LOG.debug(f"Saving '{artifact.name}' to {fpath!s}...")
-            with self.fs.open(fpath, fmode) as buf:
+            with self.fs.open(str(fpath), fmode) as buf:
                 artifact.write(artifact.value, buf, **artifact.writer_kwargs)
+                # Reset the `dirty` flag since we have the updated artifact on disk
+                artifact.dirty = False
                 if artifact.output_only:
                     warnings.warn(
                         f"Artifact '{artifact.name}' is added. It is not meant to be read back as Python Object",

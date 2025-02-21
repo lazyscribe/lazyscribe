@@ -59,6 +59,7 @@ class JoblibArtifact(Artifact):
         created_at: datetime | None = None,
         writer_kwargs: dict | None = None,
         version: int = 0,
+        dirty: bool = False,
         package: str | None = None,
         **kwargs,
     ):
@@ -85,6 +86,10 @@ class JoblibArtifact(Artifact):
             is logged to an experiment.
         version : int, optional (default 0)
             Integer version to be used for versioning artifacts.
+        dirty : bool, optional (default False)
+            Whether or not this artifact should be saved when :py:meth:`lazyscribe.project.Project.save`
+            or :py:meth:`lazyscribe.repository.Repository.save` is called. This decision is based
+            on whether the artifact is new or has been updated.
         **kwargs : dict
             Other keyword arguments.
             Usually class attributes obtained from a project JSON.
@@ -122,6 +127,7 @@ class JoblibArtifact(Artifact):
             created_at=created_at,
             writer_kwargs=writer_kwargs or {},
             version=version,
+            dirty=dirty,
             package=package,
             package_version=kwargs.get("package_version")
             or importlib_version(distribution),

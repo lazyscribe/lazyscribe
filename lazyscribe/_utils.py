@@ -49,6 +49,7 @@ def serialize_artifacts(alist: list[Artifact]) -> Iterator[dict[str, Any]]:
                 filter=filters.exclude(
                     fields(type(artifact)).value,
                     fields(type(artifact)).writer_kwargs,
+                    fields(type(artifact)).dirty,
                 ),
                 value_serializer=lambda _, __, value: value.isoformat(
                     timespec="seconds"

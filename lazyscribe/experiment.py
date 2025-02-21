@@ -68,6 +68,7 @@ class Experiment:
     tests: list[Union[Test, ReadOnlyTest]] = Factory(lambda: [])
     artifacts: list[Artifact] = Factory(factory=lambda: [])
     tags: list[str] = Factory(factory=lambda: [])
+    dirty: bool = field(eq=False, factory=lambda: False)
 
     @dir.default
     def _dir_factory(self) -> Path:
@@ -147,6 +148,8 @@ class Experiment:
         self.last_updated = utcnow()
         self.metrics[name] = value
 
+        self.dirty = True
+
     def log_parameter(self, name: str, value: Any):
         """Log a parameter to the experiment.
 
@@ -161,6 +164,8 @@ class Experiment:
         """
         self.last_updated = utcnow()
         self.parameters[name] = value
+
+        self.dirty = True
 
     def tag(self, *args, overwrite: bool = False):
         """Add one or more tags to the experiment.
@@ -184,6 +189,8 @@ class Experiment:
             self.tags = new_tags_
         else:
             self.tags += new_tags_
+
+        self.dirty = True
 
     def log_artifact(
         self,
@@ -231,6 +238,7 @@ class Experiment:
             fname=fname,
             created_at=self.last_updated,
             writer_kwargs=kwargs,
+            dirty=True,
         )
         for index, artifact in enumerate(self.artifacts):
             if artifact.name == name:
@@ -256,6 +264,8 @@ class Experiment:
                     UserWarning,
                     stacklevel=2,
                 )
+
+        self.dirty = True
 
     def load_artifact(self, name: str, validate: bool = True, **kwargs) -> Any:
         """Load a single artifact.
@@ -313,7 +323,9 @@ class Experiment:
                     )
                 # Read in the artifact
                 mode = "rb" if curr_handler.binary else "r"
-                with self.fs.open(self.dir / self.path / artifact.fname, mode) as buf:
+                with self.fs.open(
+                    str(self.dir / self.path / artifact.fname), mode
+                ) as buf:
                     out = curr_handler.read(buf, **kwargs)
                 if artifact.output_only:
                     warnings.warn(
@@ -349,7 +361,10 @@ class Experiment:
         try:
             yield test
 
+            self.last_updated = utcnow()
             self.tests.append(test)
+
+            self.dirty = True
         except Exception as exc:
             raise exc
 
@@ -368,6 +383,7 @@ class Experiment:
                 fields(Experiment).dir,
                 fields(Experiment).project,
                 fields(Experiment).fs,
+                fields(Experiment).dirty,
             ),
         )
 

@@ -28,6 +28,7 @@ def test_attrs_default():
     assert exp.slug == f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}"
     assert exp.path == Path(".", f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}")
     assert "lazyscribe.experiment.Experiment" in str(exp)
+    assert exp.dirty is False
 
 
 def test_experiment_logging():
@@ -52,6 +53,7 @@ def test_experiment_logging():
     ]
     assert exp.tags == ["success"]
     assert "lazyscribe.test.Test" in str(test)
+    assert exp.dirty
 
     # Add another tag without overwriting
     exp.tag("huge success")
@@ -60,6 +62,16 @@ def test_experiment_logging():
     # Overwrite the tags
     exp.tag("actually a failure", overwrite=True)
     assert exp.tags == ["actually a failure"]
+
+
+def test_not_logging_test():
+    """Test not logging a test when raising an error."""
+    exp = Experiment(name="My experiment", project=Path("project.json"))
+    with pytest.raises(ValueError), exp.log_test(name="My test") as test:
+        test.log_metric("name-subpop", 0.3)
+        raise ValueError("An error.")
+
+    assert len(exp.tests) == 0
 
 
 @time_machine.travel(
@@ -126,9 +138,11 @@ def test_experiment_to_tabular():
 def test_experiment_artifact_logging_basic():
     """Test logging an artifact to the experiment."""
     today = datetime.now()
+
     exp = Experiment(name="My experiment", project=Path("project.json"), author="root")
     exp.log_artifact(name="features", value=[0, 1, 2], handler="json")
     JSONArtifact = _get_handler("json")
+
     assert isinstance(exp.artifacts[0], JSONArtifact)
     assert exp.to_dict() == {
         "name": "My experiment",
@@ -154,6 +168,7 @@ def test_experiment_artifact_logging_basic():
         "tests": [],
         "tags": [],
     }
+    assert exp.dirty
 
 
 def test_experiment_artifact_logging_overwrite():
