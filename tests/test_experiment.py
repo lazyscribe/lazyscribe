@@ -229,7 +229,7 @@ def test_experiment_artifact_load_keyerror(tmp_path):
         name="My experiment", project=location / "project.json", author="root"
     )
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ArtifactLoadError):
         exp.load_artifact(name="features")
 
 
