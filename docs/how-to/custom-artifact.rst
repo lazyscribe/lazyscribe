@@ -75,7 +75,7 @@ additional metadata to capture, this is where we would capture it
             created_at: datetime | None = None,
             writer_kwargs: dict | None = None,
             version: int | None = None,
-            dirty: bool = False,
+            dirty: bool = True,
             **kwargs
         ):
             """Construct the handler class."""

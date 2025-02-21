@@ -137,7 +137,6 @@ class Repository:
             created_at=self.last_updated,
             writer_kwargs=kwargs,
             version=version,
-            dirty=True,
         )
         self.artifacts.append(artifact_handler)
         if handler_cls.output_only:

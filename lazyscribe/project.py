@@ -147,6 +147,7 @@ class Project:
                         dependencies=dependencies,
                         tests=tests,
                         artifacts=artifacts,
+                        dirty=False,
                     )
                 )
             else:

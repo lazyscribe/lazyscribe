@@ -69,7 +69,7 @@ class Experiment:
     tests: list[Union[Test, ReadOnlyTest]] = Factory(lambda: [])
     artifacts: list[Artifact] = Factory(factory=lambda: [])
     tags: list[str] = Factory(factory=lambda: [])
-    dirty: bool = field(eq=False, factory=lambda: False)
+    dirty: bool = field(eq=False, factory=lambda: True)
 
     @dir.default
     def _dir_factory(self) -> Path:
@@ -239,7 +239,6 @@ class Experiment:
             fname=fname,
             created_at=self.last_updated,
             writer_kwargs=kwargs,
-            dirty=True,
         )
         for index, artifact in enumerate(self.artifacts):
             if artifact.name == name:

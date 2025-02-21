@@ -29,7 +29,7 @@ def test_attrs_default():
     assert exp.slug == f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}"
     assert exp.path == Path(".", f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}")
     assert "lazyscribe.experiment.Experiment" in str(exp)
-    assert exp.dirty is False
+    assert exp.dirty
 
 
 def test_experiment_logging():
