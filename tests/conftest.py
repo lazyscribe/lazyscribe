@@ -27,7 +27,7 @@ class TestArtifact(Artifact):
         created_at: datetime | None = None,
         writer_kwargs: dict | None = None,
         version: int | None = None,
-        dirty: bool = False,
+        dirty: bool = True,
         **kwargs,
     ):
         created_at = created_at or utcnow()

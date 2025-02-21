@@ -69,7 +69,7 @@ class Experiment:
     tests: list[Union[Test, ReadOnlyTest]] = Factory(lambda: [])
     artifacts: list[Artifact] = Factory(factory=lambda: [])
     tags: list[str] = Factory(factory=lambda: [])
-    dirty: bool = field(eq=False, factory=lambda: False)
+    dirty: bool = field(eq=False, factory=lambda: True)
 
     @dir.default
     def _dir_factory(self) -> Path:
@@ -232,6 +232,7 @@ class Experiment:
         """
         # Retrieve and construct the handler
         self.last_updated = utcnow()
+        self.dirty = True
         handler_cls = _get_handler(handler)
         artifact_handler = handler_cls.construct(
             name=name,
@@ -239,7 +240,6 @@ class Experiment:
             fname=fname,
             created_at=self.last_updated,
             writer_kwargs=kwargs,
-            dirty=True,
         )
         for index, artifact in enumerate(self.artifacts):
             if artifact.name == name:
@@ -265,8 +265,6 @@ class Experiment:
                     UserWarning,
                     stacklevel=2,
                 )
-
-        self.dirty = True
 
     def load_artifact(self, name: str, validate: bool = True, **kwargs) -> Any:
         """Load a single artifact.
@@ -365,6 +363,7 @@ class Experiment:
             The :py:class:`lazyscribe.test.Test` dataclass.
         """
         test = Test(name=name, description=description)
+
         try:
             yield test
 

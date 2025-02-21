@@ -40,7 +40,7 @@ class YAMLArtifact(Artifact):
         created_at: datetime | None = None,
         writer_kwargs: dict | None = None,
         version: int = 0,
-        dirty: bool = False,
+        dirty: bool = True,
         **kwargs,
     ):
         """Construct the handler class."""
