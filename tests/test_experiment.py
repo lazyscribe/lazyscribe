@@ -64,6 +64,16 @@ def test_experiment_logging():
     assert exp.tags == ["actually a failure"]
 
 
+def test_not_logging_test():
+    """Test not logging a test when raising an error."""
+    exp = Experiment(name="My experiment", project=Path("project.json"))
+    with pytest.raises(ValueError), exp.log_test(name="My test") as test:
+        test.log_metric("name-subpop", 0.3)
+        raise ValueError("An error.")
+
+    assert len(exp.tests) == 0
+
+
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )

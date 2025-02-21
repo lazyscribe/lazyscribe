@@ -67,6 +67,12 @@ def test_logging_experiment(project_kwargs):
         project["not a real experiment"]
 
 
+def test_invalid_project_mode():
+    """Test instantiating a project with an invalid mode."""
+    with pytest.raises(ValueError):
+        _ = Project(author="root", mode="fake-mode")
+
+
 def test_not_logging_experiment():
     """Test not logging an experiment when raising an error."""
     project = Project(author="root")
@@ -80,11 +86,14 @@ def test_not_logging_experiment():
 def test_not_logging_experiment_readonly():
     """Test trying to log an experiment in read only mode."""
     project = Project(fpath=DATA_DIR / "project.json", mode="r")
+    context_manager = project.log(name="New experiment")
+    with pytest.raises(RuntimeError):
+        _ = context_manager.__enter__()
 
-    with pytest.raises(RuntimeError), project.log(name="My experiment") as exp:
-        exp.log_metric("name", 0.5)
+    context_manager.__exit__(None, None, None)
 
-        assert len(project.experiments) == 0
+    assert len(project.experiments) == 1
+    assert "new-experiment" not in project
 
 
 @time_machine.travel(
