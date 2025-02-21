@@ -176,6 +176,36 @@ def test_save_project_artifact(tmp_path):
 
     assert artifact == [0, 1, 2]
 
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
+def test_save_project_artifact_str_path(tmp_path):
+    """Test saving a project with an artifact."""
+    location = tmp_path / "my-project"
+    location.mkdir()
+    project_location = str(location / "project.json")
+    today = datetime.now()
+
+    project = Project(fpath=project_location, author="root")
+    with project.log(name="My experiment") as exp:
+        exp.log_artifact(name="features", value=[0, 1, 2], handler="json")
+
+    project.save()
+
+    assert project["my-experiment"].dirty is False
+    assert project["my-experiment"].artifacts[0].dirty is False
+    assert project_location.is_file()
+
+    features_fname = f"features-{today.strftime('%Y%m%d%H%M%S')}.json"
+    assert (
+        location / f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}" / features_fname
+    ).is_file()
+
+    with open(location / exp.path / features_fname) as infile:
+        artifact = json.load(infile)
+
+    assert artifact == [0, 1, 2]
+
 
 @patch("lazyscribe.artifacts.joblib.importlib_version", side_effect=["1.2.2", "0.0.0"])
 def test_save_project_artifact_failed_validation(mock_version, tmp_path):

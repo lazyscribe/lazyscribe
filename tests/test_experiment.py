@@ -202,8 +202,8 @@ def test_experiment_artifact_load(tmp_path):
     )
     exp.log_artifact(name="features", value=[0, 1, 2], handler="json")
     # Need to write the artifact to disk
-    fpath = exp.dir / exp.path / exp.artifacts[0].fname
-    exp.fs.makedirs(exp.dir / exp.path, exist_ok=True)
+    fpath = exp.path / exp.artifacts[0].fname
+    exp.fs.makedirs(exp.path, exist_ok=True)
     with exp.fs.open(fpath, "w") as buf:
         exp.artifacts[0].write(exp.artifacts[0].value, buf)
 
@@ -350,8 +350,8 @@ def test_experiment_artifact_log_load_output_only(tmp_path):
         )
 
     # Need to write the artifact to disk
-    fpath = exp.dir / exp.path / exp.artifacts[0].fname
-    exp.fs.makedirs(exp.dir / exp.path, exist_ok=True)
+    fpath = exp.path / exp.artifacts[0].fname
+    exp.fs.makedirs(exp.path, exist_ok=True)
     with exp.fs.open(fpath, "w") as buf:
         exp.artifacts[0].write(exp.artifacts[0].value, buf)
     today = datetime.now()
