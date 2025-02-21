@@ -1,25 +1,21 @@
 """Custom exceptions for lazyscribe."""
 
 
-class ReadOnlyError(Exception):
+class LazyscribeError(Exception):
+    """Base exception for lazyscribe errors."""
+
+
+class ReadOnlyError(LazyscribeError):
     """Raised when a project or repository is opened in read-only mode and write operations are tried."""
 
-    pass
 
-
-class ArtifactError(Exception):
+class ArtifactError(LazyscribeError):
     """Base exception for artifact errors."""
 
-    pass
 
-
-class ArtifactLogError(Exception):
+class ArtifactLogError(ArtifactError):
     """Raised when an artifact cannot be logged."""
 
-    pass
 
-
-class ArtifactLoadError(Exception):
+class ArtifactLoadError(ArtifactError):
     """Raised when an artifact cannot be loaded."""
-
-    pass
