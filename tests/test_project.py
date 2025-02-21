@@ -176,6 +176,7 @@ def test_save_project_artifact(tmp_path):
 
     assert artifact == [0, 1, 2]
 
+
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
