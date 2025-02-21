@@ -12,6 +12,7 @@ import pytest
 import time_machine
 
 from lazyscribe.artifacts.base import Artifact
+from lazyscribe.exception import ArtifactLoadError, ReadOnlyError
 from lazyscribe.repository import Repository
 from tests.conftest import TestArtifact
 
@@ -36,12 +37,12 @@ def test_readonly():
     """Test trying to log an artifact and save in read only mode."""
     repository = Repository(fpath=DATA_DIR / "repository.json", mode="r")
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ReadOnlyError):
         repository.log_artifact("name", [1, 2, 3], handler="json")
 
     assert len(repository.artifacts) == 4
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ReadOnlyError):
         repository.save()
 
     assert len(repository.artifacts) == 4
@@ -317,7 +318,7 @@ def test_save_repository_artifact_failed_validation(mock_version, tmp_path):
     assert (location / "estimator" / "estimator-20250120132330.joblib").is_file()
 
     # Reload repository and validate experiment
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ArtifactLoadError):
         repository2 = Repository(repository_location, mode="r")
         repository2.load_artifact(name="estimator")
 

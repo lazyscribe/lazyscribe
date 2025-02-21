@@ -11,6 +11,7 @@ from lazyscribe.artifacts import _get_handler
 from lazyscribe.artifacts.joblib import JoblibArtifact
 from lazyscribe.artifacts.json import JSONArtifact
 from lazyscribe.artifacts.yaml import YAMLArtifact
+from lazyscribe.exception import ArtifactError
 
 
 @time_machine.travel(
@@ -225,5 +226,5 @@ def test_get_handler_import_error(mock_entry_points):
     mock_plugin_import.load.side_effect = ImportError()
 
     mock_entry_points.return_value = [mock_plugin_import]
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ArtifactError):
         _get_handler(alias="dummy")

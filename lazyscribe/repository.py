@@ -18,6 +18,7 @@ from attrs import asdict, fields, filters
 from lazyscribe._utils import serialize_artifacts, utcnow
 from lazyscribe.artifacts import _get_handler
 from lazyscribe.artifacts.base import Artifact
+from lazyscribe.exception import ArtifactLoadError, ReadOnlyError
 
 LOG = logging.getLogger(__name__)
 
@@ -110,22 +111,16 @@ class Repository:
         fname : str, optional (default None)
             The filename for the artifact. If set to ``None`` or not provided, it will be derived
             from the name of the artifact and the builtin suffix for each handler.
-        overwrite : bool, optional (default False)
-            Whether or not to overwrite an existing artifact with the same name. If set to ``True``,
-            the previous artifact will be removed and overwritten with the current artifact.
-            If set to ``False``, artifact will be logged with its version incremented.
         **kwargs : dict
             Keyword arguments for the write function of the handler.
 
         Raises
         ------
-        RuntimeError
-            Raised if an artifact is supplied with the same name as an existing artifact and
-            ``overwrite`` is set to ``False``.
-            Also raised if the repository is in read-only mode.
+        ReadOnlyError
+            If repository is in read-only mode.
         """
         if self.mode == "r":
-            raise RuntimeError("Repository is in read-only mode.")
+            raise ReadOnlyError("Repository is in read-only mode.")
         # Retrieve and construct the handler
         self.last_updated = utcnow()
         artifacts_matching_name = [art for art in self.artifacts if art.name == name]
@@ -240,7 +235,7 @@ class Repository:
                 fields(type(artifact)).value,
                 fields(type(artifact)).created_at,
             )
-            raise RuntimeError(
+            raise ArtifactLoadError(
                 "Runtime environments do not match. Artifact parameters:\n\n"
                 f"{json.dumps(asdict(artifact, filter=field_filters))}"
                 "\n\nCurrent parameters:\n\n"
@@ -265,7 +260,7 @@ class Repository:
         This includes saving any artifact data.
         """
         if self.mode == "r":
-            raise RuntimeError("Repository is in read-only mode.")
+            raise ReadOnlyError("Repository is in read-only mode.")
 
         data = list(self)
         with self.fs.open(str(self.fpath), "w") as outfile:

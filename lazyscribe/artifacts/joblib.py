@@ -12,6 +12,7 @@ from slugify import slugify
 
 from lazyscribe._utils import utcnow
 from lazyscribe.artifacts.base import Artifact
+from lazyscribe.exception import ArtifactError
 
 
 @define(auto_attribs=True)
@@ -115,7 +116,7 @@ class JoblibArtifact(Artifact):
         try:
             import joblib
         except ImportError as err:
-            raise RuntimeError(
+            raise ArtifactError(
                 "Please install ``joblib`` to use this handler."
             ) from err
         created_at = created_at or utcnow()

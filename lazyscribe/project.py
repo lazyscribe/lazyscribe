@@ -16,6 +16,7 @@ from urllib.parse import urlparse
 import fsspec
 
 from lazyscribe.artifacts import _get_handler
+from lazyscribe.exception import ReadOnlyError
 from lazyscribe.experiment import Experiment, ReadOnlyExperiment
 from lazyscribe.linked import LinkedList, merge
 from lazyscribe.test import ReadOnlyTest, Test
@@ -167,7 +168,7 @@ class Project:
         This includes saving any artifact data.
         """
         if self.mode == "r":
-            raise RuntimeError("Project is in read-only mode.")
+            raise ReadOnlyError("Project is in read-only mode.")
         elif self.mode == "w+":
             for exp in self.experiments:
                 if exp.dirty:
@@ -255,12 +256,12 @@ class Project:
 
         Raises
         ------
-        RuntimeError
+        ReadOnlyError
             Raised when trying to log a new experiment when the project is in
             read-only mode.
         """
         if self.mode == "r":
-            raise RuntimeError("Project is in read-only mode.")
+            raise ReadOnlyError("Project is in read-only mode.")
         self.experiments.append(other)
 
     @contextmanager
@@ -279,12 +280,12 @@ class Project:
 
         Raises
         ------
-        RuntimeError
+        ReadOnlyError
             Raised when trying to log a new experiment when the project is in
             read-only mode.
         """
         if self.mode == "r":
-            raise RuntimeError("Project is in read-only mode.")
+            raise ReadOnlyError("Project is in read-only mode.")
         experiment = Experiment(
             name=name, project=self.fpath, fs=self.fs, author=self.author, dirty=True
         )

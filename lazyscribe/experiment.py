@@ -18,6 +18,7 @@ from slugify import slugify
 
 from lazyscribe._utils import serializer, utcnow
 from lazyscribe.artifacts import Artifact, _get_handler
+from lazyscribe.exception import ArtifactLoadError, ArtifactLogError
 from lazyscribe.test import ReadOnlyTest, Test
 
 LOG = logging.getLogger(__name__)
@@ -225,7 +226,7 @@ class Experiment:
 
         Raises
         ------
-        RuntimeError
+        ArtifactLogError
             Raised if an artifact is supplied with the same name as an existing artifact and
             ``overwrite`` is set to ``False``.
         """
@@ -252,7 +253,7 @@ class Experiment:
                         )
                     break
                 else:
-                    raise RuntimeError(
+                    raise ArtifactLogError(
                         f"An artifact with name {name} already exists in the experiment. Please "
                         "use another name or set ``overwrite=True`` to replace the artifact."
                     )
@@ -284,6 +285,12 @@ class Experiment:
         -------
         object
             The artifact.
+
+        Raises
+        ------
+        ArtifactLoadError
+            If ``validate`` and runtime environment does not match artifact metadata.
+            Or if there is no artifact found with the name provided.
         """
         for artifact in self.artifacts:
             if artifact.name == name:
@@ -315,7 +322,7 @@ class Experiment:
                         fields(type(artifact)).value,
                         fields(type(artifact)).created_at,
                     )
-                    raise RuntimeError(
+                    raise ArtifactLoadError(
                         "Runtime environments do not match. Artifact parameters:\n\n"
                         f"{json.dumps(asdict(artifact, filter=field_filters))}"
                         "\n\nCurrent parameters:\n\n"
@@ -335,7 +342,7 @@ class Experiment:
                     )
                 break
         else:
-            raise ValueError(f"No artifact with name {name}")
+            raise ArtifactLoadError(f"No artifact with name {name}")
 
         return out
 

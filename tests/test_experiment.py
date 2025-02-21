@@ -11,6 +11,7 @@ import time_machine
 from attrs.exceptions import FrozenInstanceError
 
 from lazyscribe.artifacts import _get_handler
+from lazyscribe.exception import ArtifactLoadError, ArtifactLogError
 from lazyscribe.experiment import Experiment, ReadOnlyExperiment
 from lazyscribe.test import ReadOnlyTest, Test
 
@@ -178,7 +179,7 @@ def test_experiment_artifact_logging_overwrite():
     JSONArtifact = _get_handler("json")
     assert isinstance(exp.artifacts[0], JSONArtifact)
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ArtifactLogError):
         exp.log_artifact(name="features", value=[3, 4, 5], handler="json")
 
     assert exp.artifacts[0].value == [0, 1, 2]
@@ -248,7 +249,7 @@ def test_experiment_artifact_load_validation():
     # Edit the experiment parameters to make sure the validation fails
     exp.artifacts[0].package_version = "0.0.0"
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ArtifactLoadError):
         exp.load_artifact(name="estimator")
 
 

@@ -73,6 +73,6 @@ or editable mode ("w+"):
 
 ```python
 project = Project("project.json", mode="r")
-with project.log(name="New experiment") as exp:  # Raises a RuntimeError
+with project.log(name="New experiment") as exp:  # Raises a ReadOnlyError
     ...
 ```
