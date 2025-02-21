@@ -232,6 +232,7 @@ class Experiment:
         """
         # Retrieve and construct the handler
         self.last_updated = utcnow()
+        self.dirty = True
         handler_cls = _get_handler(handler)
         artifact_handler = handler_cls.construct(
             name=name,
@@ -264,8 +265,6 @@ class Experiment:
                     UserWarning,
                     stacklevel=2,
                 )
-
-        self.dirty = True
 
     def load_artifact(self, name: str, validate: bool = True, **kwargs) -> Any:
         """Load a single artifact.
@@ -364,6 +363,7 @@ class Experiment:
             The :py:class:`lazyscribe.test.Test` dataclass.
         """
         test = Test(name=name, description=description)
+
         try:
             yield test
 
