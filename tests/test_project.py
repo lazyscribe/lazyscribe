@@ -62,6 +62,7 @@ def test_logging_experiment(project_kwargs):
         project[f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}"]
         == project.experiments[0]
     )
+    assert project["my-experiment"].dirty
     with pytest.raises(KeyError):
         project["not a real experiment"]
 
@@ -103,7 +104,9 @@ def test_save_project(tmp_path):
             test.log_parameter("features", ["col3", "col4"])
 
     project.save()
+
     assert project_location.is_file()
+    assert project["my-experiment"].dirty is False
 
     with open(project_location) as infile:
         serialized = json.load(infile)
@@ -150,6 +153,7 @@ def test_save_project_artifact(tmp_path):
 
     project.save()
 
+    assert project["my-experiment"].dirty is False
     assert project["my-experiment"].artifacts[0].dirty is False
     assert project_location.is_file()
 
@@ -182,8 +186,11 @@ def test_save_project_artifact_failed_validation(mock_version, tmp_path):
         estimator.fit(X, y)
         exp.log_artifact(name="estimator", value=estimator, handler="joblib")
 
+    assert project["my-experiment"].dirty
+
     project.save()
 
+    assert project["my-experiment"].dirty is False
     assert project["my-experiment"].artifacts[0].dirty is False
     assert project_location.is_file()
     assert (
@@ -216,8 +223,12 @@ def test_save_project_artifact_multi_experiment(tmp_path):
 
     # Reload the project in append-mode and log another experiment
     reload_project = Project(fpath=project_location, mode="a", author="root")
+
+    assert reload_project["my-first-experiment"].dirty is False
+
     with reload_project.log(name="My second experiment") as exp:
         exp.log_artifact(name="features", value=[3, 4, 5], handler="json")
+
     reload_project.save()
 
     # Check that the first experiment artifact was not overwritten
@@ -237,6 +248,10 @@ def test_save_project_artifact_multi_experiment(tmp_path):
 
     # Reload the project in editable mode and add another experiment
     final_project = Project(fpath=project_location, mode="w+", author="root")
+
+    assert final_project["my-first-experiment"].dirty is False
+    assert final_project["my-second-experiment"].dirty is False
+
     with final_project.log(name="My third experiment") as exp:
         exp.log_artifact(name="features", value=[6, 7, 8], handler="json")
     final_project.save()
@@ -338,8 +353,14 @@ def test_load_project_edit(tmp_path):
     # Load the project back
     project = Project(fpath=project_location, mode="w+", author="friend")
     exp = project["my-experiment"]
+
+    assert exp.dirty is False
+
     last_updated = exp.last_updated
     exp.log_metric("name", 0.6)
+
+    assert exp.dirty
+
     project.save()
 
     assert exp.last_updated > last_updated

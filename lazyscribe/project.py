@@ -52,10 +52,6 @@ class Project:
     ----------
     experiments : list
         The list of experiments in the project.
-    snapshot : dict
-        A on-load snapshot of the experiments and their last update timestamp. If the last updated
-        timestamp has shifted when ``save`` is called, the ``last_updated_by`` field will be
-        adjusted.
     """
 
     def __init__(
@@ -77,7 +73,6 @@ class Project:
 
         # If in ``r``, ``a``, or ``w+`` mode, read in the existing project.
         self.experiments: list[Experiment | ReadOnlyExperiment] = []
-        self.snapshot: dict = {}
         self.fs = fsspec.filesystem(self.protocol, **storage_options)
 
         if mode not in ("r", "a", "w", "w+"):
@@ -162,9 +157,9 @@ class Project:
                         dependencies=dependencies,
                         tests=tests,
                         artifacts=artifacts,
+                        dirty=False,
                     )
                 )
-            self.snapshot[self.experiments[-1].slug] = self.experiments[-1].last_updated
 
     def save(self):
         """Save the project data.
@@ -174,11 +169,9 @@ class Project:
         if self.mode == "r":
             raise RuntimeError("Project is in read-only mode.")
         elif self.mode == "w+":
-            for slug, last_updated in self.snapshot.items():
-                if slug not in self:
-                    continue
-                if self[slug].last_updated > last_updated:
-                    self[slug].last_updated_by = self.author
+            for exp in self.experiments:
+                if exp.dirty:
+                    exp.last_updated_by = self.author
 
         data = list(self)
         with self.fs.open(str(self.fpath), "w") as outfile:
@@ -188,10 +181,7 @@ class Project:
             if isinstance(exp, ReadOnlyExperiment):
                 LOG.debug(f"{exp.slug} was opened in read-only mode. Skipping...")
                 continue
-            if (
-                exp.slug in self.snapshot
-                and exp.last_updated == self.snapshot[exp.slug]
-            ):
+            if not exp.dirty:
                 LOG.debug(f"{exp.slug} has not been updated. Skipping...")
                 continue
             # Write the artifact data
@@ -217,6 +207,8 @@ class Project:
                             UserWarning,
                             stacklevel=2,
                         )
+
+            exp.dirty = False
 
     def merge(self, other: Project) -> Project:
         """Merge two projects.
@@ -294,7 +286,7 @@ class Project:
         if self.mode == "r":
             raise RuntimeError("Project is in read-only mode.")
         experiment = Experiment(
-            name=name, project=self.fpath, fs=self.fs, author=self.author
+            name=name, project=self.fpath, fs=self.fs, author=self.author, dirty=True
         )
 
         try:
