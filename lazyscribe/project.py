@@ -188,14 +188,14 @@ class Project:
             LOG.info(f"Saving artifacts for {exp.slug}")
             for artifact in exp.artifacts:
                 fmode = "wb" if artifact.binary else "w"
-                fpath = exp.dir / exp.path / artifact.fname
+                fpath = exp.path / artifact.fname
                 if not artifact.dirty:
                     LOG.debug(
                         f"Artifact '{artifact.name}' already exists and has not been updated"
                     )
                     continue
 
-                self.fs.makedirs(str(exp.dir / exp.path), exist_ok=True)
+                self.fs.makedirs(str(exp.path), exist_ok=True)
                 LOG.debug(f"Saving '{artifact.name}' to {fpath!s}...")
                 with self.fs.open(str(fpath), fmode) as buf:
                     artifact.write(artifact.value, buf, **artifact.writer_kwargs)
