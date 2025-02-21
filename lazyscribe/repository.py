@@ -234,6 +234,39 @@ class Repository:
 
         return out
 
+    def get_artifact_metadata(
+        self,
+        name: str,
+        version: datetime | str | int | None = None,
+        match: Literal["asof", "exact"] = "exact",
+    ) -> dict[str, Any]:
+        """Retrieve the metadata for an artifact.
+
+        Parameters
+        ----------
+        name : str
+            The name of the artifact to load.
+        version : datetime.datetime | str | int, optional (default None)
+            The version of the artifact to load.
+            Can be provided as a datetime corresponding to the ``created_at`` field,
+            a string corresponding to the ``created_at`` field in the format ``"%Y-%m-%dT%H:%M:%S"``
+            (e.g. ``"2025-01-25T12:36:22"``), or an integer version.
+            If set to ``None`` or not provided, defaults to the most recent version.
+        match : "asof" | "exact", optional (default "exact")
+            Matching logic. Only relevant for ``str`` and ``datetime.datetime`` values for
+            ``version``. ``exact`` will provide an artifact with the exact ``created_at``
+            value provided. ``asof`` will provide the most recent version as of the
+            ``version`` value.
+
+        Returns
+        -------
+        dict
+            The artifact metadata.
+        """
+        artifact = self._search_artifact_versions(name, version, match)
+
+        return next(serialize_artifacts([artifact]))
+
     def save(self):
         """Save the repository data.
 

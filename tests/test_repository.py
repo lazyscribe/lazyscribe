@@ -431,3 +431,23 @@ def test_repository_asof_search(tmp_path):
     )
 
     assert art == repository.load_artifact(name="my-dict", version=datetime(2025, 3, 1))
+
+
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
+def test_retrieve_artifact_meta():
+    """Test retrieving artifact metadata."""
+    repository = Repository()
+    repository.log_artifact("my-dict", {"a": 1}, handler="json")
+
+    data = repository.get_artifact_metadata("my-dict")
+
+    assert data == {
+        "created_at": "2025-01-20T13:23:30",
+        "fname": "my-dict-20250120132330.json",
+        "handler": "json",
+        "name": "my-dict",
+        "python_version": ".".join(str(i) for i in sys.version_info[:2]),
+        "version": 0,
+    }
