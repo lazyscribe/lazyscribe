@@ -7,7 +7,7 @@ import json
 import logging
 import warnings
 from collections.abc import Iterator
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Literal
 from urllib.parse import urlparse
@@ -152,6 +152,7 @@ class Repository:
         name: str,
         validate: bool = True,
         version: datetime | str | int | None = None,
+        match: Literal["asof", "exact"] = "exact",
         **kwargs,
     ) -> Any:
         """Load a single artifact.
@@ -163,12 +164,17 @@ class Repository:
         validate : bool, optional (default True)
             Whether or not to validate the runtime environment against the artifact
             metadata.
-        version: datetime.datetime | str | int, optional (default None)
+        version : datetime.datetime | str | int, optional (default None)
             The version of the artifact to load.
             Can be provided as a datetime corresponding to the ``created_at`` field,
             a string corresponding to the ``created_at`` field in the format ``"%Y-%m-%dT%H:%M:%S"``
             (e.g. ``"2025-01-25T12:36:22"``), or an integer version.
             If set to ``None`` or not provided, defaults to the most recent version.
+        match : "asof" | "exact", optional (default "exact")
+            Matching logic. Only relevant for ``str`` and ``datetime.datetime`` values for
+            ``version``. ``exact`` will provide an artifact with the exact ``created_at``
+            value provided. ``asof`` will provide the most recent version as of the
+            ``version`` value.
         **kwargs : dict
             Keyword arguments for the handler read function.
 
@@ -177,36 +183,10 @@ class Repository:
         Any
             The artifact object.
         """
-        artifacts_matching_name = [art for art in self.artifacts if art.name == name]
-        version = (
-            datetime.strptime(version, "%Y-%m-%dT%H:%M:%S")
-            if isinstance(version, str)
-            else version
+        # Search for the artifact
+        artifact = self._search_artifact_versions(
+            name=name, version=version, match=match
         )
-        if not artifacts_matching_name:
-            raise ValueError(f"No artifact with name {name}") from None
-        if version is None:
-            artifact = sorted(
-                artifacts_matching_name, key=lambda x: x.created_at, reverse=True
-            )[0]
-        elif isinstance(version, datetime):
-            try:
-                artifact = next(
-                    art for art in artifacts_matching_name if art.created_at == version
-                )
-            except StopIteration:
-                raise ValueError(
-                    f"No artifact named {name} with version {version}"
-                ) from None
-        else:
-            try:
-                artifact = sorted(artifacts_matching_name, key=lambda x: x.created_at)[
-                    version
-                ]
-            except IndexError:
-                raise ValueError(
-                    f"No artifact named {name} with version {version}"
-                ) from None
         # Construct the handler with relevant parameters.
         artifact_attrs = {
             x: y
@@ -289,6 +269,86 @@ class Repository:
                         UserWarning,
                         stacklevel=2,
                     )
+
+    def _search_artifact_versions(
+        self,
+        name: str,
+        version: datetime | str | int | None = None,
+        match: Literal["asof", "exact"] = "exact",
+    ) -> Artifact:
+        """Search for an artifact based on name and version.
+
+        Parameters
+        ----------
+        name : str
+            The name of the artifact to load.
+        version : datetime.datetime | str | int, optional (default None)
+            The version of the artifact to load.
+            Can be provided as a datetime corresponding to the ``created_at`` field,
+            a string corresponding to the ``created_at`` field in the format ``"%Y-%m-%dT%H:%M:%S"``
+            (e.g. ``"2025-01-25T12:36:22"``), or an integer version.
+            If set to ``None`` or not provided, defaults to the most recent version.
+        match : "asof" | "exact", optional (default "exact")
+            Matching logic. Only relevant for ``str`` and ``datetime.datetime`` values for
+            ``version``. ``exact`` will provide an artifact with the exact ``created_at``
+            value provided. ``asof`` will provide the most recent version as of the
+            ``version`` value.
+        """
+        artifacts_matching_name = sorted(
+            [art for art in self.artifacts if art.name == name],
+            key=lambda x: x.created_at,
+        )
+        version = (
+            datetime.strptime(version, "%Y-%m-%dT%H:%M:%S")
+            if isinstance(version, str)
+            else version
+        )
+        if not artifacts_matching_name:
+            raise ValueError(f"No artifact with name {name}") from None
+        if version is None:
+            artifact = artifacts_matching_name[-1]
+        elif isinstance(version, datetime):
+            if match == "exact":
+                try:
+                    artifact = next(
+                        art
+                        for art in artifacts_matching_name
+                        if art.created_at == version
+                    )
+                except StopIteration:
+                    raise ValueError(
+                        f"No artifact named {name} with version {version}"
+                    ) from None
+            elif match == "asof":
+                try:
+                    artifact = next(
+                        art
+                        for idx, art in enumerate(artifacts_matching_name)
+                        if (
+                            (version - art.created_at > timedelta(0))
+                            and (
+                                version - artifacts_matching_name[idx + 1].created_at
+                                < timedelta(0)
+                            )
+                        )
+                    )
+                except IndexError:
+                    # Get latest
+                    artifact = artifacts_matching_name[-1]
+            else:
+                raise ValueError(
+                    "Please provide ``exact`` or ``asof`` as the value for ``match``"
+                ) from None
+        else:
+            try:
+                # Integer version is 0-indexed
+                artifact = artifacts_matching_name[version]
+            except IndexError:
+                raise ValueError(
+                    f"No artifact named {name} with version {version}"
+                ) from None
+
+        return artifact
 
     def __contains__(self, item: str) -> bool:
         """Check if the repository contains an artifact with the given slug or short slug."""
