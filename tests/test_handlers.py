@@ -11,7 +11,6 @@ from lazyscribe.artifacts import _get_handler
 from lazyscribe.artifacts.joblib import JoblibArtifact
 from lazyscribe.artifacts.json import JSONArtifact
 from lazyscribe.artifacts.yaml import YAMLArtifact
-from lazyscribe.exception import ArtifactError
 
 
 @time_machine.travel(
