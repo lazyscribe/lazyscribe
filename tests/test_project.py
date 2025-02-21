@@ -12,6 +12,7 @@ import pytest
 import time_machine
 
 from lazyscribe import Project
+from lazyscribe.exception import ArtifactLoadError, ReadOnlyError
 from lazyscribe.experiment import Experiment, ReadOnlyExperiment
 from lazyscribe.test import ReadOnlyTest, Test
 from tests.conftest import TestArtifact
@@ -87,7 +88,7 @@ def test_not_logging_experiment_readonly():
     """Test trying to log an experiment in read only mode."""
     project = Project(fpath=DATA_DIR / "project.json", mode="r")
     context_manager = project.log(name="New experiment")
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ReadOnlyError):
         _ = context_manager.__enter__()
 
     context_manager.__exit__(None, None, None)
@@ -243,7 +244,7 @@ def test_save_project_artifact_failed_validation(mock_version, tmp_path):
     ).is_file()
 
     # Reload project and validate experiment
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ArtifactLoadError):
         project2 = Project(project_location, mode="r")
         exp2 = project2["my-experiment"]
         model_load = exp2.load_artifact(name="estimator")
@@ -431,7 +432,7 @@ def test_load_project_readonly():
     )
 
     assert project.experiments == [expected]
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ReadOnlyError):
         project.save()
 
 
