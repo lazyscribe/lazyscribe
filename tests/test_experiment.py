@@ -29,7 +29,7 @@ def test_attrs_default():
     assert exp.slug == f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}"
     assert exp.path == Path(".", f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}")
     assert "lazyscribe.experiment.Experiment" in str(exp)
-    assert exp.dirty
+    assert exp.dirty is True
 
 
 def test_experiment_logging():
@@ -54,7 +54,7 @@ def test_experiment_logging():
     ]
     assert exp.tags == ["success"]
     assert "lazyscribe.test.Test" in str(test)
-    assert exp.dirty
+    assert exp.dirty is True
 
     # Add another tag without overwriting
     exp.tag("huge success")
@@ -169,7 +169,7 @@ def test_experiment_artifact_logging_basic():
         "tests": [],
         "tags": [],
     }
-    assert exp.dirty
+    assert exp.dirty is True
 
 
 def test_experiment_artifact_logging_overwrite():

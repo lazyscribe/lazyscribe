@@ -63,7 +63,7 @@ def test_logging_experiment(project_kwargs):
         project[f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}"]
         == project.experiments[0]
     )
-    assert project["my-experiment"].dirty
+    assert project["my-experiment"].dirty is True
     with pytest.raises(KeyError):
         project["not a real experiment"]
 
@@ -230,7 +230,7 @@ def test_save_project_artifact_failed_validation(mock_version, tmp_path):
         estimator.fit(X, y)
         exp.log_artifact(name="estimator", value=estimator, handler="joblib")
 
-    assert project["my-experiment"].dirty
+    assert project["my-experiment"].dirty is True
 
     project.save()
 
@@ -403,7 +403,7 @@ def test_load_project_edit(tmp_path):
     last_updated = exp.last_updated
     exp.log_metric("name", 0.6)
 
-    assert exp.dirty
+    assert exp.dirty is True
 
     project.save()
 

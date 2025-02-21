@@ -109,7 +109,7 @@ def test_save_repository_multi(tmp_path):
     repository_read.log_artifact("my-dict-2", {"b": 2}, handler="json")
 
     assert repository_read["my-dict"].dirty is False
-    assert repository_read["my-dict-2"].dirty
+    assert repository_read["my-dict-2"].dirty is True
 
     repository_read.save()
 
