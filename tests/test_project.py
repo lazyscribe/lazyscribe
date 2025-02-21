@@ -12,7 +12,7 @@ import pytest
 import time_machine
 
 from lazyscribe import Project
-from lazyscribe.exception import ReadOnlyError
+from lazyscribe.exception import ArtifactLoadError, ReadOnlyError
 from lazyscribe.experiment import Experiment, ReadOnlyExperiment
 from lazyscribe.test import ReadOnlyTest, Test
 from tests.conftest import TestArtifact
@@ -244,7 +244,7 @@ def test_save_project_artifact_failed_validation(mock_version, tmp_path):
     ).is_file()
 
     # Reload project and validate experiment
-    with pytest.raises(ReadOnlyError):
+    with pytest.raises(ArtifactLoadError):
         project2 = Project(project_location, mode="r")
         exp2 = project2["my-experiment"]
         model_load = exp2.load_artifact(name="estimator")
