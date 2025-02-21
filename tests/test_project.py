@@ -195,7 +195,7 @@ def test_save_project_artifact_str_path(tmp_path):
 
     assert project["my-experiment"].dirty is False
     assert project["my-experiment"].artifacts[0].dirty is False
-    assert project_location.is_file()
+    assert Path(project_location).is_file()
 
     features_fname = f"features-{today.strftime('%Y%m%d%H%M%S')}.json"
     assert (
