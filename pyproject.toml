@@ -105,17 +105,23 @@ select = [
 	"TID252",  # flake8-tidy-imports ban relative imports
 	"SIM",  # flake8-simplify
 	"LOG",  # flake8-logging
-	"RUF",  # Ruff errors
+	"ANN",  # flake8-annotations
+	"RUF",  # Ruff errors,
 ]
 ignore = [
 	"C901",  # Function/method is too complex. (Add back in later.)
 	"E501",  # Line too long. Using formatter instead.
+	"ANN401",  # `Any` usage
 ]
+
+[tool.ruff.lint.flake8-type-checking]
+strict = true
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["E402"]
-"**/{tests,docs}/*" = ["E402", "D", "F841", "ARG"]
-"tutorials/*" = ["D", "T201"]
+"tests/**/*" = ["ANN"]
+"{tests,docs}/**/*" = ["E402"]
+"tutorials/*" = ["T201", "D205", "D400"]
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"
@@ -127,8 +133,12 @@ convention = "numpy"
 
 [tool.mypy]
 python_version = 3.9
+exclude = [
+	'^docs\/',
+	'^lazyscribe\/prefect\/',
+	'^tests\/'
+]
+strict = true
 warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
-allow_redefinition = true
-check_untyped_defs = true
