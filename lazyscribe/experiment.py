@@ -364,15 +364,12 @@ class Experiment:
         """
         test = Test(name=name, description=description)
 
-        try:
-            yield test
+        yield test
 
-            self.last_updated = utcnow()
-            self.tests.append(test)
+        self.last_updated = utcnow()
+        self.tests.append(test)
 
-            self.dirty = True
-        except Exception as exc:
-            raise exc
+        self.dirty = True
 
     def to_dict(self) -> dict:
         """Serialize the experiment to a dictionary.
