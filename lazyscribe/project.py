@@ -289,12 +289,9 @@ class Project:
             name=name, project=self.fpath, fs=self.fs, author=self.author, dirty=True
         )
 
-        try:
-            yield experiment
+        yield experiment
 
-            self.append(experiment)
-        except Exception as exc:
-            raise exc
+        self.append(experiment)
 
     def filter(self, func: Callable) -> Iterator[Experiment | ReadOnlyExperiment]:
         """Filter the experiments in the project.
