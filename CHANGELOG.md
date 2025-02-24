@@ -27,14 +27,56 @@
 
 - Add repository for artifact storage (#81)
 
+## v0.6.0 (2024-10-30)
+
+### Feat
+
+- added `output_only` option to the Artifact base class (#55)
+- added ability to use entry points to specify dynamic artifact handlers (#56)
+- implement parameters for `Test` (#60)
+
+### Fix
+
+- enable parameterized project paths in Prefect (#58)
+
 ## v0.5.0 (2024-05-29)
+
+### Breaking Changes
+
+- changed the field names for `Project.to_tabular` output to explicitly label Experiment vs. Test-level fields (#41)
+
+### Feat
+
+- ability to tag and filter experiments (#43)
 
 ## v0.4.0 (2023-06-01)
 
+### Feat
+
+- improved performance on project load through caching dependencies (#21)
+- associating artifacts directly with experiments through generic handlers
+
 ## v0.3.2 (2023-01-31)
+
+### Feat
+
+- added ability to interact with remote filesystems through ``fsspec``
 
 ## v0.3.1 (2022-11-24)
 
+### Fix
+
+- added explicit testing and support for Python 3.10
+
 ## v0.3.0 (2022-04-02)
 
+### Feat
+
+- Prefect integration (#8)
+
 ## v0.2.0 (2022-03-04)
+
+### Feat
+
+- ability to log non-global metrics (#4)
+- conversion of experiments and tests to lists for conversion to pandas (#5)
