@@ -86,7 +86,7 @@ furo==2024.8.6
     # via lazyscribe (pyproject.toml)
 id==1.5.0
     # via twine
-identify==2.6.7
+identify==2.6.8
     # via pre-commit
 idna==3.10
     # via requests

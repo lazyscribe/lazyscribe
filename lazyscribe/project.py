@@ -98,7 +98,7 @@ class Project:
             data[idx]["last_updated"] = datetime.fromisoformat(entry["last_updated"])
 
         parent = self.fpath.parent
-        upstream_projects = {}
+        upstream_projects: dict[str, Project] = {}
         for exp in data:
             dependencies = {}
             if "dependencies" in exp:
@@ -117,7 +117,7 @@ class Project:
                     depexp = project[exp_name]
                     dependencies[depexp.short_slug] = depexp
 
-            tests = []
+            tests: list[Test | ReadOnlyTest] = []
             if "tests" in exp:
                 testlist = exp.pop("tests")
                 for test in testlist:
@@ -179,10 +179,10 @@ class Project:
         with self.fs.open(str(self.fpath), "w") as outfile:
             json.dump(data, outfile, sort_keys=True, indent=4)
 
-        for exp in self.experiments:
-            if isinstance(exp, ReadOnlyExperiment):
-                LOG.debug(f"{exp.slug} was opened in read-only mode. Skipping...")
-                continue
+        mutable_: list[Experiment] = [
+            exp for exp in self.experiments if isinstance(exp, Experiment)
+        ]
+        for exp in mutable_:
             if not exp.dirty:
                 LOG.debug(f"{exp.slug} has not been updated. Skipping...")
                 continue
