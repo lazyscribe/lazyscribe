@@ -1,18 +1,21 @@
-## v1.0.0 (2025-02-21)
+## v1.0.0 (2025-02-24)
 
 ### Feat
 
+- creating the directory for the project JSON if it doesn't exist
 - **repository**: `asof` version matching to allow users to get the latest version of an artifact as of a given datetime (#110)
 - Replace `RuntimeError` with custom errors (#108)
 - using a new `dirty` flag to describe whether an artifact or experiment needs to be persisted (#98)
 
 ### Fix
 
+- exclude `.dirty` from validations (#115)
 - make objects dirty by default
 - handle string project filepaths (#107)
 
 ### Refactor
 
+- get rid of re-raise (#119)
 - refactor exceptions hierarchy (#112)
 
 ## v0.7.1 (2025-02-15)
