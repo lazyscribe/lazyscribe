@@ -16,6 +16,7 @@ from urllib.parse import urlparse
 import fsspec
 
 from lazyscribe.artifacts import _get_handler
+from lazyscribe.exception import ReadOnlyError
 from lazyscribe.experiment import Experiment, ReadOnlyExperiment
 from lazyscribe.linked import LinkedList, merge
 from lazyscribe.test import ReadOnlyTest, Test
@@ -52,10 +53,6 @@ class Project:
     ----------
     experiments : list
         The list of experiments in the project.
-    snapshot : dict
-        A on-load snapshot of the experiments and their last update timestamp. If the last updated
-        timestamp has shifted when ``save`` is called, the ``last_updated_by`` field will be
-        adjusted.
     """
 
     def __init__(
@@ -77,13 +74,12 @@ class Project:
 
         # If in ``r``, ``a``, or ``w+`` mode, read in the existing project.
         self.experiments: list[Experiment | ReadOnlyExperiment] = []
-        self.snapshot: dict = {}
         self.fs = fsspec.filesystem(self.protocol, **storage_options)
 
         if mode not in ("r", "a", "w", "w+"):
             raise ValueError("Please provide a valid ``mode`` value.")
         self.mode = mode
-        if mode in ("r", "a", "w+") and self.fs.isfile(self.fpath):
+        if mode in ("r", "a", "w+") and self.fs.isfile(str(self.fpath)):
             self.load()
 
         self.author = getpass.getuser() if author is None else author
@@ -95,14 +91,14 @@ class Project:
         be loaded in read-only mode. If opened in editable mode, existing experiments
         will be loaded in editable mode.
         """
-        with self.fs.open(self.fpath, "r") as infile:
+        with self.fs.open(str(self.fpath), "r") as infile:
             data = json.load(infile)
         for idx, entry in enumerate(data):
             data[idx]["created_at"] = datetime.fromisoformat(entry["created_at"])
             data[idx]["last_updated"] = datetime.fromisoformat(entry["last_updated"])
 
         parent = self.fpath.parent
-        upstream_projects = {}
+        upstream_projects: dict[str, Project] = {}
         for exp in data:
             dependencies = {}
             if "dependencies" in exp:
@@ -121,7 +117,7 @@ class Project:
                     depexp = project[exp_name]
                     dependencies[depexp.short_slug] = depexp
 
-            tests = []
+            tests: list[Test | ReadOnlyTest] = []
             if "tests" in exp:
                 testlist = exp.pop("tests")
                 for test in testlist:
@@ -137,7 +133,9 @@ class Project:
                     handler_cls = _get_handler(artifact.pop("handler"))
                     created_at = datetime.fromisoformat(artifact.pop("created_at"))
                     artifacts.append(
-                        handler_cls.construct(**artifact, created_at=created_at)
+                        handler_cls.construct(
+                            **artifact, created_at=created_at, dirty=False
+                        )
                     )
 
             if self.mode in ("r", "a"):
@@ -149,6 +147,7 @@ class Project:
                         dependencies=dependencies,
                         tests=tests,
                         artifacts=artifacts,
+                        dirty=False,
                     )
                 )
             else:
@@ -160,9 +159,9 @@ class Project:
                         dependencies=dependencies,
                         tests=tests,
                         artifacts=artifacts,
+                        dirty=False,
                     )
                 )
-            self.snapshot[self.experiments[-1].slug] = self.experiments[-1].last_updated
 
     def save(self):
         """Save the project data.
@@ -170,53 +169,47 @@ class Project:
         This includes saving any artifact data.
         """
         if self.mode == "r":
-            raise RuntimeError("Project is in read-only mode.")
+            raise ReadOnlyError("Project is in read-only mode.")
         elif self.mode == "w+":
-            for slug, last_updated in self.snapshot.items():
-                if slug not in self:
-                    continue
-                if self[slug].last_updated > last_updated:
-                    self[slug].last_updated_by = self.author
+            for exp in self.experiments:
+                if exp.dirty:
+                    exp.last_updated_by = self.author
 
         data = list(self)
-        with self.fs.open(self.fpath, "w") as outfile:
+        self.fs.makedirs(str(self.fpath.parent), exist_ok=True)
+        with self.fs.open(str(self.fpath), "w") as outfile:
             json.dump(data, outfile, sort_keys=True, indent=4)
 
-        for exp in self.experiments:
-            if isinstance(exp, ReadOnlyExperiment):
-                LOG.debug(f"{exp.slug} was opened in read-only mode. Skipping...")
-                continue
-            if (
-                exp.slug in self.snapshot
-                and exp.last_updated == self.snapshot[exp.slug]
-            ):
+        mutable_: list[Experiment] = [
+            exp for exp in self.experiments if not isinstance(exp, ReadOnlyExperiment)
+        ]
+        for exp in mutable_:
+            if not exp.dirty:
                 LOG.debug(f"{exp.slug} has not been updated. Skipping...")
                 continue
             # Write the artifact data
             LOG.info(f"Saving artifacts for {exp.slug}")
             for artifact in exp.artifacts:
                 fmode = "wb" if artifact.binary else "w"
-                fpath = exp.dir / exp.path / artifact.fname
-                if self.fs.isfile(
-                    fpath
-                ) and artifact.created_at <= datetime.fromtimestamp(
-                    self.fs.info(fpath)["created"]
-                ):
-                    LOG.debug(
-                        f"Artifact '{artifact.name}' already exists and has not been updated"
-                    )
+                fpath = exp.path / artifact.fname
+                if not artifact.dirty:
+                    LOG.debug(f"Artifact '{artifact.name}' has not been updated")
                     continue
 
-                self.fs.makedirs(exp.dir / exp.path, exist_ok=True)
+                self.fs.makedirs(str(exp.path), exist_ok=True)
                 LOG.debug(f"Saving '{artifact.name}' to {fpath!s}...")
-                with self.fs.open(fpath, fmode) as buf:
+                with self.fs.open(str(fpath), fmode) as buf:
                     artifact.write(artifact.value, buf, **artifact.writer_kwargs)
+                    # Reset the `dirty` flag since we have the updated artifact on disk
+                    artifact.dirty = False
                     if artifact.output_only:
                         warnings.warn(
                             f"Artifact '{artifact.name}' is added. It is not meant to be read back as Python Object",
                             UserWarning,
                             stacklevel=2,
                         )
+
+            exp.dirty = False
 
     def merge(self, other: Project) -> Project:
         """Merge two projects.
@@ -263,12 +256,12 @@ class Project:
 
         Raises
         ------
-        RuntimeError
+        ReadOnlyError
             Raised when trying to log a new experiment when the project is in
             read-only mode.
         """
         if self.mode == "r":
-            raise RuntimeError("Project is in read-only mode.")
+            raise ReadOnlyError("Project is in read-only mode.")
         self.experiments.append(other)
 
     @contextmanager
@@ -287,22 +280,19 @@ class Project:
 
         Raises
         ------
-        RuntimeError
+        ReadOnlyError
             Raised when trying to log a new experiment when the project is in
             read-only mode.
         """
         if self.mode == "r":
-            raise RuntimeError("Project is in read-only mode.")
+            raise ReadOnlyError("Project is in read-only mode.")
         experiment = Experiment(
-            name=name, project=self.fpath, fs=self.fs, author=self.author
+            name=name, project=self.fpath, fs=self.fs, author=self.author, dirty=True
         )
 
-        try:
-            yield experiment
+        yield experiment
 
-            self.append(experiment)
-        except Exception as exc:
-            raise exc
+        self.append(experiment)
 
     def filter(self, func: Callable) -> Iterator[Experiment | ReadOnlyExperiment]:
         """Filter the experiments in the project.

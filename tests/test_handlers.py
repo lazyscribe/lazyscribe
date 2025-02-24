@@ -167,6 +167,7 @@ def test_joblib_handler(tmp_path):
             package_version=sklearn.__version__,
             joblib_version=joblib.__version__,
             version=None,
+            dirty=False,
         )
     ) == handler
 
@@ -224,5 +225,5 @@ def test_get_handler_import_error(mock_entry_points):
     mock_plugin_import.load.side_effect = ImportError()
 
     mock_entry_points.return_value = [mock_plugin_import]
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ImportError):
         _get_handler(alias="dummy")

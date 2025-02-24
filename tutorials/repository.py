@@ -16,7 +16,7 @@ from sklearn.datasets import make_classification
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 
-from lazyscribe.repository import Repository
+from lazyscribe import Repository
 
 # %%
 # First, we're going to train version 0 of our model that we want to deploy

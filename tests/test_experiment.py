@@ -11,6 +11,7 @@ import time_machine
 from attrs.exceptions import FrozenInstanceError
 
 from lazyscribe.artifacts import _get_handler
+from lazyscribe.exception import ArtifactLoadError, ArtifactLogError
 from lazyscribe.experiment import Experiment, ReadOnlyExperiment
 from lazyscribe.test import ReadOnlyTest, Test
 
@@ -28,6 +29,7 @@ def test_attrs_default():
     assert exp.slug == f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}"
     assert exp.path == Path(".", f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}")
     assert "lazyscribe.experiment.Experiment" in str(exp)
+    assert exp.dirty is True
 
 
 def test_experiment_logging():
@@ -52,6 +54,7 @@ def test_experiment_logging():
     ]
     assert exp.tags == ["success"]
     assert "lazyscribe.test.Test" in str(test)
+    assert exp.dirty is True
 
     # Add another tag without overwriting
     exp.tag("huge success")
@@ -60,6 +63,16 @@ def test_experiment_logging():
     # Overwrite the tags
     exp.tag("actually a failure", overwrite=True)
     assert exp.tags == ["actually a failure"]
+
+
+def test_not_logging_test():
+    """Test not logging a test when raising an error."""
+    exp = Experiment(name="My experiment", project=Path("project.json"))
+    with pytest.raises(ValueError), exp.log_test(name="My test") as test:
+        test.log_metric("name-subpop", 0.3)
+        raise ValueError("An error.")
+
+    assert len(exp.tests) == 0
 
 
 @time_machine.travel(
@@ -126,9 +139,11 @@ def test_experiment_to_tabular():
 def test_experiment_artifact_logging_basic():
     """Test logging an artifact to the experiment."""
     today = datetime.now()
+
     exp = Experiment(name="My experiment", project=Path("project.json"), author="root")
     exp.log_artifact(name="features", value=[0, 1, 2], handler="json")
     JSONArtifact = _get_handler("json")
+
     assert isinstance(exp.artifacts[0], JSONArtifact)
     assert exp.to_dict() == {
         "name": "My experiment",
@@ -154,6 +169,7 @@ def test_experiment_artifact_logging_basic():
         "tests": [],
         "tags": [],
     }
+    assert exp.dirty is True
 
 
 def test_experiment_artifact_logging_overwrite():
@@ -163,7 +179,7 @@ def test_experiment_artifact_logging_overwrite():
     JSONArtifact = _get_handler("json")
     assert isinstance(exp.artifacts[0], JSONArtifact)
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ArtifactLogError):
         exp.log_artifact(name="features", value=[3, 4, 5], handler="json")
 
     assert exp.artifacts[0].value == [0, 1, 2]
@@ -187,8 +203,8 @@ def test_experiment_artifact_load(tmp_path):
     )
     exp.log_artifact(name="features", value=[0, 1, 2], handler="json")
     # Need to write the artifact to disk
-    fpath = exp.dir / exp.path / exp.artifacts[0].fname
-    exp.fs.makedirs(exp.dir / exp.path, exist_ok=True)
+    fpath = exp.path / exp.artifacts[0].fname
+    exp.fs.makedirs(exp.path, exist_ok=True)
     with exp.fs.open(fpath, "w") as buf:
         exp.artifacts[0].write(exp.artifacts[0].value, buf)
 
@@ -213,7 +229,7 @@ def test_experiment_artifact_load_keyerror(tmp_path):
         name="My experiment", project=location / "project.json", author="root"
     )
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ArtifactLoadError):
         exp.load_artifact(name="features")
 
 
@@ -233,7 +249,7 @@ def test_experiment_artifact_load_validation():
     # Edit the experiment parameters to make sure the validation fails
     exp.artifacts[0].package_version = "0.0.0"
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ArtifactLoadError):
         exp.load_artifact(name="estimator")
 
 
@@ -335,8 +351,8 @@ def test_experiment_artifact_log_load_output_only(tmp_path):
         )
 
     # Need to write the artifact to disk
-    fpath = exp.dir / exp.path / exp.artifacts[0].fname
-    exp.fs.makedirs(exp.dir / exp.path, exist_ok=True)
+    fpath = exp.path / exp.artifacts[0].fname
+    exp.fs.makedirs(exp.path, exist_ok=True)
     with exp.fs.open(fpath, "w") as buf:
         exp.artifacts[0].write(exp.artifacts[0].value, buf)
     today = datetime.now()

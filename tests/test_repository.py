@@ -12,6 +12,7 @@ import pytest
 import time_machine
 
 from lazyscribe.artifacts.base import Artifact
+from lazyscribe.exception import ArtifactLoadError, ReadOnlyError
 from lazyscribe.repository import Repository
 from tests.conftest import TestArtifact
 
@@ -36,12 +37,12 @@ def test_readonly():
     """Test trying to log an artifact and save in read only mode."""
     repository = Repository(fpath=DATA_DIR / "repository.json", mode="r")
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ReadOnlyError):
         repository.log_artifact("name", [1, 2, 3], handler="json")
 
     assert len(repository.artifacts) == 4
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ReadOnlyError):
         repository.save()
 
     assert len(repository.artifacts) == 4
@@ -60,6 +61,8 @@ def test_save_repository(tmp_path):
     repository.log_artifact("my-dict", {"a": 1}, handler="json")
 
     repository.save()
+
+    assert repository["my-dict"].dirty is False
     assert repository_location.is_file()
 
     with open(repository_location) as infile:
@@ -97,14 +100,20 @@ def test_save_repository_multi(tmp_path):
     repository.log_artifact("my-dict", {"a": 1}, handler="json")
 
     repository.save()
+
+    assert repository["my-dict"].dirty is False
     assert repository_location.is_file()
 
     # Read in the repository again and log a separate artifact
     repository_read = Repository(repository_location, mode="a")
     repository_read.log_artifact("my-dict-2", {"b": 2}, handler="json")
 
+    assert repository_read["my-dict"].dirty is False
+    assert repository_read["my-dict-2"].dirty is True
+
     repository_read.save()
 
+    assert repository_read["my-dict"].dirty is False
     with open(repository_location) as infile:
         serialized = json.load(infile)
 
@@ -309,7 +318,7 @@ def test_save_repository_artifact_failed_validation(mock_version, tmp_path):
     assert (location / "estimator" / "estimator-20250120132330.joblib").is_file()
 
     # Reload repository and validate experiment
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ArtifactLoadError):
         repository2 = Repository(repository_location, mode="r")
         repository2.load_artifact(name="estimator")
 
@@ -374,3 +383,71 @@ def test_repository_artifact_output_only(tmp_path):
         assert "Artifact 'features' is not the original Python Object" in str(
             w[-1].message
         )
+
+
+def test_invalid_match_strategy():
+    """Test raising an error with an invalid value for ``match``."""
+    repository = Repository()
+    repository.log_artifact("my-dict", {"a": 1}, handler="json")
+
+    with pytest.raises(ValueError):
+        repository._search_artifact_versions(
+            "my-dict", version=datetime(2025, 1, 1), match="fake"
+        )
+
+
+def test_repository_asof_search(tmp_path):
+    """Test retrieving artifacts using ``asof``."""
+    location = tmp_path / "my-repository"
+    location.mkdir()
+    repository_location = location / "repository.json"
+
+    repository = Repository(repository_location)
+
+    # Log artifacts using time-travel to get different creation dates
+    with time_machine.travel(
+        datetime(2025, 1, 1, 0, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+    ):
+        repository.log_artifact("my-dict", {"a": 1}, handler="json")
+    with time_machine.travel(
+        datetime(2025, 2, 1, 0, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+    ):
+        repository.log_artifact("my-dict", {"a": 2}, handler="json")
+    with time_machine.travel(
+        datetime(2025, 3, 1, 0, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+    ):
+        repository.log_artifact("my-dict", {"a": 3}, handler="json")
+
+    repository.save()
+
+    art = repository.load_artifact(
+        name="my-dict", version=datetime(2025, 1, 15), match="asof"
+    )
+
+    assert art == repository.load_artifact(name="my-dict", version=datetime(2025, 1, 1))
+
+    art = repository.load_artifact(
+        name="my-dict", version=datetime(2025, 3, 15), match="asof"
+    )
+
+    assert art == repository.load_artifact(name="my-dict", version=datetime(2025, 3, 1))
+
+
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
+def test_retrieve_artifact_meta():
+    """Test retrieving artifact metadata."""
+    repository = Repository()
+    repository.log_artifact("my-dict", {"a": 1}, handler="json")
+
+    data = repository.get_artifact_metadata("my-dict")
+
+    assert data == {
+        "created_at": "2025-01-20T13:23:30",
+        "fname": "my-dict-20250120132330.json",
+        "handler": "json",
+        "name": "my-dict",
+        "python_version": ".".join(str(i) for i in sys.version_info[:2]),
+        "version": 0,
+    }

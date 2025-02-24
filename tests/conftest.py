@@ -27,6 +27,7 @@ class TestArtifact(Artifact):
         created_at: datetime | None = None,
         writer_kwargs: dict | None = None,
         version: int | None = None,
+        dirty: bool = True,
         **kwargs,
     ):
         created_at = created_at or utcnow()
@@ -39,6 +40,7 @@ class TestArtifact(Artifact):
             or f"{slugify(name)}-{created_at.strftime('%Y%m%d%H%M%S')}.{cls.suffix}",
             created_at=created_at,
             version=version,
+            dirty=dirty,
         )
 
     @classmethod

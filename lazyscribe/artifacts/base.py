@@ -28,6 +28,10 @@ class Artifact(metaclass=ABCMeta):
         the artifact is logged to an experiment.
     version : int
         Version of the artifact.
+    dirty : bool
+        Whether or not this artifact should be saved when :py:meth:`lazyscribe.project.Project.save`
+        or :py:meth:`lazyscribe.repository.Repository.save` is called. This decision is based
+        on whether the artifact is new or has been updated.
 
     Attributes
     ----------
@@ -61,6 +65,7 @@ class Artifact(metaclass=ABCMeta):
     writer_kwargs: dict = field(eq=False)
     created_at: datetime = field(eq=False)
     version: int = field(eq=False)
+    dirty: bool = field(eq=False)
 
     @classmethod
     @abstractmethod
@@ -72,6 +77,7 @@ class Artifact(metaclass=ABCMeta):
         created_at: datetime | None = None,
         writer_kwargs: dict | None = None,
         version: int = 0,
+        dirty: bool = True,
         **kwargs,
     ):
         """Construct the artifact handler.
@@ -96,6 +102,10 @@ class Artifact(metaclass=ABCMeta):
             is logged to an experiment.
         version : int, optional (default 0)
             Integer version to be used for versioning artifacts.
+        dirty : bool, optional (default True)
+            Whether or not this artifact should be saved when :py:meth:`lazyscribe.project.Project.save`
+            or :py:meth:`lazyscribe.repository.Repository.save` is called. This decision is based
+            on whether the artifact is new or has been updated.
         **kwargs : dict
             Other keyword arguments.
             Usually class attributes obtained from a project JSON.

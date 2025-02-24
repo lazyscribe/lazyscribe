@@ -4,12 +4,12 @@ from collections.abc import Iterator
 from datetime import datetime, timezone
 from typing import Any
 
-from attrs import asdict, fields, filters
+from attrs import Attribute, asdict, fields, filters
 
 from lazyscribe.artifacts.base import Artifact
 
 
-def serializer(inst, field, value):
+def serializer(inst: type, field: Attribute, value: Any) -> Any:
     """Datetime and dependencies converter for :meth:`attrs.asdict`.
 
     Parameters
@@ -29,14 +29,14 @@ def serializer(inst, field, value):
     if isinstance(value, datetime):
         return value.isoformat(timespec="seconds")
     if field is not None and field.name == "dependencies":
-        new = [f"{exp.project}|{exp.slug}" for exp in value.values()]
-        return new
+        deps: list[str] = [f"{exp.project}|{exp.slug}" for exp in value.values()]
+        return deps
     if field is not None and field.name == "tests":
-        new = [asdict(test) for test in value]
-        return new
+        tests: list[dict[str, Any]] = [asdict(test) for test in value]
+        return tests
     if field is not None and field.name == "artifacts":
-        new = list(serialize_artifacts(value))
-        return new
+        art: list[dict[str, Any]] = list(serialize_artifacts(value))
+        return art
 
     return value
 
@@ -49,6 +49,7 @@ def serialize_artifacts(alist: list[Artifact]) -> Iterator[dict[str, Any]]:
                 filter=filters.exclude(
                     fields(type(artifact)).value,
                     fields(type(artifact)).writer_kwargs,
+                    fields(type(artifact)).dirty,
                 ),
                 value_serializer=lambda _, __, value: value.isoformat(
                     timespec="seconds"

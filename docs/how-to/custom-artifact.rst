@@ -74,7 +74,8 @@ additional metadata to capture, this is where we would capture it
             fname: str | None = None,
             created_at: datetime | None = None,
             writer_kwargs: dict | None = None,
-            version: int | None = None
+            version: int | None = None,
+            dirty: bool = True,
             **kwargs
         ):
             """Construct the handler class."""
@@ -86,6 +87,7 @@ additional metadata to capture, this is where we would capture it
                 version=version,
                 fname=fname or f"{slugify(name)}-{slugify(created_at.strftime('%Y%m%d%H%M%S'))}.{cls.suffix}",
                 created_at=created_at,
+                dirty=dirty,
             )
 
 Finally, we have to write the I/O methods, ``read`` and ``write``. Both of these

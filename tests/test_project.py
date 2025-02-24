@@ -12,6 +12,7 @@ import pytest
 import time_machine
 
 from lazyscribe import Project
+from lazyscribe.exception import ArtifactLoadError, ReadOnlyError
 from lazyscribe.experiment import Experiment, ReadOnlyExperiment
 from lazyscribe.test import ReadOnlyTest, Test
 from tests.conftest import TestArtifact
@@ -40,6 +41,8 @@ def test_logging_experiment(project_kwargs):
     with project.log(name="My experiment") as exp:
         exp.log_metric("name", 0.5)
 
+    assert "my-experiment" in project
+    assert f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}" in project
     assert len(project.experiments) == 1
     assert isinstance(project.experiments[0], Experiment)
     assert project.experiments[0].to_dict() == {
@@ -62,8 +65,15 @@ def test_logging_experiment(project_kwargs):
         project[f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}"]
         == project.experiments[0]
     )
+    assert project["my-experiment"].dirty is True
     with pytest.raises(KeyError):
         project["not a real experiment"]
+
+
+def test_invalid_project_mode():
+    """Test instantiating a project with an invalid mode."""
+    with pytest.raises(ValueError):
+        _ = Project(author="root", mode="fake-mode")
 
 
 def test_not_logging_experiment():
@@ -79,11 +89,14 @@ def test_not_logging_experiment():
 def test_not_logging_experiment_readonly():
     """Test trying to log an experiment in read only mode."""
     project = Project(fpath=DATA_DIR / "project.json", mode="r")
+    context_manager = project.log(name="New experiment")
+    with pytest.raises(ReadOnlyError):
+        _ = context_manager.__enter__()
 
-    with pytest.raises(RuntimeError), project.log(name="My experiment") as exp:
-        exp.log_metric("name", 0.5)
+    context_manager.__exit__(None, None, None)
 
-        assert len(project.experiments) == 0
+    assert len(project.experiments) == 1
+    assert "new-experiment" not in project
 
 
 @time_machine.travel(
@@ -92,7 +105,6 @@ def test_not_logging_experiment_readonly():
 def test_save_project(tmp_path):
     """Test saving a project to an output JSON."""
     location = tmp_path / "my-project"
-    location.mkdir()
     project_location = location / "project.json"
     today = datetime.now()
     project = Project(fpath=project_location, author="root")
@@ -103,7 +115,9 @@ def test_save_project(tmp_path):
             test.log_parameter("features", ["col3", "col4"])
 
     project.save()
+
     assert project_location.is_file()
+    assert project["my-experiment"].dirty is False
 
     with open(project_location) as infile:
         serialized = json.load(infile)
@@ -140,7 +154,6 @@ def test_save_project(tmp_path):
 def test_save_project_artifact(tmp_path):
     """Test saving a project with an artifact."""
     location = tmp_path / "my-project"
-    location.mkdir()
     project_location = location / "project.json"
     today = datetime.now()
 
@@ -150,6 +163,8 @@ def test_save_project_artifact(tmp_path):
 
     project.save()
 
+    assert project["my-experiment"].dirty is False
+    assert project["my-experiment"].artifacts[0].dirty is False
     assert project_location.is_file()
 
     features_fname = f"features-{today.strftime('%Y%m%d%H%M%S')}.json"
@@ -163,13 +178,44 @@ def test_save_project_artifact(tmp_path):
     assert artifact == [0, 1, 2]
 
 
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
+def test_save_project_artifact_str_path(tmp_path):
+    """Test saving a project with an artifact."""
+    location = tmp_path / "my-project"
+    project_location = str(location / "project.json")
+    today = datetime.now()
+
+    project = Project(fpath=project_location, author="root")
+    with project.log(name="My experiment") as exp:
+        exp.log_artifact(name="features", value=[0, 1, 2], handler="json")
+
+    project.save()
+
+    assert project["my-experiment"].dirty is False
+    assert project["my-experiment"].artifacts[0].dirty is False
+    assert Path(project_location).is_file()
+
+    features_fname = f"features-{today.strftime('%Y%m%d%H%M%S')}.json"
+    assert (
+        location / f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}" / features_fname
+    ).is_file()
+
+    with open(location / exp.path / features_fname) as infile:
+        artifact = json.load(infile)
+
+    assert artifact == [0, 1, 2]
+
+
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
 @patch("lazyscribe.artifacts.joblib.importlib_version", side_effect=["1.2.2", "0.0.0"])
 def test_save_project_artifact_failed_validation(mock_version, tmp_path):
     """Test saving and loading project with an artifact."""
     location = tmp_path / "my-project"
-    location.mkdir()
     project_location = location / "project.json"
-    today = datetime.now()
 
     datasets = pytest.importorskip("sklearn.datasets")
     svm = pytest.importorskip("sklearn.svm")
@@ -182,8 +228,12 @@ def test_save_project_artifact_failed_validation(mock_version, tmp_path):
         estimator.fit(X, y)
         exp.log_artifact(name="estimator", value=estimator, handler="joblib")
 
+    assert project["my-experiment"].dirty is True
+
     project.save()
 
+    assert project["my-experiment"].dirty is False
+    assert project["my-experiment"].artifacts[0].dirty is False
     assert project_location.is_file()
     assert (
         location
@@ -192,7 +242,7 @@ def test_save_project_artifact_failed_validation(mock_version, tmp_path):
     ).is_file()
 
     # Reload project and validate experiment
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ArtifactLoadError):
         project2 = Project(project_location, mode="r")
         exp2 = project2["my-experiment"]
         model_load = exp2.load_artifact(name="estimator")
@@ -203,9 +253,25 @@ def test_save_project_artifact_multi_experiment(tmp_path):
 
     The goal of this test is to ensure that an experiment opened in read-only mode or
     one that has not been updated does not result in the file being overwritten on the filesystem.
+
+    The logic of the test is that if we manually delete an artifact, it should not re-appear in the
+    filesystem.
+
+    This logic works with the JSON handler because you can write a JSON file with `None`
+    as the value:
+
+    .. code-block:: python
+
+        from lazyscribe.artifacts.json import JSONArtifact
+
+        art = JSONArtifact.construct(name="mydict")
+        with open("test.json", "w") as buf:
+            art.write(None, buf)
+
+    So, if the file re-appears, it means that :py:meth:`lazyscribe.artifacts.json.JSONArtifact.write` was
+    called without us re-loading the object into memory and without overwriting the artifact in the experiment(s).
     """
     location = tmp_path / "my-project"
-    location.mkdir()
     project_location = location / "project.json"
 
     project = Project(fpath=project_location, author="root")
@@ -215,62 +281,71 @@ def test_save_project_artifact_multi_experiment(tmp_path):
 
     # Reload the project in append-mode and log another experiment
     reload_project = Project(fpath=project_location, mode="a", author="root")
+
+    assert reload_project["my-first-experiment"].dirty is False
+
     with reload_project.log(name="My second experiment") as exp:
         exp.log_artifact(name="features", value=[3, 4, 5], handler="json")
+
+    # Manually delete the artifact file
+    fs = fsspec.filesystem("file")
+    first_art_path = (
+        project["my-first-experiment"].path
+        / project["my-first-experiment"].artifacts[0].fname
+    )
+    fs.rm(str(first_art_path))
+
     reload_project.save()
 
-    # Check that the first experiment artifact was not overwritten
-    fs = fsspec.filesystem("file")
-    first_exp = project["my-first-experiment"]
-    second_exp = reload_project["my-second-experiment"]
-    assert (
-        datetime.fromtimestamp(
-            fs.info(
-                location
-                / first_exp.path
-                / f"features-{first_exp.last_updated.strftime('%Y%m%d%H%M%S')}.json"
-            )["created"]
-        )
-        < second_exp.created_at
-    )
+    # Check that the first experiment artifact was not overwritten -- it should not exist
+    assert not first_art_path.is_file()
 
     # Reload the project in editable mode and add another experiment
     final_project = Project(fpath=project_location, mode="w+", author="root")
+
+    assert final_project["my-first-experiment"].dirty is False
+    assert final_project["my-second-experiment"].dirty is False
+
     with final_project.log(name="My third experiment") as exp:
         exp.log_artifact(name="features", value=[6, 7, 8], handler="json")
+
+    # Manually delete the second artifact file
+    second_art_path = (
+        reload_project["my-second-experiment"].path
+        / reload_project["my-second-experiment"].artifacts[0].fname
+    )
+    fs.rm(second_art_path)
+
     final_project.save()
 
     # Check that the first and second experiment artifacts were not overwritten
-    assert (
-        datetime.fromtimestamp(
-            fs.info(
-                location
-                / first_exp.path
-                / f"features-{first_exp.last_updated.strftime('%Y%m%d%H%M%S')}.json"
-            )["created"]
-        )
-        < second_exp.created_at
-    )
-
-    assert (
-        datetime.fromtimestamp(
-            fs.info(
-                location
-                / second_exp.path
-                / f"features-{second_exp.last_updated.strftime('%Y%m%d%H%M%S')}.json"
-            )["created"]
-        )
-        < final_project["my-third-experiment"].created_at
-    )
+    assert not first_art_path.is_file()
+    assert not second_art_path.is_file()
 
 
 def test_save_project_artifact_updated(tmp_path):
     """Test running save twice with an updated experiment.
 
     The goal of this test is to ensure that an artifact is not overwritten unnecessarily.
+
+    The logic of the test is that if we manually delete an artifact, it should not re-appear in the
+    filesystem.
+
+    This logic works with the JSON handler because you can write a JSON file with `None`
+    as the value:
+
+    .. code-block:: python
+
+        from lazyscribe.artifacts.json import JSONArtifact
+
+        art = JSONArtifact.construct(name="mydict")
+        with open("test.json", "w") as buf:
+            art.write(None, buf)
+
+    So, if the file re-appears, it means that :py:meth:`lazyscribe.artifacts.json.JSONArtifact.write` was
+    called without us re-loading the object into memory and without overwriting the artifact in the experiment(s).
     """
     location = tmp_path / "my-project"
-    location.mkdir()
     project_location = location / "project.json"
 
     project = Project(fpath=project_location, author="root")
@@ -284,20 +359,18 @@ def test_save_project_artifact_updated(tmp_path):
     new_project["my-experiment"].log_artifact(
         name="feature_names", value=["a", "b", "c"], handler="json"
     )
+
+    # Intentionally delete the artifact
+    fs = fsspec.filesystem("file")
+    art_path = (
+        project["my-experiment"].path / project["my-experiment"].artifacts[0].fname
+    )
+    fs.rm(str(art_path))
+
     new_project.save()
 
-    fs = fsspec.filesystem("file")
-    experiment = project["my-experiment"]
-    assert (
-        datetime.fromtimestamp(
-            fs.info(
-                location
-                / experiment.path
-                / f"features-{experiment.last_updated.strftime('%Y%m%d%H%M%S')}.json"
-            )["created"]
-        )
-        < new_project["my-experiment"].last_updated
-    )
+    # The artifact file should not exist because we manually deleted it and it wasn't overwritten
+    assert not art_path.is_file()
 
 
 def test_load_project():
@@ -326,7 +399,6 @@ def test_load_project():
 def test_load_project_edit(tmp_path):
     """Test loading a project and editing an experiment."""
     location = tmp_path / "my-location"
-    location.mkdir()
     project_location = location / "project.json"
     project = Project(fpath=project_location, author="root")
     with project.log(name="My experiment") as exp:
@@ -337,8 +409,14 @@ def test_load_project_edit(tmp_path):
     # Load the project back
     project = Project(fpath=project_location, mode="w+", author="friend")
     exp = project["my-experiment"]
+
+    assert exp.dirty is False
+
     last_updated = exp.last_updated
     exp.log_metric("name", 0.6)
+
+    assert exp.dirty is True
+
     project.save()
 
     assert exp.last_updated > last_updated
@@ -366,7 +444,7 @@ def test_load_project_readonly():
     )
 
     assert project.experiments == [expected]
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ReadOnlyError):
         project.save()
 
 
@@ -573,7 +651,6 @@ def test_filter_project():
 def test_save_project_artifact_output_only(tmp_path):
     """Test saving a project with an output only artifact."""
     location = tmp_path / "my-project"
-    location.mkdir()
     project_location = location / "project.testartifact"
     today = datetime.now()
 

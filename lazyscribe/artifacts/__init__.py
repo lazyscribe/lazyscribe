@@ -31,7 +31,7 @@ def _get_handler(alias: str) -> type[Artifact]:
             try:
                 mod = full_artifact_class.load()
             except ImportError as imp:
-                raise RuntimeError(
+                raise ImportError(
                     f"Unable to import handler for {alias} through entry points"
                 ) from imp
 

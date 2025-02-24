@@ -18,6 +18,7 @@ from slugify import slugify
 
 from lazyscribe._utils import serializer, utcnow
 from lazyscribe.artifacts import Artifact, _get_handler
+from lazyscribe.exception import ArtifactLoadError, ArtifactLogError
 from lazyscribe.test import ReadOnlyTest, Test
 
 LOG = logging.getLogger(__name__)
@@ -68,6 +69,7 @@ class Experiment:
     tests: list[Union[Test, ReadOnlyTest]] = Factory(lambda: [])
     artifacts: list[Artifact] = Factory(factory=lambda: [])
     tags: list[str] = Factory(factory=lambda: [])
+    dirty: bool = field(eq=False, factory=lambda: True)
 
     @dir.default
     def _dir_factory(self) -> Path:
@@ -147,6 +149,8 @@ class Experiment:
         self.last_updated = utcnow()
         self.metrics[name] = value
 
+        self.dirty = True
+
     def log_parameter(self, name: str, value: Any):
         """Log a parameter to the experiment.
 
@@ -161,6 +165,8 @@ class Experiment:
         """
         self.last_updated = utcnow()
         self.parameters[name] = value
+
+        self.dirty = True
 
     def tag(self, *args, overwrite: bool = False):
         """Add one or more tags to the experiment.
@@ -184,6 +190,8 @@ class Experiment:
             self.tags = new_tags_
         else:
             self.tags += new_tags_
+
+        self.dirty = True
 
     def log_artifact(
         self,
@@ -218,12 +226,13 @@ class Experiment:
 
         Raises
         ------
-        RuntimeError
+        ArtifactLogError
             Raised if an artifact is supplied with the same name as an existing artifact and
             ``overwrite`` is set to ``False``.
         """
         # Retrieve and construct the handler
         self.last_updated = utcnow()
+        self.dirty = True
         handler_cls = _get_handler(handler)
         artifact_handler = handler_cls.construct(
             name=name,
@@ -244,7 +253,7 @@ class Experiment:
                         )
                     break
                 else:
-                    raise RuntimeError(
+                    raise ArtifactLogError(
                         f"An artifact with name {name} already exists in the experiment. Please "
                         "use another name or set ``overwrite=True`` to replace the artifact."
                     )
@@ -274,6 +283,12 @@ class Experiment:
         -------
         object
             The artifact.
+
+        Raises
+        ------
+        ArtifactLoadError
+            If ``validate`` and runtime environment does not match artifact metadata.
+            Or if there is no artifact found with the name provided.
         """
         for artifact in self.artifacts:
             if artifact.name == name:
@@ -283,7 +298,7 @@ class Experiment:
                     for x, y in inspect.getmembers(artifact)
                     if not x.startswith("_") and not inspect.ismethod(y)
                 }
-                exclude_params = ["value", "fname", "created_at"]
+                exclude_params = ["value", "fname", "created_at", "dirty"]
                 construct_params = [
                     param
                     for param in inspect.signature(artifact.construct).parameters
@@ -295,7 +310,7 @@ class Experiment:
                     if key in construct_params
                 }
 
-                curr_handler = type(artifact).construct(**artifact_attrs)
+                curr_handler = type(artifact).construct(**artifact_attrs, dirty=False)
 
                 # Validate the handler
                 if validate and curr_handler != artifact:
@@ -304,8 +319,9 @@ class Experiment:
                         fields(type(artifact)).fname,
                         fields(type(artifact)).value,
                         fields(type(artifact)).created_at,
+                        fields(type(artifact)).dirty,
                     )
-                    raise RuntimeError(
+                    raise ArtifactLoadError(
                         "Runtime environments do not match. Artifact parameters:\n\n"
                         f"{json.dumps(asdict(artifact, filter=field_filters))}"
                         "\n\nCurrent parameters:\n\n"
@@ -313,7 +329,9 @@ class Experiment:
                     )
                 # Read in the artifact
                 mode = "rb" if curr_handler.binary else "r"
-                with self.fs.open(self.dir / self.path / artifact.fname, mode) as buf:
+                with self.fs.open(
+                    str(self.dir / self.path / artifact.fname), mode
+                ) as buf:
                     out = curr_handler.read(buf, **kwargs)
                 if artifact.output_only:
                     warnings.warn(
@@ -323,7 +341,7 @@ class Experiment:
                     )
                 break
         else:
-            raise ValueError(f"No artifact with name {name}")
+            raise ArtifactLoadError(f"No artifact with name {name}")
 
         return out
 
@@ -346,12 +364,13 @@ class Experiment:
             The :py:class:`lazyscribe.test.Test` dataclass.
         """
         test = Test(name=name, description=description)
-        try:
-            yield test
 
-            self.tests.append(test)
-        except Exception as exc:
-            raise exc
+        yield test
+
+        self.last_updated = utcnow()
+        self.tests.append(test)
+
+        self.dirty = True
 
     def to_dict(self) -> dict:
         """Serialize the experiment to a dictionary.
@@ -368,6 +387,7 @@ class Experiment:
                 fields(Experiment).dir,
                 fields(Experiment).project,
                 fields(Experiment).fs,
+                fields(Experiment).dirty,
             ),
         )
 
