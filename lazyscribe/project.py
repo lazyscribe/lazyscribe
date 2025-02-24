@@ -176,6 +176,7 @@ class Project:
                     exp.last_updated_by = self.author
 
         data = list(self)
+        self.fs.makedirs(str(self.fpath.parent), exist_ok=True)
         with self.fs.open(str(self.fpath), "w") as outfile:
             json.dump(data, outfile, sort_keys=True, indent=4)
 

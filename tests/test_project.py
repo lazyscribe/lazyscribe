@@ -105,7 +105,6 @@ def test_not_logging_experiment_readonly():
 def test_save_project(tmp_path):
     """Test saving a project to an output JSON."""
     location = tmp_path / "my-project"
-    location.mkdir()
     project_location = location / "project.json"
     today = datetime.now()
     project = Project(fpath=project_location, author="root")
@@ -155,7 +154,6 @@ def test_save_project(tmp_path):
 def test_save_project_artifact(tmp_path):
     """Test saving a project with an artifact."""
     location = tmp_path / "my-project"
-    location.mkdir()
     project_location = location / "project.json"
     today = datetime.now()
 
@@ -186,7 +184,6 @@ def test_save_project_artifact(tmp_path):
 def test_save_project_artifact_str_path(tmp_path):
     """Test saving a project with an artifact."""
     location = tmp_path / "my-project"
-    location.mkdir()
     project_location = str(location / "project.json")
     today = datetime.now()
 
@@ -218,7 +215,6 @@ def test_save_project_artifact_str_path(tmp_path):
 def test_save_project_artifact_failed_validation(mock_version, tmp_path):
     """Test saving and loading project with an artifact."""
     location = tmp_path / "my-project"
-    location.mkdir()
     project_location = location / "project.json"
 
     datasets = pytest.importorskip("sklearn.datasets")
@@ -276,7 +272,6 @@ def test_save_project_artifact_multi_experiment(tmp_path):
     called without us re-loading the object into memory and without overwriting the artifact in the experiment(s).
     """
     location = tmp_path / "my-project"
-    location.mkdir()
     project_location = location / "project.json"
 
     project = Project(fpath=project_location, author="root")
@@ -351,7 +346,6 @@ def test_save_project_artifact_updated(tmp_path):
     called without us re-loading the object into memory and without overwriting the artifact in the experiment(s).
     """
     location = tmp_path / "my-project"
-    location.mkdir()
     project_location = location / "project.json"
 
     project = Project(fpath=project_location, author="root")
@@ -405,7 +399,6 @@ def test_load_project():
 def test_load_project_edit(tmp_path):
     """Test loading a project and editing an experiment."""
     location = tmp_path / "my-location"
-    location.mkdir()
     project_location = location / "project.json"
     project = Project(fpath=project_location, author="root")
     with project.log(name="My experiment") as exp:
@@ -658,7 +651,6 @@ def test_filter_project():
 def test_save_project_artifact_output_only(tmp_path):
     """Test saving a project with an output only artifact."""
     location = tmp_path / "my-project"
-    location.mkdir()
     project_location = location / "project.testartifact"
     today = datetime.now()
 
