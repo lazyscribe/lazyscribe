@@ -192,7 +192,7 @@ class Repository:
             for x, y in inspect.getmembers(artifact)
             if not x.startswith("_") and not inspect.ismethod(y)
         }
-        exclude_params = ["value", "fname", "created_at"]
+        exclude_params = ["value", "fname", "created_at", "dirty"]
         construct_params = [
             param
             for param in inspect.signature(artifact.construct).parameters
@@ -204,7 +204,7 @@ class Repository:
             if key in construct_params
         }
 
-        curr_handler = type(artifact).construct(**artifact_attrs)
+        curr_handler = type(artifact).construct(**artifact_attrs, dirty=False)
 
         # Validate the handler
         if validate and curr_handler != artifact:
@@ -213,6 +213,7 @@ class Repository:
                 fields(type(artifact)).fname,
                 fields(type(artifact)).value,
                 fields(type(artifact)).created_at,
+                fields(type(artifact)).dirty,
             )
             raise ArtifactLoadError(
                 "Runtime environments do not match. Artifact parameters:\n\n"
