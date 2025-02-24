@@ -41,6 +41,8 @@ def test_logging_experiment(project_kwargs):
     with project.log(name="My experiment") as exp:
         exp.log_metric("name", 0.5)
 
+    assert "my-experiment" in project
+    assert f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}" in project
     assert len(project.experiments) == 1
     assert isinstance(project.experiments[0], Experiment)
     assert project.experiments[0].to_dict() == {
@@ -255,6 +257,23 @@ def test_save_project_artifact_multi_experiment(tmp_path):
 
     The goal of this test is to ensure that an experiment opened in read-only mode or
     one that has not been updated does not result in the file being overwritten on the filesystem.
+
+    The logic of the test is that if we manually delete an artifact, it should not re-appear in the
+    filesystem.
+
+    This logic works with the JSON handler because you can write a JSON file with `None`
+    as the value:
+
+    .. code-block:: python
+
+        from lazyscribe.artifacts.json import JSONArtifact
+
+        art = JSONArtifact.construct(name="mydict")
+        with open("test.json", "w") as buf:
+            art.write(None, buf)
+
+    So, if the file re-appears, it means that :py:meth:`lazyscribe.artifacts.json.JSONArtifact.write` was
+    called without us re-loading the object into memory and without overwriting the artifact in the experiment(s).
     """
     location = tmp_path / "my-project"
     location.mkdir()
@@ -273,22 +292,18 @@ def test_save_project_artifact_multi_experiment(tmp_path):
     with reload_project.log(name="My second experiment") as exp:
         exp.log_artifact(name="features", value=[3, 4, 5], handler="json")
 
+    # Manually delete the artifact file
+    fs = fsspec.filesystem("file")
+    first_art_path = (
+        project["my-first-experiment"].path
+        / project["my-first-experiment"].artifacts[0].fname
+    )
+    fs.rm(str(first_art_path))
+
     reload_project.save()
 
-    # Check that the first experiment artifact was not overwritten
-    fs = fsspec.filesystem("file")
-    first_exp = project["my-first-experiment"]
-    second_exp = reload_project["my-second-experiment"]
-    assert (
-        datetime.fromtimestamp(
-            fs.info(
-                location
-                / first_exp.path
-                / f"features-{first_exp.last_updated.strftime('%Y%m%d%H%M%S')}.json"
-            )["created"]
-        )
-        < second_exp.created_at
-    )
+    # Check that the first experiment artifact was not overwritten -- it should not exist
+    assert not first_art_path.is_file()
 
     # Reload the project in editable mode and add another experiment
     final_project = Project(fpath=project_location, mode="w+", author="root")
@@ -298,36 +313,42 @@ def test_save_project_artifact_multi_experiment(tmp_path):
 
     with final_project.log(name="My third experiment") as exp:
         exp.log_artifact(name="features", value=[6, 7, 8], handler="json")
+
+    # Manually delete the second artifact file
+    second_art_path = (
+        reload_project["my-second-experiment"].path
+        / reload_project["my-second-experiment"].artifacts[0].fname
+    )
+    fs.rm(second_art_path)
+
     final_project.save()
 
     # Check that the first and second experiment artifacts were not overwritten
-    assert (
-        datetime.fromtimestamp(
-            fs.info(
-                location
-                / first_exp.path
-                / f"features-{first_exp.last_updated.strftime('%Y%m%d%H%M%S')}.json"
-            )["created"]
-        )
-        < second_exp.created_at
-    )
-
-    assert (
-        datetime.fromtimestamp(
-            fs.info(
-                location
-                / second_exp.path
-                / f"features-{second_exp.last_updated.strftime('%Y%m%d%H%M%S')}.json"
-            )["created"]
-        )
-        < final_project["my-third-experiment"].created_at
-    )
+    assert not first_art_path.is_file()
+    assert not second_art_path.is_file()
 
 
 def test_save_project_artifact_updated(tmp_path):
     """Test running save twice with an updated experiment.
 
     The goal of this test is to ensure that an artifact is not overwritten unnecessarily.
+
+    The logic of the test is that if we manually delete an artifact, it should not re-appear in the
+    filesystem.
+
+    This logic works with the JSON handler because you can write a JSON file with `None`
+    as the value:
+
+    .. code-block:: python
+
+        from lazyscribe.artifacts.json import JSONArtifact
+
+        art = JSONArtifact.construct(name="mydict")
+        with open("test.json", "w") as buf:
+            art.write(None, buf)
+
+    So, if the file re-appears, it means that :py:meth:`lazyscribe.artifacts.json.JSONArtifact.write` was
+    called without us re-loading the object into memory and without overwriting the artifact in the experiment(s).
     """
     location = tmp_path / "my-project"
     location.mkdir()
@@ -344,20 +365,18 @@ def test_save_project_artifact_updated(tmp_path):
     new_project["my-experiment"].log_artifact(
         name="feature_names", value=["a", "b", "c"], handler="json"
     )
+
+    # Intentionally delete the artifact
+    fs = fsspec.filesystem("file")
+    art_path = (
+        project["my-experiment"].path / project["my-experiment"].artifacts[0].fname
+    )
+    fs.rm(str(art_path))
+
     new_project.save()
 
-    fs = fsspec.filesystem("file")
-    experiment = project["my-experiment"]
-    assert (
-        datetime.fromtimestamp(
-            fs.info(
-                location
-                / experiment.path
-                / f"features-{experiment.last_updated.strftime('%Y%m%d%H%M%S')}.json"
-            )["created"]
-        )
-        < new_project["my-experiment"].last_updated
-    )
+    # The artifact file should not exist because we manually deleted it and it wasn't overwritten
+    assert not art_path.is_file()
 
 
 def test_load_project():
