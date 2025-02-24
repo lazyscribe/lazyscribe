@@ -180,7 +180,7 @@ class Project:
             json.dump(data, outfile, sort_keys=True, indent=4)
 
         mutable_: list[Experiment] = [
-            exp for exp in self.experiments if isinstance(exp, Experiment)
+            exp for exp in self.experiments if not isinstance(exp, ReadOnlyExperiment)
         ]
         for exp in mutable_:
             if not exp.dirty:
