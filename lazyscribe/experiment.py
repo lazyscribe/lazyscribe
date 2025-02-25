@@ -330,7 +330,7 @@ class Experiment:
                 # Read in the artifact
                 mode = "rb" if curr_handler.binary else "r"
                 with self.fs.open(
-                    str(self.dir / self.path / artifact.fname), mode
+                    str(self.path / artifact.fname), mode
                 ) as buf:
                     out = curr_handler.read(buf, **kwargs)
                 if artifact.output_only:
