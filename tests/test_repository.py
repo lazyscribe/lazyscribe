@@ -420,12 +420,31 @@ def test_repository_asof_search(tmp_path):
 
     repository.save()
 
+    # Try loading with date before first artifact
+    with pytest.raises(ValueError) as exc_info:
+        repository.load_artifact(
+            name="my-dict", version=datetime(2024, 12, 31), match="asof"
+        )
+
+        assert str(exc_info.value) == (
+            "Version 2024-12-31T00:00:00 predates the earliest version 2025-01-01T00:00:00"
+        )
+
+    # Check loading an exact match
+    art = repository.load_artifact(
+        name="my-dict", version=datetime(2025, 1, 1), match="asof"
+    )
+
+    assert art == repository.load_artifact(name="my-dict", version=0)
+
+    # Check loading as of an intermediate date
     art = repository.load_artifact(
         name="my-dict", version=datetime(2025, 1, 15), match="asof"
     )
 
     assert art == repository.load_artifact(name="my-dict", version=datetime(2025, 1, 1))
 
+    # Check loading the latest
     art = repository.load_artifact(
         name="my-dict", version=datetime(2025, 3, 15), match="asof"
     )

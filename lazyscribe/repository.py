@@ -354,11 +354,17 @@ class Repository:
                     ) from None
             elif match == "asof":
                 try:
+                    if version < artifacts_matching_name[0].created_at:
+                        msg = (
+                            f"Version {version!s} predates the earliest version "
+                            f"{artifacts_matching_name[0].created_at!s}."
+                        )
+                        raise ValueError(msg) from None
                     artifact = next(
                         art
                         for idx, art in enumerate(artifacts_matching_name)
                         if (
-                            (version - art.created_at > timedelta(0))
+                            (version - art.created_at >= timedelta(0))
                             and (
                                 version - artifacts_matching_name[idx + 1].created_at
                                 < timedelta(0)
