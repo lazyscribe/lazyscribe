@@ -1,3 +1,10 @@
+## v1.0.1 (2025-02-25)
+
+### Fix
+
+- remove duplicate path to artifact in loading (#122)
+- address handling of exact matches for the 'asof' match (#121)
+
 ## v1.0.0 (2025-02-24)
 
 ### Feat
