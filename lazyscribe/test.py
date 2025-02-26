@@ -2,7 +2,7 @@
 
 from typing import Any, Optional, Union
 
-from attrs import Factory, asdict, define, frozen
+from attrs import Factory, asdict, define, field, frozen
 
 from lazyscribe._utils import serializer
 
@@ -30,7 +30,7 @@ class Test:
     # Tell pytest it's not a Python test class
     __test__ = False
 
-    name: str
+    name: str = field()
     description: Optional[str] = Factory(lambda: None)
     metrics: dict = Factory(lambda: {})
     parameters: dict = Factory(lambda: {})
