@@ -17,24 +17,24 @@ class Node:
 
     Parameters
     ----------
-    data : any, optional (default None)
+    data : Any, optional (default None)
         The current data.
-    next : any, optional (default None)
+    next : Node | None, optional (default None)
         The next data in the chain.
     """
 
     data: Any = None
-    next: Any = None
+    next: Node | None = None
 
-    def to_list(self) -> list:
+    def to_list(self) -> list[Any]:
         """Convert the nodes to a de-duped list.
 
         Returns
         -------
-        list
-            A standard list.
+        list[Any]
+            A standard list of data.
         """
-        out = []
+        out: list[Any] = []
         while self.next:
             out.append(self.data)
             self = self.next
@@ -49,13 +49,13 @@ class LinkedList:
 
     Parameters
     ----------
-    head : any, optional (default None)
+    head : Node, optional (default None)
         The start of the list.
     """
 
-    head: Any = None
+    head: Node | None = None
 
-    def append(self, data: Any):
+    def append(self, data: Any) -> None:
         """Append a new node to the end of the list.
 
         Parameters
@@ -63,7 +63,7 @@ class LinkedList:
         data : Any
             The new data.
         """
-        new = Node(data=data)
+        new = Node(data)
         if self.head:
             # Scroll to the end of the list
             current = self.head
@@ -74,7 +74,7 @@ class LinkedList:
             self.head = new
 
     @staticmethod
-    def from_list(data: list) -> LinkedList:
+    def from_list(data: list[Any]) -> LinkedList:
         """Convert a standard list to a linked list."""
         # Sort the list
         sorted_list = sorted(data)
@@ -85,7 +85,7 @@ class LinkedList:
         return out
 
 
-def merge(list1: Node, list2: Node) -> Any:
+def merge(list1: Node, list2: Node) -> Node:
     """Merge two linked lists.
 
     Parameters
@@ -102,18 +102,19 @@ def merge(list1: Node, list2: Node) -> Any:
     """
     # Create the head of the new list as a dummy node
     head = Node()
-    temp = head
-    # Loop while some data exists in the latest node
-    while list1 or list2:
+    current = head
+    # Loop while the data exists
+    while list1 and list2:
         # Add the earliest available node from either l1 or l2
-        if list1 and (not list2 or list1.data < list2.data):
-            temp.next = Node(list1.data)
+        if list1.data < list2.data:
+            current.next = list1
             # Scroll the list
-            list1 = list1.next
+            list1: Node | None = list1.next  # type: ignore[no-redef]
         else:
-            temp.next = Node(list2.data)
+            current.next = list2
             # Scroll the list
-            list2 = list2.next
-        temp = temp.next
-
-    return head.next
+            list2: Node | None = list2.next  # type: ignore[no-redef]
+        current = current.next
+    # Add non-empty list
+    current.next = list1 or list2
+    return head.next  # type: ignore[return-value]

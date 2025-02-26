@@ -8,7 +8,7 @@ import time_machine
 from lazyscribe._utils import utcnow
 
 
-def test_utcnow():
+def test_utcnow() -> None:
     """Test UTCnow."""
     with time_machine.travel(
         datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False

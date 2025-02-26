@@ -39,6 +39,9 @@ class Repository:
           read-only and new artifacts can be added.
         * ``w``: No existing artifacts will be loaded.
         * ``w+``: All artifacts will be loaded in editable mode.
+    **storage_options
+        Storage options to pass to the filesystem initialization. Will be passed to
+        :py:meth:`fsspec.filesystem`.
 
     Attributes
     ----------
@@ -50,9 +53,15 @@ class Repository:
         self,
         fpath: str | Path = "repository.json",
         mode: Literal["r", "a", "w", "w+"] = "w",
-        **storage_options,
-    ):
-        """Init method."""
+        **storage_options: Any,
+    ) -> None:
+        """Init method.
+
+        Raises
+        ------
+        ValueError
+            Raises on invalid ``mode`` value.
+        """
         if isinstance(fpath, str):
             parsed = urlparse(fpath)
             self.fpath = Path(parsed.netloc + parsed.path)
@@ -73,12 +82,12 @@ class Repository:
         if mode in ("r", "a", "w+") and self.fs.isfile(str(self.fpath)):
             self.load()
 
-    def load(self):
+    def load(self) -> None:
         """Load existing artifacts."""
         with self.fs.open(str(self.fpath), "r") as infile:
             data = json.load(infile)
 
-        artifacts = []
+        artifacts: list[Artifact] = []
         for artifact in data:
             handler_cls = _get_handler(artifact.pop("handler"))
             created_at = datetime.fromisoformat(artifact.pop("created_at"))
@@ -93,8 +102,8 @@ class Repository:
         value: Any,
         handler: str,
         fname: str | None = None,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> None:
         """Log an artifact to the repository.
 
         This method associates an artifact with the repository, but the artifact will
@@ -111,7 +120,7 @@ class Repository:
         fname : str, optional (default None)
             The filename for the artifact. If set to ``None`` or not provided, it will be derived
             from the name of the artifact and the builtin suffix for each handler.
-        **kwargs : dict
+        **kwargs
             Keyword arguments for the write function of the handler.
 
         Raises
@@ -123,7 +132,9 @@ class Repository:
             raise ReadOnlyError("Repository is in read-only mode.")
         # Retrieve and construct the handler
         self.last_updated = utcnow()
-        artifacts_matching_name = [art for art in self.artifacts if art.name == name]
+        artifacts_matching_name: list[Artifact] = [
+            art for art in self.artifacts if art.name == name
+        ]
         version = (
             max(art.version for art in artifacts_matching_name) + 1
             if artifacts_matching_name
@@ -152,7 +163,7 @@ class Repository:
         validate: bool = True,
         version: datetime | str | int | None = None,
         match: Literal["asof", "exact"] = "exact",
-        **kwargs,
+        **kwargs: Any,
     ) -> Any:
         """Load a single artifact.
 
@@ -174,26 +185,32 @@ class Repository:
             ``version``. ``exact`` will provide an artifact with the exact ``created_at``
             value provided. ``asof`` will provide the most recent version as of the
             ``version`` value.
-        **kwargs : dict
+        **kwargs
             Keyword arguments for the handler read function.
 
         Returns
         -------
         Any
             The artifact object.
+
+        Raises
+        ------
+        ArtifactLoadError
+            If ``validate`` and runtime environment does not match artifact metadata.
+            Or if there is no artifact found with the name provided.
         """
         # Search for the artifact
         artifact = self._search_artifact_versions(
             name=name, version=version, match=match
         )
         # Construct the handler with relevant parameters.
-        artifact_attrs = {
+        artifact_attrs: dict[str, Any] = {
             x: y
             for x, y in inspect.getmembers(artifact)
             if not x.startswith("_") and not inspect.ismethod(y)
         }
-        exclude_params = ["value", "fname", "created_at", "dirty"]
-        construct_params = [
+        exclude_params: list[str] = ["value", "fname", "created_at", "dirty"]
+        construct_params: list[str] = [
             param
             for param in inspect.signature(artifact.construct).parameters
             if param not in exclude_params
@@ -260,14 +277,19 @@ class Repository:
 
         Returns
         -------
-        dict
+        dict[str, Any]
             The artifact metadata.
+
+        Raises
+        ------
+        ValueError
+            Raises if no valid artifact was found.
         """
         artifact = self._search_artifact_versions(name, version, match)
 
         return next(serialize_artifacts([artifact]))
 
-    def save(self):
+    def save(self) -> None:
         """Save the repository data.
 
         This includes saving any artifact data.
@@ -326,18 +348,23 @@ class Repository:
             ``version``. ``exact`` will provide an artifact with the exact ``created_at``
             value provided. ``asof`` will provide the most recent version as of the
             ``version`` value.
+
+        Raises
+        ------
+        ValueError
+            Raises if no valid artifact was found.
         """
         artifacts_matching_name = sorted(
             [art for art in self.artifacts if art.name == name],
             key=lambda x: x.created_at,
         )
+        if not artifacts_matching_name:
+            raise ValueError(f"No artifact with name {name}")
         version = (
             datetime.strptime(version, "%Y-%m-%dT%H:%M:%S")
             if isinstance(version, str)
             else version
         )
-        if not artifacts_matching_name:
-            raise ValueError(f"No artifact with name {name}") from None
         if version is None:
             artifact = artifacts_matching_name[-1]
         elif isinstance(version, datetime):
@@ -377,7 +404,7 @@ class Repository:
             else:
                 raise ValueError(
                     "Please provide ``exact`` or ``asof`` as the value for ``match``"
-                ) from None
+                )
         else:
             try:
                 # Integer version is 0-indexed

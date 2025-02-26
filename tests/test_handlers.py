@@ -2,6 +2,14 @@
 
 import zoneinfo
 from datetime import datetime
+from pathlib import Path
+from typing import Any
+from unittest.mock import Mock, patch
+
+try:
+    from importlib_metadata import EntryPoints
+except ImportError:
+    from importlib.metadata import EntryPoints  # type: ignore
 
 import pytest
 import time_machine
@@ -16,7 +24,7 @@ from lazyscribe.artifacts.yaml import YAMLArtifact
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
-def test_json_handler(tmp_path):
+def test_json_handler(tmp_path: Path) -> None:
     """Test reading and writing JSON files with the handler."""
     location = tmp_path / "my-location"
     location.mkdir()
@@ -52,7 +60,9 @@ def test_json_handler(tmp_path):
         ({"key": "value", "type": str}, yaml.FullLoader),
     ),
 )
-def test_yaml_handler(data, Loader, tmp_path):
+def test_yaml_handler(
+    data: dict[str, Any], Loader: yaml.Loader, tmp_path: Path
+) -> None:
     """Test reading and writing YAML files with the handler."""
     location = tmp_path / "my-location"
     location.mkdir()
@@ -77,12 +87,12 @@ def test_yaml_handler(data, Loader, tmp_path):
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
-def test_yaml_handler_defaults_to_safeloader(tmp_path):
+def test_yaml_handler_defaults_to_safeloader(tmp_path: Path) -> None:
     """Test YAML handler defaults to safe loader."""
     location = tmp_path / "my-location"
     location.mkdir()
 
-    data = [{"key": "value"}]
+    data: list[dict[str, Any]] = [{"key": "value"}]
     handler = YAMLArtifact.construct(name="My output file")
 
     assert (
@@ -122,7 +132,7 @@ def test_yaml_handler_defaults_to_safeloader(tmp_path):
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
-def test_joblib_handler(tmp_path):
+def test_joblib_handler(tmp_path: Path) -> None:
     """Test reading and writing scikit-learn estimators with the joblib handler."""
     joblib = pytest.importorskip("joblib")
     sklearn = pytest.importorskip("sklearn")
@@ -157,7 +167,7 @@ def test_joblib_handler(tmp_path):
 
     # Check that the handler correctly captures the environment variables
     assert (
-        JoblibArtifact(
+        JoblibArtifact.construct(
             name="EXCLUDED FROM COMPARISON",
             fname="EXCLUDED FROM COMPARISON",
             value=None,
@@ -166,25 +176,25 @@ def test_joblib_handler(tmp_path):
             package="sklearn",
             package_version=sklearn.__version__,
             joblib_version=joblib.__version__,
-            version=None,
+            version=0,
             dirty=False,
         )
     ) == handler
 
 
-def test_joblib_handler_error_no_inputs():
+def test_joblib_handler_error_no_inputs() -> None:
     """Test that the joblib handler raises an error when no value or package is provided."""
     with pytest.raises(ValueError):
         _ = JoblibArtifact.construct(name="My artifact")
 
 
-def test_joblib_handler_invalid_package():
+def test_joblib_handler_invalid_package() -> None:
     """Test that the joblib handler raises an error when an invalid package is provided."""
     with pytest.raises(ValueError):
         _ = JoblibArtifact.construct(name="My artifact", package="my_invalid_package")
 
 
-def test_joblib_handler_raise_attribute_error():
+def test_joblib_handler_raise_attribute_error() -> None:
     """Test that the joblib handler raises an error for objects where the package can't be determined."""
     numpy = pytest.importorskip("numpy")
 
@@ -193,7 +203,7 @@ def test_joblib_handler_raise_attribute_error():
         JoblibArtifact.construct(name="My array", value=myarr)
 
 
-def test_get_handler():
+def test_get_handler() -> None:
     """Test retrieving a handler."""
     handler = _get_handler("joblib")
     assert handler == JoblibArtifact
@@ -205,25 +215,24 @@ def test_get_handler():
         _get_handler("fake-handler")
 
 
-from unittest.mock import Mock, patch
-
-
 @patch("lazyscribe.artifacts.entry_points")
-def test_get_handler_type_error(mock_entry_points):
+def test_get_handler_type_error(mock_entry_points: EntryPoints) -> None:
+    """TODO."""
     mock_plugin = Mock()
     mock_plugin.name = "dummy"
 
-    mock_entry_points.return_value = [mock_plugin]
+    mock_entry_points.return_value = [mock_plugin]  # type: ignore[attr-defined]
     with pytest.raises(TypeError):
         _get_handler(alias="dummy")
 
 
 @patch("lazyscribe.artifacts.entry_points")
-def test_get_handler_import_error(mock_entry_points):
+def test_get_handler_import_error(mock_entry_points: EntryPoints) -> None:
+    """TODO."""
     mock_plugin_import = Mock()
     mock_plugin_import.name = "dummy"
     mock_plugin_import.load.side_effect = ImportError()
 
-    mock_entry_points.return_value = [mock_plugin_import]
+    mock_entry_points.return_value = [mock_plugin_import]  # type: ignore[attr-defined]
     with pytest.raises(ImportError):
         _get_handler(alias="dummy")

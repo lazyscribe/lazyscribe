@@ -1,5 +1,7 @@
 """Experiment dataclass."""
 
+from __future__ import annotations
+
 import getpass
 import inspect
 import json
@@ -9,7 +11,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any
 
 from attrs import Factory, asdict, define, field, fields, filters, frozen
 from fsspec.implementations.local import LocalFileSystem
@@ -17,9 +19,10 @@ from fsspec.spec import AbstractFileSystem
 from slugify import slugify
 
 from lazyscribe._utils import serializer, utcnow
-from lazyscribe.artifacts import Artifact, _get_handler
+from lazyscribe.artifacts import _get_handler
+from lazyscribe.artifacts.base import Artifact
 from lazyscribe.exception import ArtifactLoadError, ArtifactLogError
-from lazyscribe.test import ReadOnlyTest, Test
+from lazyscribe.test import Test
 
 LOG = logging.getLogger(__name__)
 
@@ -35,22 +38,39 @@ class Experiment:
     ----------
     name : str
         The name of the experiment.
-    project : Path
+    project : pathlib.Path
         The path to the project JSON associated with the project.
+    dir : pathlib.Path, TODO
+        TODO
     author : str, optional (default ``getpass.getuser()``)
         The author of the experiment.
+    last_updated_by : str, TODO
+        TODO
     metrics : dict, optional (default {})
         A dictionary of metric values. Each metric value can be an individual value or a list.
     parameters : dict, optional (default {})
         A dictionary of experiment parameters. The key must be a string but the value can be
         anything.
-    created_at : datetime, optional (default ``utcnow()``)
+    created_at : datetime.datetime, optional (default ``lazyscribe._utils.utcnow()``)
         When the experiment was created.
-    last_updated : datetime, optional (default ``utcnow()``)
+    last_updated : datetime.datetime, optional (default ``lazyscribe._utils.utcnow()``)
         When the experiment was last updated.
-    dependencies : dict, optional (default None)
+    short_slug : str, TODO
+        TODO
+    slug : str, TODO
+        TODO
+    tags : list[str], TODO
+        TODO
+    dependencies : dict[str, Experiment], optional (default {})
         A dictionary of upstream project experiments. The key is the short slug for the upstream
-        experiment and the value is an :class:`Experiment` instance.
+        experiment and the value is an :py:class:`Experiment` instance.
+    tests : list[lazyscribe.test.Test], optional (default [])
+        TODO
+    artifacts : list[lazyscribe.artifacts.Artifact], optional (default [])
+        TODO
+    dirty : bool, optional (default True)
+        Whether or not this experiment should be saved when :py:meth:`lazyscribe.project.Project.save`
+        is called. This decision is based on whether the experiment is new or has been updated.
     """
 
     name: str
@@ -59,14 +79,14 @@ class Experiment:
     fs: AbstractFileSystem = field(eq=False)
     author: str = Factory(getpass.getuser)
     last_updated_by: str = field()
-    metrics: dict = Factory(lambda: {})
-    parameters: dict = Factory(lambda: {})
+    metrics: dict[str, float | int] = Factory(lambda: {})
+    parameters: dict[str, Any] = Factory(lambda: {})
     created_at: datetime = Factory(utcnow)
     last_updated: datetime = Factory(utcnow)
-    dependencies: dict = field(eq=False, factory=lambda: {})
+    dependencies: dict[str, Experiment] = field(eq=False, factory=lambda: {})
     short_slug: str = field()
     slug: str = field()
-    tests: list[Union[Test, ReadOnlyTest]] = Factory(lambda: [])
+    tests: list[Test] = Factory(lambda: [])
     artifacts: list[Artifact] = Factory(factory=lambda: [])
     tags: list[str] = Factory(factory=lambda: [])
     dirty: bool = field(eq=False, factory=lambda: True)
@@ -77,7 +97,7 @@ class Experiment:
 
         Returns
         -------
-        Path
+        libpath.Path
             Absolute path to the directory.
         """
         return self.project.parent
@@ -88,7 +108,7 @@ class Experiment:
 
         Returns
         -------
-        LocalFileSystem
+        fsspec.implementations.local.LocalFileSystem
             A standard local filesystem through ``fsspec``.
         """
         return LocalFileSystem()
@@ -129,12 +149,12 @@ class Experiment:
 
         Returns
         -------
-        Path
+        pathlib.Path
             The path for the experiment.
         """
         return self.dir / self.slug
 
-    def log_metric(self, name: str, value: Union[float, int]):
+    def log_metric(self, name: str, value: float | int) -> None:
         """Log a metric to the experiment.
 
         This method will overwrite existing keys.
@@ -151,7 +171,7 @@ class Experiment:
 
         self.dirty = True
 
-    def log_parameter(self, name: str, value: Any):
+    def log_parameter(self, name: str, value: Any) -> None:
         """Log a parameter to the experiment.
 
         This method will overwrite existing keys.
@@ -168,7 +188,7 @@ class Experiment:
 
         self.dirty = True
 
-    def tag(self, *args, overwrite: bool = False):
+    def tag(self, *args: str, overwrite: bool = False) -> None:
         """Add one or more tags to the experiment.
 
         .. important::
@@ -179,7 +199,7 @@ class Experiment:
 
         Parameters
         ----------
-        *args
+        *args : str
             The tags.
         overwrite : bool, optional (default False)
             Whether to add or overwrite the new tags.
@@ -198,10 +218,10 @@ class Experiment:
         name: str,
         value: Any,
         handler: str,
-        fname: Optional[str] = None,
+        fname: str | None = None,
         overwrite: bool = False,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> None:
         """Log an artifact to the experiment.
 
         This method associates an artifact with the experiment, but the artifact will
@@ -221,7 +241,7 @@ class Experiment:
         overwrite : bool, optional (default False)
             Whether or not to overwrite an existing artifact with the same name. If set to ``True``,
             the previous artifact will be removed and overwritten with the current artifact.
-        **kwargs : dict
+        **kwargs
             Keyword arguments for the write function of the handler.
 
         Raises
@@ -266,7 +286,7 @@ class Experiment:
                     stacklevel=2,
                 )
 
-    def load_artifact(self, name: str, validate: bool = True, **kwargs) -> Any:
+    def load_artifact(self, name: str, validate: bool = True, **kwargs: Any) -> Any:
         """Load a single artifact.
 
         Parameters
@@ -276,13 +296,13 @@ class Experiment:
         validate : bool, optional (default True)
             Whether or not to validate the runtime environment against the artifact
             metadata.
-        **kwargs : dict
+        **kwargs
             Keyword arguments for the handler read function.
 
         Returns
         -------
-        object
-            The artifact.
+        Any
+            The artifact object.
 
         Raises
         ------
@@ -293,13 +313,13 @@ class Experiment:
         for artifact in self.artifacts:
             if artifact.name == name:
                 # Construct the handler with relevant parameters.
-                artifact_attrs = {
+                artifact_attrs: dict[str, Any] = {
                     x: y
                     for x, y in inspect.getmembers(artifact)
                     if not x.startswith("_") and not inspect.ismethod(y)
                 }
-                exclude_params = ["value", "fname", "created_at", "dirty"]
-                construct_params = [
+                exclude_params: list[str] = ["value", "fname", "created_at", "dirty"]
+                construct_params: list[str] = [
                     param
                     for param in inspect.signature(artifact.construct).parameters
                     if param not in exclude_params
@@ -344,7 +364,7 @@ class Experiment:
         return out
 
     @contextmanager
-    def log_test(self, name: str, description: Optional[str] = None) -> Iterator[Test]:
+    def log_test(self, name: str, description: str | None = None) -> Iterator[Test]:
         """Add a test to the experiment using a context handler.
 
         A test is a specific location for non-global metrics.
@@ -358,7 +378,7 @@ class Experiment:
 
         Yields
         ------
-        Test
+        lazyscribe.test.Test
             The :py:class:`lazyscribe.test.Test` dataclass.
         """
         test = Test(name=name, description=description)
@@ -370,7 +390,7 @@ class Experiment:
 
         self.dirty = True
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize the experiment to a dictionary.
 
         Returns
@@ -389,7 +409,7 @@ class Experiment:
             ),
         )
 
-    def to_tabular(self) -> dict:
+    def to_tabular(self) -> dict[tuple[str] | tuple[str, str], Any]:
         """Create a dictionary that can be fed into ``pandas``.
 
         Returns
@@ -438,11 +458,11 @@ class Experiment:
             **{("metrics", key): value for key, value in d["metrics"].items()},
         }
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Shortened string representation."""
         return f"<lazyscribe.experiment.Experiment at {hex(id(self))}>"
 
-    def __gt__(self, other):
+    def __gt__(self, other: Experiment) -> bool:
         """Determine whether this experiment is newer than another experiment.
 
         If the experiments have the same ``slug``, this function will compare using the
@@ -454,7 +474,7 @@ class Experiment:
         else:
             return self.created_at > other.created_at
 
-    def __lt__(self, other):
+    def __lt__(self, other: Experiment) -> bool:
         """Determine whether this experiment is older than another experiment.
 
         If the experiments have the same ``slug``, this function will compare using the
@@ -466,7 +486,7 @@ class Experiment:
         else:
             return self.created_at < other.created_at
 
-    def __ge__(self, other):
+    def __ge__(self, other: Experiment) -> bool:
         """Determine whether this experiment is newer than another experiment.
 
         If the experiments have the same ``slug``, this function will compare using the
@@ -475,7 +495,7 @@ class Experiment:
         """
         return bool(self == other or self > other)
 
-    def __le__(self, other):
+    def __le__(self, other: Experiment) -> bool:
         """Determine whether this experiment is older than another experiment.
 
         If the experiments have the same ``slug``, this function will compare using the
@@ -489,6 +509,6 @@ class Experiment:
 class ReadOnlyExperiment(Experiment):
     """Immutable version of an experiment."""
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Shortened string representation."""
         return f"<lazyscribe.experiment.ReadOnlyExperiment at {hex(id(self))}>"
