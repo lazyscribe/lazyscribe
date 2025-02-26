@@ -80,6 +80,13 @@ todo_include_todos = False
 
 # -- Extension configuration -------------------------------------------------
 
+# Autodoc default options
+
+autodoc_default_options = {
+    # Do not use __all__ when analysing the module to document.
+    'ignore-module-all': True,
+}
+
 # Napoleon settings
 
 napoleon_google_docstring = False
