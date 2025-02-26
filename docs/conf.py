@@ -32,6 +32,7 @@ sys.path.insert(0, os.path.abspath(".."))
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
     "sphinx_gallery.gen_gallery",
     "sphinx_inline_tabs",
@@ -76,6 +77,14 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
 
+
+# -- Extension configuration -------------------------------------------------
+
+# Napoleon settings
+
+napoleon_google_docstring = False
+napoleon_numpy_docstring = True
+
 # Sphinx gallery configuration
 
 sphinx_gallery_conf = {
@@ -83,6 +92,7 @@ sphinx_gallery_conf = {
     "filename_pattern": "",
     "gallery_dirs": "tutorials",
 }
+
 
 # -- Options for HTML output -------------------------------------------
 
