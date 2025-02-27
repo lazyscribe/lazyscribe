@@ -4,14 +4,16 @@ import getpass
 import inspect
 import json
 import logging
+import os
 import warnings
 from collections.abc import Iterator
 from contextlib import contextmanager
+from copy import copy
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional, Union
 
-from attrs import Factory, asdict, define, field, fields, filters, frozen
+from attrs import Factory, asdict, define, evolve, field, fields, filters, frozen
 from fsspec.implementations.local import LocalFileSystem
 from fsspec.spec import AbstractFileSystem
 from slugify import slugify
@@ -19,6 +21,7 @@ from slugify import slugify
 from lazyscribe._utils import serializer, utcnow
 from lazyscribe.artifacts import Artifact, _get_handler
 from lazyscribe.exception import ArtifactLoadError, ArtifactLogError
+from lazyscribe.repository import Repository
 from lazyscribe.test import ReadOnlyTest, Test
 
 LOG = logging.getLogger(__name__)
@@ -437,6 +440,59 @@ class Experiment:
             },
             **{("metrics", key): value for key, value in d["metrics"].items()},
         }
+
+    def promote_artifact(self, repository: Repository, name: str):
+        """Associate an artifact with a :py:class:`lazyscribe.repository.Repository`.
+
+        The purpose of this method is to move an artifact from an *ephemeral*
+        experiment to the versioned repository.
+
+        If the artifact does not exist on disk yet, this function is simply a passthrough
+        to :py:meth:`lazyscribe.repository.Repository.log_artifact`. If the artifact does
+        exist on disk already, this function will copy the artifact from the experiment
+        directory to the repository, increment the version, and call
+        :py:meth:`lazyscribe.repository.Repository.save`.
+
+        Parameters
+        ----------
+        repository : Repository
+            The :py:class:`lazyscribe.repository.Repository` to promote the artifact to.
+        name : str
+            The artifact to promote.
+        """
+        for artifact in self.artifacts:
+            if artifact.name == name:
+                try:
+                    existing_version = repository.get_artifact_metadata(name=name)[
+                        "version"
+                    ]
+                    new_handler = evolve(artifact, version=existing_version + 1)
+                except ValueError:
+                    new_handler = copy(artifact)
+
+                if artifact.dirty:
+                    LOG.debug(
+                        f"Artifact '{name}' does not exist on the filesystem yet."
+                    )
+                    repository.artifacts.append(new_handler)
+                else:
+                    # The artifact is on disk, we will have to copy it over
+                    curr_path = self.path / artifact.fname
+                    new_path = repository.dir / artifact.name
+                    LOG.debug(f"Copying '{curr_path!s}' to '{new_path!s}{os.sep}'")
+                    if not self.fs.isdir(f"{new_path!s}{os.sep}"):
+                        LOG.debug(f"Creating '{new_path!s}{os.sep}'")
+                        self.fs.mkdir(f"{new_path!s}{os.sep}", create_parents=True)
+                    self.fs.copy(str(curr_path), f"{new_path!s}{os.sep}")
+
+                    repository.artifacts.append(new_handler)
+                    LOG.info(
+                        "Calling `save` on the repository since the artifact exists on disk already."
+                    )
+                    repository.save()
+                break
+        else:
+            raise ArtifactLoadError(f"No artifact with name {name}")
 
     def __str__(self):
         """Shortened string representation."""
