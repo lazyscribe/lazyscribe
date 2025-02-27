@@ -117,15 +117,15 @@ def test_promote_artifact_new_version(tmp_path):
     project_location = location / "project.json"
     project = Project(project_location)
     with (
-        project.log("My experiment") as exp,
         time_machine.travel(
             datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")),
             tick=False,
         ),
     ):
-        exp.log_artifact(name="features", value=[0, 1, 2], handler="json")
+        with project.log("My experiment") as exp:
+            exp.log_artifact(name="features", value=[0, 1, 2], handler="json")
 
-    project.save()
+        project.save()
 
     # Reload the project and repository, promote the new object
     reload_project = Project(project_location, mode="r")
@@ -134,7 +134,7 @@ def test_promote_artifact_new_version(tmp_path):
     reload_project["my-experiment"].promote_artifact(reload_repository, "features")
 
     assert (repository.dir / "features" / "features-20250120132330.json").is_file()
-    assert repository.get_artifact_metadata("features") == {
+    assert reload_repository.get_artifact_metadata("features") == {
         "name": "features",
         "fname": "features-20250120132330.json",
         "created_at": "2025-01-20T13:23:30",
@@ -153,7 +153,7 @@ def test_promote_artifact_new_version(tmp_path):
             "created_at": "2025-01-01T00:00:00",
             "handler": "json",
             "python_version": ".".join(str(i) for i in sys.version_info[:2]),
-            "version": 1,
+            "version": 0,
         },
         {
             "name": "features",
