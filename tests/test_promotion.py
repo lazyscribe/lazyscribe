@@ -12,7 +12,7 @@ from datetime import datetime
 import pytest
 import time_machine
 
-from lazyscribe.exception import ArtifactLoadError
+from lazyscribe.exception import ArtifactLoadError, ArtifactLogError
 from lazyscribe.project import Project
 from lazyscribe.repository import Repository
 
@@ -24,6 +24,41 @@ def test_promote_artifact_nonexistent():
 
     with pytest.raises(ArtifactLoadError), project.log("My experiment") as exp:
         exp.promote_artifact(repository, "fake-artifact")
+
+
+def test_promoting_old_artifact(tmp_path):
+    """Test raising an error when promoting an artifact that is older than the most recent version."""
+    location = tmp_path / "my-project"
+    repository_location = location / "repository.json"
+    repository = Repository(repository_location)
+
+    # Log version 0 of the artifact
+    with time_machine.travel(
+        datetime(2025, 1, 1, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+    ):
+        repository.log_artifact("features", [0, 1], handler="json")
+
+    repository.save()
+
+    # Create an old project and promote
+    project_location = location / "project.json"
+    project = Project(project_location)
+    with (
+        time_machine.travel(
+            datetime(2024, 12, 31, tzinfo=zoneinfo.ZoneInfo("UTC")),
+            tick=False,
+        ),
+    ):
+        with project.log("My experiment") as exp:
+            exp.log_artifact(name="features", value=[0, 1, 2], handler="json")
+
+        project.save()
+
+    reload_project = Project(project_location, mode="r")
+    reload_repository = Repository(repository_location, mode="a")
+
+    with pytest.raises(ArtifactLogError):
+        reload_project["my-experiment"].promote_artifact(reload_repository, "features")
 
 
 def test_promote_artifact_dirty(tmp_path):

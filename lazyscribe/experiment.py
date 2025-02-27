@@ -459,14 +459,27 @@ class Experiment:
             The :py:class:`lazyscribe.repository.Repository` to promote the artifact to.
         name : str
             The artifact to promote.
+
+        Raises
+        ------
+        ArtifactLogError
+            Raised if the artifact to be promoted is older than the latest version available in the
+            repository.
+        ArtifactLoadError
+            Raised if there is no artifact with the name ``name`` in the experiment.
         """
         for artifact in self.artifacts:
             if artifact.name == name:
                 try:
-                    existing_version = repository.get_artifact_metadata(name=name)[
-                        "version"
-                    ]
-                    new_handler = evolve(artifact, version=existing_version + 1)
+                    meta_ = repository.get_artifact_metadata(name)
+                    if (
+                        datetime.strptime(meta_["created_at"], "%Y-%m-%dT%H:%M:%S")
+                        > artifact.created_at
+                    ):
+                        raise ArtifactLogError(
+                            f"Artifact `{name}` is older than the latest version available in the repository."
+                        ) from None
+                    new_handler = evolve(artifact, version=meta_["version"] + 1)
                 except ValueError:
                     new_handler = copy(artifact)
 
