@@ -20,7 +20,7 @@ from slugify import slugify
 
 from lazyscribe._utils import serializer, utcnow
 from lazyscribe.artifacts import Artifact, _get_handler
-from lazyscribe.exception import ArtifactLoadError, ArtifactLogError
+from lazyscribe.exception import ArtifactLoadError, ArtifactLogError, SaveError
 from lazyscribe.repository import Repository
 from lazyscribe.test import ReadOnlyTest, Test
 
@@ -502,7 +502,15 @@ class Experiment:
                     LOG.info(
                         "Calling `save` on the repository since the artifact exists on disk already."
                     )
-                    repository.save()
+                    try:
+                        repository.save()
+                    except SaveError as exc:
+                        LOG.exception(exc, exc_info=True)
+                        LOG.info(
+                            f"Save failed, deleting '{(new_path / artifact.fname)!s}'..."
+                        )
+                        self.fs.rm(str(new_path / artifact.fname))
+                        del repository.artifacts[-1]
                 break
         else:
             raise ArtifactLoadError(f"No artifact with name {name}")

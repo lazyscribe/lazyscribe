@@ -16,7 +16,7 @@ from urllib.parse import urlparse
 import fsspec
 
 from lazyscribe.artifacts import _get_handler
-from lazyscribe.exception import ReadOnlyError
+from lazyscribe.exception import ReadOnlyError, SaveError
 from lazyscribe.experiment import Experiment, ReadOnlyExperiment
 from lazyscribe.linked import LinkedList, merge
 from lazyscribe.test import ReadOnlyTest, Test
@@ -90,6 +90,11 @@ class Project:
         If the project is in read-only or append mode, existing experiments will
         be loaded in read-only mode. If opened in editable mode, existing experiments
         will be loaded in editable mode.
+
+        Raises
+        ------
+        SaveError
+            Raised when writing to the filesystem fails.
         """
         with self.fs.open(str(self.fpath), "r") as infile:
             data = json.load(infile)
@@ -176,9 +181,14 @@ class Project:
                     exp.last_updated_by = self.author
 
         data = list(self)
-        self.fs.makedirs(str(self.fpath.parent), exist_ok=True)
-        with self.fs.open(str(self.fpath), "w") as outfile:
-            json.dump(data, outfile, sort_keys=True, indent=4)
+        try:
+            self.fs.makedirs(str(self.fpath.parent), exist_ok=True)
+            with self.fs.open(str(self.fpath), "w") as outfile:
+                json.dump(data, outfile, sort_keys=True, indent=4)
+        except Exception as exc:
+            raise SaveError(
+                "Unable to save the Project JSON file to %s", str(self.path)
+            ) from exc
 
         mutable_: list[Experiment] = [
             exp for exp in self.experiments if not isinstance(exp, ReadOnlyExperiment)
@@ -196,10 +206,11 @@ class Project:
                     LOG.debug(f"Artifact '{artifact.name}' has not been updated")
                     continue
 
-                self.fs.makedirs(str(exp.path), exist_ok=True)
-                LOG.debug(f"Saving '{artifact.name}' to {fpath!s}...")
-                with self.fs.open(str(fpath), fmode) as buf:
-                    artifact.write(artifact.value, buf, **artifact.writer_kwargs)
+                try:
+                    self.fs.makedirs(str(exp.path), exist_ok=True)
+                    LOG.debug(f"Saving '{artifact.name}' to {fpath!s}...")
+                    with self.fs.open(str(fpath), fmode) as buf:
+                        artifact.write(artifact.value, buf, **artifact.writer_kwargs)
                     # Reset the `dirty` flag since we have the updated artifact on disk
                     artifact.dirty = False
                     if artifact.output_only:
@@ -208,6 +219,10 @@ class Project:
                             UserWarning,
                             stacklevel=2,
                         )
+                except Exception as exc:
+                    raise SaveError(
+                        f"Unable to write '{artifact.name}' to '{fpath!s}'"
+                    ) from exc
 
             exp.dirty = False
 

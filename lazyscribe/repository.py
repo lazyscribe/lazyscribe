@@ -18,7 +18,7 @@ from attrs import asdict, fields, filters
 from lazyscribe._utils import serialize_artifacts, utcnow
 from lazyscribe.artifacts import _get_handler
 from lazyscribe.artifacts.base import Artifact
-from lazyscribe.exception import ArtifactLoadError, ReadOnlyError
+from lazyscribe.exception import ArtifactLoadError, ReadOnlyError, SaveError
 
 LOG = logging.getLogger(__name__)
 
@@ -271,14 +271,24 @@ class Repository:
         """Save the repository data.
 
         This includes saving any artifact data.
+
+        Raises
+        ------
+        SaveError
+            Raised when writing to the filesystem fails.
         """
         if self.mode == "r":
             raise ReadOnlyError("Repository is in read-only mode.")
 
         data = list(self)
-        self.fs.makedirs(str(self.fpath.parent), exist_ok=True)
-        with self.fs.open(str(self.fpath), "w") as outfile:
-            json.dump(data, outfile, sort_keys=True, indent=4)
+        try:
+            self.fs.makedirs(str(self.fpath.parent), exist_ok=True)
+            with self.fs.open(str(self.fpath), "w") as outfile:
+                json.dump(data, outfile, sort_keys=True, indent=4)
+        except Exception as exc:
+            raise SaveError(
+                "Unable to save the Repository JSON file to %s", str(self.fpath)
+            ) from exc
 
         for artifact in self.artifacts:
             # Write the artifact data
@@ -291,18 +301,23 @@ class Repository:
                 )
                 continue
 
-            self.fs.makedirs(str(artifact_dir), exist_ok=True)
-            LOG.debug(f"Saving '{artifact.name}' to {fpath!s}...")
-            with self.fs.open(str(fpath), fmode) as buf:
-                artifact.write(artifact.value, buf, **artifact.writer_kwargs)
-                # Reset the `dirty` flag since we have the updated artifact on disk
-                artifact.dirty = False
-                if artifact.output_only:
-                    warnings.warn(
-                        f"Artifact '{artifact.name}' is added. It is not meant to be read back as Python Object",
-                        UserWarning,
-                        stacklevel=2,
-                    )
+            try:
+                self.fs.makedirs(str(artifact_dir), exist_ok=True)
+                LOG.debug(f"Saving '{artifact.name}' to {fpath!s}...")
+                with self.fs.open(str(fpath), fmode) as buf:
+                    artifact.write(artifact.value, buf, **artifact.writer_kwargs)
+                    # Reset the `dirty` flag since we have the updated artifact on disk
+                    artifact.dirty = False
+                    if artifact.output_only:
+                        warnings.warn(
+                            f"Artifact '{artifact.name}' is added. It is not meant to be read back as Python Object",
+                            UserWarning,
+                            stacklevel=2,
+                        )
+            except Exception as exc:
+                raise SaveError(
+                    f"Unable to write '{artifact.name}' to '{fpath!s}'"
+                ) from exc
 
     def _search_artifact_versions(
         self,
