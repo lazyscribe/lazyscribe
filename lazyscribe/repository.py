@@ -7,7 +7,7 @@ import json
 import logging
 import warnings
 from collections.abc import Iterator
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Literal
 from urllib.parse import urlparse
@@ -364,11 +364,8 @@ class Repository:
                         art
                         for idx, art in enumerate(artifacts_matching_name)
                         if (
-                            (version - art.created_at >= timedelta(0))
-                            and (
-                                version - artifacts_matching_name[idx + 1].created_at
-                                < timedelta(0)
-                            )
+                            version >= art.created_at
+                            and version < artifacts_matching_name[idx + 1].created_at
                         )
                     )
                 except IndexError:
