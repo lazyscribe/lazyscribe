@@ -187,7 +187,7 @@ class Project:
                 json.dump(data, outfile, sort_keys=True, indent=4)
         except Exception as exc:
             raise SaveError(
-                "Unable to save the Project JSON file to %s", str(self.path)
+                "Unable to save the Project JSON file to %s", str(self.fpath)
             ) from exc
 
         mutable_: list[Experiment] = [
