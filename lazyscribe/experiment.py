@@ -462,37 +462,29 @@ class Experiment:
         """
         for artifact in self.artifacts:
             if artifact.name == name:
+                try:
+                    existing_version = repository.get_artifact_metadata(name=name)[
+                        "version"
+                    ]
+                    new_handler = evolve(artifact, version=existing_version + 1)
+                except ValueError:
+                    new_handler = copy(artifact)
+
                 if artifact.dirty:
                     LOG.debug(
-                        f"Artifact '{name}' does not exist on the filesystem yet, "
-                        "using `Repository.log_artifact`."
+                        f"Artifact '{name}' does not exist on the filesystem yet."
                     )
-                    repository.log_artifact(
-                        name=name,
-                        value=artifact.value,
-                        handler=artifact.alias,
-                        fname=artifact.fname,
-                        **artifact.writer_kwargs,
-                    )
-                    # Manually overwrite the creation timestamp
-                    repository.artifacts[-1].created_at = artifact.created_at
+                    repository.artifacts.append(new_handler)
                 else:
                     # The artifact is on disk, we will have to copy it over
                     curr_path = self.path / artifact.fname
                     new_path = repository.dir / artifact.name
-                    LOG.info(f"Copying '{curr_path!s}' to '{new_path!s}{os.sep}'")
+                    LOG.debug(f"Copying '{curr_path!s}' to '{new_path!s}{os.sep}'")
                     if not self.fs.isdir(f"{new_path!s}{os.sep}"):
                         LOG.debug(f"Creating '{new_path!s}{os.sep}'")
                         self.fs.mkdir(f"{new_path!s}{os.sep}", create_parents=True)
                     self.fs.copy(str(curr_path), f"{new_path!s}{os.sep}")
 
-                    try:
-                        existing_version = repository.get_artifact_metadata(name=name)[
-                            "version"
-                        ]
-                        new_handler = evolve(artifact, version=existing_version + 1)
-                    except ValueError:
-                        new_handler = copy(artifact)
                     repository.artifacts.append(new_handler)
                     LOG.info(
                         "Calling `save` on the repository since the artifact exists on disk already."

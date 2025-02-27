@@ -9,10 +9,21 @@ import sys
 import zoneinfo
 from datetime import datetime
 
+import pytest
 import time_machine
 
+from lazyscribe.exception import ArtifactLoadError
 from lazyscribe.project import Project
 from lazyscribe.repository import Repository
+
+
+def test_promote_artifact_nonexistent():
+    """Test raising an error when a user promotes a non-existent artifact."""
+    project = Project()
+    repository = Repository()
+
+    with pytest.raises(ArtifactLoadError), project.log("My experiment") as exp:
+        exp.promote_artifact(repository, "fake-artifact")
 
 
 def test_promote_artifact_dirty(tmp_path):
