@@ -4,9 +4,11 @@ import getpass
 import inspect
 import json
 import logging
+import os
 import warnings
 from collections.abc import Iterator
 from contextlib import contextmanager
+from copy import copy
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional, Union
@@ -472,17 +474,25 @@ class Experiment:
                         fname=artifact.fname,
                         **artifact.writer_kwargs,
                     )
+                    # Manually overwrite the creation timestamp
+                    repository.artifacts[-1].created_at = artifact.created_at
                 else:
                     # The artifact is on disk, we will have to copy it over
                     curr_path = self.path / artifact.fname
-                    new_path = repository.dir / artifact.name / artifact.fname
-                    LOG.info(f"Copying '{curr_path!s} to {new_path!s}")
-                    self.fs.copy(str(curr_path), str(new_path))
+                    new_path = repository.dir / artifact.name
+                    LOG.info(f"Copying '{curr_path!s}' to '{new_path!s}{os.sep}'")
+                    if not self.fs.isdir(f"{new_path!s}{os.sep}"):
+                        LOG.debug(f"Creating '{new_path!s}{os.sep}'")
+                        self.fs.mkdir(f"{new_path!s}{os.sep}", create_parents=True)
+                    self.fs.copy(str(curr_path), f"{new_path!s}{os.sep}")
 
-                    existing_version = repository.get_artifact_metadata(name=name)[
-                        "version"
-                    ]
-                    new_handler = evolve(artifact, version=existing_version + 1)
+                    try:
+                        existing_version = repository.get_artifact_metadata(name=name)[
+                            "version"
+                        ]
+                        new_handler = evolve(artifact, version=existing_version + 1)
+                    except ValueError:
+                        new_handler = copy(artifact)
                     repository.artifacts.append(new_handler)
                     LOG.info(
                         "Calling `save` on the repository since the artifact exists on disk already."
