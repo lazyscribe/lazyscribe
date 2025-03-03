@@ -465,6 +465,11 @@ class Experiment:
         ArtifactLogError
             Raised if the artifact to be promoted is older than the latest version available in the
             repository.
+
+            Raised if
+
+            * the artifact ``name`` exists on the filesystem, and
+            * the filesystem protocol does not match between the repository and the experiment.
         ArtifactLoadError
             Raised if there is no artifact with the name ``name`` in the experiment.
         """
@@ -485,12 +490,18 @@ class Experiment:
 
                 if artifact.dirty:
                     LOG.debug(
-                        f"Artifact '{name}' does not exist on the filesystem yet."
+                        f"The current value for artifact '{name}' is not on the filesystem."
                     )
                     repository.artifacts.append(new_handler)
                 else:
                     # The artifact is on disk, we will have to copy it over
                     curr_path = self.path / artifact.fname
+                    if self.fs.protocol != repository.fs.protocol:
+                        raise ArtifactLogError(
+                            "The repository and the experiment use different filesystems. "
+                            f"Please move {curr_path!s} from the experiment filesystem to "
+                            "the Repository filesystem and log it manually."
+                        )
                     new_path = repository.dir / artifact.name
                     LOG.debug(f"Copying '{curr_path!s}' to '{new_path!s}{os.sep}'")
                     if not self.fs.isdir(f"{new_path!s}{os.sep}"):
@@ -505,12 +516,13 @@ class Experiment:
                     try:
                         repository.save()
                     except SaveError as exc:
-                        LOG.exception(exc, exc_info=True)
                         LOG.info(
                             f"Save failed, deleting '{(new_path / artifact.fname)!s}'..."
                         )
                         self.fs.rm(str(new_path / artifact.fname))
                         del repository.artifacts[-1]
+
+                        raise exc
                 break
         else:
             raise ArtifactLoadError(f"No artifact with name {name}")
