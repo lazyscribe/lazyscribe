@@ -11,8 +11,10 @@ from datetime import datetime
 
 import pytest
 import time_machine
+from fsspec.implementations.local import LocalFileSystem
+from fsspec.registry import register_implementation
 
-from lazyscribe.exception import ArtifactLoadError, ArtifactLogError
+from lazyscribe.exception import ArtifactLoadError, ArtifactLogError, SaveError
 from lazyscribe.project import Project
 from lazyscribe.repository import Repository
 
@@ -210,3 +212,95 @@ def test_promote_artifact_new_version(tmp_path):
             "version": 1,
         },
     ]
+
+
+def test_mismatched_protocol(tmp_path):
+    """Test promoting an artifact with mismatched fsspec protocols."""
+    location = tmp_path / "my-project"
+    project_location = location / "project.json"
+    project = Project(project_location)
+
+    with (
+        project.log("My experiment") as exp,
+        time_machine.travel(
+            datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")),
+            tick=False,
+        ),
+    ):
+        exp.log_artifact(name="features", value=[0, 1, 2], handler="json")
+
+    # Save the project
+    project.save()
+
+    repository_location = location / "repository.json"
+    # Modify the repository spec to have a mismatched protocol
+    repository = Repository(
+        "github://" + str(repository_location),
+        org="lazyscribe",
+        repo="lazyscribe",
+        mode="w",
+    )
+
+    reload_project = Project(project_location, mode="r")
+    with pytest.raises(ArtifactLogError):
+        reload_project["my-experiment"].promote_artifact(repository, "features")
+
+
+def test_raised_save_error(tmp_path):
+    """Test promoting an artifact and having it fail on save, reverting the change."""
+    location = tmp_path / "my-project"
+    project_location = location / "project.json"
+    project = Project(project_location)
+
+    with (
+        project.log("My experiment") as exp,
+        time_machine.travel(
+            datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")),
+            tick=False,
+        ),
+    ):
+        exp.log_artifact(name="features", value=[0, 1, 2], handler="json")
+
+    # Save the project
+    project.save()
+
+    # Create a fake protocol that errors on open
+    class FakeProtocol(LocalFileSystem):
+        """Fake filesystem protocol."""
+
+        protocol = "fake"
+
+        def open(
+            self,
+            path,
+            mode="rb",
+            block_size=None,
+            cache_options=None,
+            compression=None,
+            **kwargs,
+        ):
+            """Return a file-like object."""
+            if mode == "w":
+                raise ValueError("Error!")
+            else:
+                return super().open(
+                    path, mode, block_size, cache_options, compression, **kwargs
+                )
+
+    # Register the fake implementation
+    register_implementation("fake", FakeProtocol)
+
+    # Open the project and repository using the fake protocol
+    repository_location = location / "repository.json"
+    repository = Repository("fake://" + str(repository_location))
+
+    with time_machine.travel(
+        datetime(2025, 3, 1, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+    ):
+        reload_project = Project("fake://" + str(project_location), mode="r")
+        with pytest.raises(SaveError):
+            reload_project["my-experiment"].promote_artifact(repository, "features")
+
+    # Ensure the artifact has been deleted
+    assert not (repository.dir / "features" / "features-20250120132330.json").is_file()
+    assert len(repository.artifacts) == 0
