@@ -287,7 +287,7 @@ class Repository:
                 json.dump(data, outfile, sort_keys=True, indent=4)
         except Exception as exc:
             raise SaveError(
-                "Unable to save the Repository JSON file to %s", str(self.fpath)
+                f"Unable to save the Repository JSON file to {self.fpath!s}"
             ) from exc
 
         for artifact in self.artifacts:
