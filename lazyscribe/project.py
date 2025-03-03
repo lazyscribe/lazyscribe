@@ -90,11 +90,6 @@ class Project:
         If the project is in read-only or append mode, existing experiments will
         be loaded in read-only mode. If opened in editable mode, existing experiments
         will be loaded in editable mode.
-
-        Raises
-        ------
-        SaveError
-            Raised when writing to the filesystem fails.
         """
         with self.fs.open(str(self.fpath), "r") as infile:
             data = json.load(infile)
@@ -172,6 +167,11 @@ class Project:
         """Save the project data.
 
         This includes saving any artifact data.
+
+        Raises
+        ------
+        SaveError
+            Raised when writing to the filesystem fails.
         """
         if self.mode == "r":
             raise ReadOnlyError("Project is in read-only mode.")
@@ -187,7 +187,7 @@ class Project:
                 json.dump(data, outfile, sort_keys=True, indent=4)
         except Exception as exc:
             raise SaveError(
-                "Unable to save the Project JSON file to %s", str(self.fpath)
+                f"Unable to save the Project JSON file to {self.fpath!s}"
             ) from exc
 
         mutable_: list[Experiment] = [
