@@ -34,11 +34,10 @@ class Repository:
     mode : {"r", "a", "w", "w+"}, optional (default "w")
         The mode for opening the repository.
 
-        * ``r``: Repository loaded as read-only: no new artifacts can be logged.
-        * ``a``: All existing artifacts will be loaded as
-          read-only and new artifacts can be added.
+        * ``r``: No new artifacts can be logged.
+        * ``a``: The same as ``w+`` (deprecated).
         * ``w``: No existing artifacts will be loaded.
-        * ``w+``: All artifacts will be loaded in editable mode.
+        * ``w+``: All artifacts will be loaded.
 
     Attributes
     ----------
@@ -49,7 +48,9 @@ class Repository:
     def __init__(
         self,
         fpath: str | Path = "repository.json",
-        mode: Literal["r", "a", "w", "w+"] = "w",
+        mode: Literal[
+            "r", "a", "w", "w+"
+        ] = "w",  # TODO: remove `mode="a"` in version 2.0
         **storage_options,
     ):
         """Init method."""
@@ -63,14 +64,20 @@ class Repository:
         self.dir = self.fpath.parent
         self.storage_options = storage_options
 
-        # If in ``r``, ``a``, or ``w+`` mode, read in the existing repository.
         self.artifacts: list[Artifact] = []
         self.fs = fsspec.filesystem(self.protocol, **storage_options)
 
         if mode not in ("r", "a", "w", "w+"):
             raise ValueError("Please provide a valid ``mode`` value.")
+        if mode == "a":
+            warnings.warn(
+                '`mode="a"` is deprecated and will be removed from `lazyscribe.repository.Repository` in version 2.0',
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            mode = "w+"
         self.mode = mode
-        if mode in ("r", "a", "w+") and self.fs.isfile(str(self.fpath)):
+        if mode in ("r", "w+") and self.fs.isfile(str(self.fpath)):
             self.load()
 
     def load(self):
