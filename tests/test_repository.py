@@ -105,7 +105,7 @@ def test_save_repository_multi(tmp_path):
     assert repository_location.is_file()
 
     # Read in the repository again and log a separate artifact
-    repository_read = Repository(repository_location, mode="a")
+    repository_read = Repository(repository_location, mode="w+")
     repository_read.log_artifact("my-dict-2", {"b": 2}, handler="json")
 
     assert repository_read["my-dict"].dirty is False
