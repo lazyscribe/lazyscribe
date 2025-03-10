@@ -11,7 +11,7 @@ for example usage and available protocols.
     from lazyscribe import Project
 
     fpath = "s3://path/to/my/project.json"
-    storage_options = {
+    storage_options: dict[str, Any] = {
         "username": "user",
         "password": "pswrd"
     }

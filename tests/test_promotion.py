@@ -4,10 +4,14 @@ These tests are in a separate module because it requires the interaction between
 projects and repositories.
 """
 
+from __future__ import annotations
+
 import json
 import sys
 import zoneinfo
 from datetime import datetime
+from pathlib import Path
+from typing import Any
 
 import pytest
 import time_machine
@@ -19,7 +23,7 @@ from lazyscribe.project import Project
 from lazyscribe.repository import Repository
 
 
-def test_promote_artifact_nonexistent():
+def test_promote_artifact_nonexistent() -> None:
     """Test raising an error when a user promotes a non-existent artifact."""
     project = Project()
     repository = Repository()
@@ -28,7 +32,7 @@ def test_promote_artifact_nonexistent():
         exp.promote_artifact(repository, "fake-artifact")
 
 
-def test_promoting_old_artifact(tmp_path):
+def test_promoting_old_artifact(tmp_path: Path) -> None:
     """Test raising an error when promoting an artifact that is older than the most recent version."""
     location = tmp_path / "my-project"
     repository_location = location / "repository.json"
@@ -64,7 +68,7 @@ def test_promoting_old_artifact(tmp_path):
 
 
 @time_machine.travel(datetime(2025, 1, 1, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False)
-def test_promote_equal_artifact(tmp_path):
+def test_promote_equal_artifact(tmp_path: Path) -> None:
     """Test promoting an artifact that has the exact same creation date."""
     location = tmp_path / "my-project"
     repository_location = location / "repository.json"
@@ -90,7 +94,7 @@ def test_promote_equal_artifact(tmp_path):
         reload_project["my-experiment"].promote_artifact(reload_repository, "features")
 
 
-def test_promote_artifact_dirty(tmp_path):
+def test_promote_artifact_dirty(tmp_path: Path) -> None:
     """Test promoting an artifact that hasn't been persisted to disk yet."""
     location = tmp_path / "my-project"
     project_location = location / "project.json"
@@ -121,7 +125,7 @@ def test_promote_artifact_dirty(tmp_path):
     assert repository.artifacts[0].value == project["my-experiment"].artifacts[0].value
 
 
-def test_promote_artifact_clean(tmp_path):
+def test_promote_artifact_clean(tmp_path: Path) -> None:
     """Test promoting an artifact that exists on disk already."""
     location = tmp_path / "my-project"
     project_location = location / "project.json"
@@ -173,7 +177,7 @@ def test_promote_artifact_clean(tmp_path):
     ]
 
 
-def test_promote_artifact_new_version(tmp_path):
+def test_promote_artifact_new_version(tmp_path: Path) -> None:
     """Test promoting a new version of an existing artifact."""
     location = tmp_path / "my-project"
     repository_location = location / "repository.json"
@@ -241,7 +245,7 @@ def test_promote_artifact_new_version(tmp_path):
     ]
 
 
-def test_mismatched_protocol(tmp_path):
+def test_mismatched_protocol(tmp_path: Path) -> None:
     """Test promoting an artifact with mismatched fsspec protocols."""
     location = tmp_path / "my-project"
     project_location = location / "project.json"
@@ -273,7 +277,7 @@ def test_mismatched_protocol(tmp_path):
         reload_project["my-experiment"].promote_artifact(repository, "features")
 
 
-def test_raised_save_error(tmp_path):
+def test_raised_save_error(tmp_path: Path) -> None:
     """Test promoting an artifact and having it fail on save, reverting the change."""
     location = tmp_path / "my-project"
     project_location = location / "project.json"
@@ -292,20 +296,20 @@ def test_raised_save_error(tmp_path):
     project.save()
 
     # Create a fake protocol that errors on open
-    class FakeProtocol(LocalFileSystem):
+    class FakeProtocol(LocalFileSystem):  # type: ignore
         """Fake filesystem protocol."""
 
         protocol = "fake"
 
         def open(
             self,
-            path,
-            mode="rb",
-            block_size=None,
-            cache_options=None,
-            compression=None,
-            **kwargs,
-        ):
+            path: str,
+            mode: str = "rb",
+            block_size: int | None = None,
+            cache_options: dict[str, Any] | None = None,
+            compression: str | None = None,
+            **kwargs: Any,
+        ) -> Any:
             """Return a file-like object."""
             if mode == "w":
                 raise ValueError("Error!")

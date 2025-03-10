@@ -1,5 +1,5 @@
 Tag experiments
-==========================
+===============
 
 In this guide, we will discuss how you can add tags to your experiment. First,
 let's create a :py:class:`lazyscribe.Project`.

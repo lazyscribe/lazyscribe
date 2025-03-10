@@ -3,14 +3,14 @@
 from lazyscribe.linked import LinkedList, Node, merge
 
 
-def test_convert_to_list():
+def test_convert_to_list() -> None:
     """Test converting a node to a list."""
     node = Node(1, next=Node(1, Node(2, Node(3, Node(4)))))
 
     assert node.to_list() == [1, 1, 2, 3, 4]
 
 
-def test_append_linked_list():
+def test_append_linked_list() -> None:
     """Test appending to a linked list."""
     null = LinkedList()
     null.append(3)
@@ -22,7 +22,7 @@ def test_append_linked_list():
     assert null.head == Node(3, next=Node(4))
 
 
-def test_linked_list_conversion():
+def test_linked_list_conversion() -> None:
     """Test converting a list of integers to a sorted linked list."""
     lst = [1, 2, 1, 3, 4]
     new = LinkedList.from_list(lst)
@@ -38,8 +38,8 @@ def test_linked_list_conversion():
     )
 
 
-def test_merge_no_overlap():
-    """Test merging two non-overlapping linked lists"""
+def test_merge_no_overlap() -> None:
+    """Test merging two non-overlapping linked lists."""
     first = LinkedList()
     first.append(1)
     first.append(3)
@@ -49,12 +49,12 @@ def test_merge_no_overlap():
     second.append(4)
     second.append(6)
 
-    out = merge(first.head, second.head)
+    out = merge(first.head, second.head)  # type: ignore[arg-type]
 
     assert out == Node(1, Node(2, Node(3, Node(4, Node(5, Node(6))))))
 
 
-def test_merge_overlap():
+def test_merge_overlap() -> None:
     """Test merging with some overlapping nodes."""
     first = LinkedList()
     first.append(1)
@@ -69,7 +69,7 @@ def test_merge_overlap():
     second.append(4)
     second.append(6)
 
-    out = merge(first.head, second.head)
+    out = merge(first.head, second.head)  # type: ignore[arg-type]
 
     assert out == Node(
         1, Node(1, Node(2, Node(2, Node(3, Node(3, Node(4, Node(5, Node(6))))))))
