@@ -63,6 +63,33 @@ def test_promoting_old_artifact(tmp_path):
         reload_project["my-experiment"].promote_artifact(reload_repository, "features")
 
 
+@time_machine.travel(datetime(2025, 1, 1, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False)
+def test_promote_equal_artifact(tmp_path):
+    """Test promoting an artifact that has the exact same creation date."""
+    location = tmp_path / "my-project"
+    repository_location = location / "repository.json"
+    repository = Repository(repository_location)
+
+    # Log version 0 of the artifact
+    repository.log_artifact("features", [0, 1], handler="json")
+
+    repository.save()
+
+    # Create an old project and promote
+    project_location = location / "project.json"
+    project = Project(project_location)
+    with project.log("My experiment") as exp:
+        exp.log_artifact(name="features", value=[0, 1, 2], handler="json")
+
+    project.save()
+
+    reload_project = Project(project_location, mode="r")
+    reload_repository = Repository(repository_location, mode="a")
+
+    with pytest.raises(ArtifactLogError):
+        reload_project["my-experiment"].promote_artifact(reload_repository, "features")
+
+
 def test_promote_artifact_dirty(tmp_path):
     """Test promoting an artifact that hasn't been persisted to disk yet."""
     location = tmp_path / "my-project"

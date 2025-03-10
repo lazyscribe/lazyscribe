@@ -479,10 +479,10 @@ class Experiment:
                     meta_ = repository.get_artifact_metadata(name)
                     if (
                         datetime.strptime(meta_["created_at"], "%Y-%m-%dT%H:%M:%S")
-                        > artifact.created_at
+                        >= artifact.created_at
                     ):
                         raise ArtifactLogError(
-                            f"Artifact `{name}` is older than the latest version available in the repository."
+                            f"Artifact `{name}` is not newer than the latest version available in the repository."
                         ) from None
                     new_handler = evolve(artifact, version=meta_["version"] + 1)
                 except ValueError:
