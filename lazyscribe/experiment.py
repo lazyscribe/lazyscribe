@@ -56,7 +56,7 @@ class Experiment:
         experiment and the value is an :class:`Experiment` instance.
     """
 
-    name: str
+    name: str = field()
     project: Path = field(eq=False)
     dir: Path = field(eq=False)
     fs: AbstractFileSystem = field(eq=False)

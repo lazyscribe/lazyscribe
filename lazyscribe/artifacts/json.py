@@ -7,7 +7,7 @@ from datetime import datetime
 from json import dump, load
 from typing import Any, ClassVar
 
-from attrs import define
+from attrs import define, field
 from slugify import slugify
 
 from lazyscribe._utils import utcnow
@@ -28,7 +28,7 @@ class JSONArtifact(Artifact):
     suffix: ClassVar[str] = "json"
     binary: ClassVar[bool] = False
     output_only: ClassVar[bool] = False
-    python_version: str
+    python_version: str = field()
 
     @classmethod
     def construct(
