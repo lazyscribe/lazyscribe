@@ -463,8 +463,8 @@ class Experiment:
         Raises
         ------
         ArtifactLogError
-            Raised if the artifact to be promoted is older than the latest version available in the
-            repository.
+            Raised if the artifact to be promoted is not newer than the latest version available
+            in the repository.
 
             Raised if
 
