@@ -105,7 +105,7 @@ def test_save_repository_multi(tmp_path):
     assert repository_location.is_file()
 
     # Read in the repository again and log a separate artifact
-    repository_read = Repository(repository_location, mode="a")
+    repository_read = Repository(repository_location, mode="w+")
     repository_read.log_artifact("my-dict-2", {"b": 2}, handler="json")
 
     assert repository_read["my-dict"].dirty is False
@@ -470,3 +470,17 @@ def test_retrieve_artifact_meta():
         "python_version": ".".join(str(i) for i in sys.version_info[:2]),
         "version": 0,
     }
+
+
+def test_repository_append_mode_deprecation(tmp_path):
+    """Test reading a repository in append mode."""
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        repository = Repository(fpath=DATA_DIR / "repository.json", mode="a")
+        assert len(w) == 1
+        assert issubclass(w[-1].category, DeprecationWarning)
+        assert (
+            '`mode="a"` is deprecated and will be removed from `lazyscribe.repository.Repository` in version 2.0'
+            in str(w[-1].message)
+        )
+    assert repository.mode == "w+"
