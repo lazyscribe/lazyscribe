@@ -1,3 +1,19 @@
+## v1.1.0 (2025-03-14)
+
+### Feat
+
+- adding the ability for users to promote an artifact from an experiment to a repository (#129)
+
+### Fix
+
+- **repository**: `repository.Repository`: fix `mode` handling (#130)
+- **project,repository**: moving code block for resetting dirty flag (#131)
+
+### Refactor
+
+- use `attrs.field` everywhere (#128)
+- **repository**: get rid of `datetime.timedelta` (#126)
+
 ## v1.0.1 (2025-02-25)
 
 ### Fix
