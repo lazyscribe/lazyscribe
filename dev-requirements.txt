@@ -4,12 +4,10 @@ alabaster==0.7.16
     # via sphinx
 argcomplete==3.5.3
     # via commitizen
-attrs==25.1.0
+attrs==25.3.0
     # via lazyscribe (pyproject.toml)
 babel==2.17.0
     # via sphinx
-backports-tarfile==1.2.0
-    # via jaraco-context
 beautifulsoup4==4.13.3
     # via furo
 build==1.2.2.post1
@@ -72,8 +70,6 @@ docutils==0.21.2
     #   sphinx
 edgetest==2025.1.0
     # via lazyscribe (pyproject.toml)
-exceptiongroup==1.2.2
-    # via pytest
 filelock==3.18.0
     # via virtualenv
 fonttools==4.56.0
@@ -92,19 +88,10 @@ idna==3.10
     # via requests
 imagesize==1.4.1
     # via sphinx
-importlib-metadata==8.5.0
-    # via
-    #   lazyscribe (pyproject.toml)
-    #   build
-    #   commitizen
-    #   dask
-    #   keyring
-    #   sphinx
-    #   twine
+importlib-metadata==8.6.1
+    # via lazyscribe (pyproject.toml)
 importlib-resources==6.5.2
-    # via
-    #   matplotlib
-    #   prefect
+    # via prefect
 iniconfig==2.0.0
     # via pytest
 jaraco-classes==3.4.0
@@ -339,14 +326,6 @@ time-machine==2.16.0
     #   pendulum
 toml==0.10.2
     # via prefect
-tomli==2.2.1
-    # via
-    #   build
-    #   coverage
-    #   mypy
-    #   pip-tools
-    #   pytest
-    #   sphinx
 tomlkit==0.11.4
     # via
     #   commitizen
@@ -367,9 +346,7 @@ types-pyyaml==6.0.12.20241230
 typing-extensions==4.12.2
     # via
     #   beautifulsoup4
-    #   commitizen
     #   mypy
-    #   rich
 tzdata==2025.1
     # via
     #   pandas
@@ -394,6 +371,4 @@ wheel==0.45.1
 zict==3.0.0
     # via distributed
 zipp==3.21.0
-    # via
-    #   importlib-metadata
-    #   importlib-resources
+    # via importlib-metadata
