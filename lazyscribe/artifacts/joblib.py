@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, ClassVar
 
-from attrs import define
+from attrs import define, field
 from importlib_metadata import packages_distributions
 from importlib_metadata import version as importlib_version
 from slugify import slugify
@@ -47,9 +47,9 @@ class JoblibArtifact(Artifact):
     suffix: ClassVar[str] = "joblib"
     binary: ClassVar[bool] = True
     output_only: ClassVar[bool] = False
-    package: str
-    package_version: str
-    joblib_version: str
+    package: str = field()
+    package_version: str = field()
+    joblib_version: str = field()
 
     @classmethod
     def construct(

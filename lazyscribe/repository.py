@@ -7,7 +7,7 @@ import json
 import logging
 import warnings
 from collections.abc import Iterator
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Literal
 from urllib.parse import urlparse
@@ -18,7 +18,7 @@ from attrs import asdict, fields, filters
 from lazyscribe._utils import serialize_artifacts, utcnow
 from lazyscribe.artifacts import _get_handler
 from lazyscribe.artifacts.base import Artifact
-from lazyscribe.exception import ArtifactLoadError, ReadOnlyError
+from lazyscribe.exception import ArtifactLoadError, ReadOnlyError, SaveError
 
 LOG = logging.getLogger(__name__)
 
@@ -34,11 +34,10 @@ class Repository:
     mode : {"r", "a", "w", "w+"}, optional (default "w")
         The mode for opening the repository.
 
-        * ``r``: Repository loaded as read-only: no new artifacts can be logged.
-        * ``a``: All existing artifacts will be loaded as
-          read-only and new artifacts can be added.
+        * ``r``: No new artifacts can be logged.
+        * ``a``: The same as ``w+`` (deprecated).
         * ``w``: No existing artifacts will be loaded.
-        * ``w+``: All artifacts will be loaded in editable mode.
+        * ``w+``: All artifacts will be loaded.
 
     Attributes
     ----------
@@ -49,7 +48,9 @@ class Repository:
     def __init__(
         self,
         fpath: str | Path = "repository.json",
-        mode: Literal["r", "a", "w", "w+"] = "w",
+        mode: Literal[
+            "r", "a", "w", "w+"
+        ] = "w",  # TODO: remove `mode="a"` in version 2.0
         **storage_options,
     ):
         """Init method."""
@@ -63,14 +64,20 @@ class Repository:
         self.dir = self.fpath.parent
         self.storage_options = storage_options
 
-        # If in ``r``, ``a``, or ``w+`` mode, read in the existing repository.
         self.artifacts: list[Artifact] = []
         self.fs = fsspec.filesystem(self.protocol, **storage_options)
 
         if mode not in ("r", "a", "w", "w+"):
             raise ValueError("Please provide a valid ``mode`` value.")
+        if mode == "a":
+            warnings.warn(
+                '`mode="a"` is deprecated and will be removed from `lazyscribe.repository.Repository` in version 2.0',
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            mode = "w+"
         self.mode = mode
-        if mode in ("r", "a", "w+") and self.fs.isfile(str(self.fpath)):
+        if mode in ("r", "w+") and self.fs.isfile(str(self.fpath)):
             self.load()
 
     def load(self):
@@ -271,13 +278,24 @@ class Repository:
         """Save the repository data.
 
         This includes saving any artifact data.
+
+        Raises
+        ------
+        SaveError
+            Raised when writing to the filesystem fails.
         """
         if self.mode == "r":
             raise ReadOnlyError("Repository is in read-only mode.")
 
         data = list(self)
-        with self.fs.open(str(self.fpath), "w") as outfile:
-            json.dump(data, outfile, sort_keys=True, indent=4)
+        try:
+            self.fs.makedirs(str(self.fpath.parent), exist_ok=True)
+            with self.fs.open(str(self.fpath), "w") as outfile:
+                json.dump(data, outfile, sort_keys=True, indent=4)
+        except Exception as exc:
+            raise SaveError(
+                f"Unable to save the Repository JSON file to {self.fpath!s}"
+            ) from exc
 
         for artifact in self.artifacts:
             # Write the artifact data
@@ -290,18 +308,24 @@ class Repository:
                 )
                 continue
 
-            self.fs.makedirs(str(artifact_dir), exist_ok=True)
-            LOG.debug(f"Saving '{artifact.name}' to {fpath!s}...")
-            with self.fs.open(str(fpath), fmode) as buf:
-                artifact.write(artifact.value, buf, **artifact.writer_kwargs)
-                # Reset the `dirty` flag since we have the updated artifact on disk
-                artifact.dirty = False
-                if artifact.output_only:
-                    warnings.warn(
-                        f"Artifact '{artifact.name}' is added. It is not meant to be read back as Python Object",
-                        UserWarning,
-                        stacklevel=2,
-                    )
+            try:
+                self.fs.makedirs(str(artifact_dir), exist_ok=True)
+                LOG.debug(f"Saving '{artifact.name}' to {fpath!s}...")
+                with self.fs.open(str(fpath), fmode) as buf:
+                    artifact.write(artifact.value, buf, **artifact.writer_kwargs)
+            except Exception as exc:
+                raise SaveError(
+                    f"Unable to write '{artifact.name}' to '{fpath!s}'"
+                ) from exc
+
+            # Reset the `dirty` flag since we have the updated artifact on disk
+            artifact.dirty = False
+            if artifact.output_only:
+                warnings.warn(
+                    f"Artifact '{artifact.name}' is added. It is not meant to be read back as Python Object",
+                    UserWarning,
+                    stacklevel=2,
+                )
 
     def _search_artifact_versions(
         self,
@@ -364,11 +388,8 @@ class Repository:
                         art
                         for idx, art in enumerate(artifacts_matching_name)
                         if (
-                            (version - art.created_at >= timedelta(0))
-                            and (
-                                version - artifacts_matching_name[idx + 1].created_at
-                                < timedelta(0)
-                            )
+                            version >= art.created_at
+                            and version < artifacts_matching_name[idx + 1].created_at
                         )
                     )
                 except IndexError:

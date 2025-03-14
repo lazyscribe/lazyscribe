@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, ClassVar
 
+from attrs import field
 from slugify import slugify
 
 from lazyscribe._utils import utcnow
@@ -16,7 +17,7 @@ class TestArtifact(Artifact):
     suffix: ClassVar[str] = "testartifact"
     binary: ClassVar[bool] = True
     output_only: ClassVar[bool] = True
-    python_version: str
+    python_version: str = field()
 
     @classmethod
     def construct(
