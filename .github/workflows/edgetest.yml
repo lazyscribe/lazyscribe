@@ -19,3 +19,4 @@ jobs:
           edgetest-flags: '-c pyproject.toml -r requirements.txt --export'
           base-branch: 'develop'
           skip-pr: 'false'
+          add-paths: 'pyproject.toml, requirements.txt'
