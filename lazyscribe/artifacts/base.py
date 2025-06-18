@@ -16,21 +16,18 @@ class Artifact(metaclass=ABCMeta):
 
     Artifact handlers are not meant to be initialized directly.
 
-    Class Attributes
-    ----------------
-    alias : str
-        The alias for the artifact handler. This value will be supplied to
-        :py:meth:`lazyscribe.experiment.Experiment.log_artifact`.
-    suffix : str
-        The standard suffix for the files written and read by this handler.
-    binary : bool
-        Whether or not the file format for the handler is binary in nature. This
-        affects whether or not the file handler uses ``w`` or ``wb``.
-    output_only : bool
-        Whether or not the file output by the handler is meant to be read as the orginal project.
-
     Attributes
     ----------
+    :cvar alias : str
+        The alias for the artifact handler. This value will be supplied to
+        :py:meth:`lazyscribe.experiment.Experiment.log_artifact`.
+    :cvar suffix : str
+        The standard suffix for the files written and read by this handler.
+    :cvar binary : bool
+        Whether or not the file format for the handler is binary in nature. This
+        affects whether or not the file handler uses ``w`` or ``wb``.
+    :cvar output_only : bool
+        Whether or not the file output by the handler is meant to be read as the orginal project.
     name : str
         The name of the artifact.
     fname : str

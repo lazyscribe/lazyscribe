@@ -24,19 +24,16 @@ class JSONArtifact(Artifact):
         This class is not meant to be initialized directly. Please use the ``construct``
         method.
 
-    Class Attributes
-    ----------------
-    See also "Class Attributes" of :py:class:`lazyscribe.artifacts.base.Artifact`.
+    .. note::
 
-    alias : str = "json"
-    suffix : str = "json"
-    binary : bool = False
-    output_only : bool = False
+        For the attributes documentation, see also "Attributes" of :py:class:`lazyscribe.artifacts.base.Artifact`.
 
     Attributes
     ----------
-    See also "Attributes" of :py:class:`lazyscribe.artifacts.base.Artifact`.
-
+    :cvar alias : str = "json"
+    :cvar suffix : str = "json"
+    :cvar binary : bool = False
+    :cvar output_only : bool = False
     python_version : str
         TODO
     """

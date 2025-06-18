@@ -32,18 +32,16 @@ class YAMLArtifact(Artifact):
         This class is not meant to be initialized directly. Please use the ``construct``
         method.
 
-    Class Attributes
-    ----------------
-    See also "Class Attributes" of :py:class:`lazyscribe.artifacts.base.Artifact`.
+    .. note::
 
-    alias : str = "yaml"
-    suffix : str = "yaml"
-    binary : bool = False
-    output_only : bool = False
+        For the attributes documentation, see also "Attributes" of :py:class:`lazyscribe.artifacts.base.Artifact`.
 
     Attributes
     ----------
-    See also "Attributes" of :py:class:`lazyscribe.artifacts.base.Artifact`.
+    :cvar alias : str = "yaml"
+    :cvar suffix : str = "yaml"
+    :cvar binary : bool = False
+    :cvar output_only : bool = False
     """
 
     alias: ClassVar[str] = "yaml"
