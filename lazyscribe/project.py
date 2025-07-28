@@ -408,12 +408,24 @@ class Project:
         KeyError
             Raised if the slug does not exist.
         """
-        for exp in self.experiments:
+        for exp in self.experiments[
+            ::-1
+        ]:  # reverse list to get the latest saved experiment
             if exp.slug == arg or exp.short_slug == arg:
                 out = exp
                 break
         else:
             raise KeyError(f"No experiment with slug {arg}")
+
+        # If short slug is used, return the latest experiment saved with that slug, but may not correspond to the latest "last_updated" timestamp if it was manually set.
+        short_slug_timestamp = [
+            exp.last_updated for exp in self.experiments if exp.short_slug == arg
+        ]
+        if len(short_slug_timestamp) > 0:
+            latest_datetime = max(short_slug_timestamp)
+            if out.last_updated != latest_datetime:
+                LOG.warning(f"Returning experiment last saved, with ``last_updated`` manually set as {exp.last_updated}. \
+                            The latest ``last_updated`` timestamp is {latest_datetime}.")
 
         return out
 
