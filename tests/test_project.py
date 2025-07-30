@@ -1,9 +1,10 @@
 """Test the project class."""
 
 import json
+import logging
 import warnings
 import zoneinfo
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import patch
 
@@ -68,6 +69,63 @@ def test_logging_experiment(project_kwargs):
     assert project["my-experiment"].dirty is True
     with pytest.raises(KeyError):
         project["not a real experiment"]
+
+
+LOG = logging.getLogger(__name__)
+
+
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
+@pytest.mark.parametrize(
+    "project_kwargs",
+    [
+        {"author": "root"},
+        {
+            "author": "root",
+            "fpath": "file://" + (DATA_DIR / "external_fs_project.json").as_posix(),
+        },
+    ],
+)
+def test_logging(caplog, project_kwargs):
+    project = Project(**project_kwargs)
+    today = datetime.now()
+    caplog.set_level(logging.WARNING)
+    with project.log(name="My experiment") as exp:
+        exp.log_metric("name", 0.5)
+
+    with project.log(name="My experiment") as exp:
+        exp.last_updated = datetime.min
+        exp.created_at = today - timedelta(days=1)
+        exp.log_metric("name", 1.0)
+
+    assert project["my-experiment"] == project.experiments[-1]
+    assert (
+        project[f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}"]
+        == project.experiments[-1]
+    )
+    assert project["my-experiment"].dirty is True
+
+    assert (
+        caplog.text == ""
+    )  # If log_metric, then last_updated is overwritten to timestamp at logging hence no warning
+
+    with project.log(name="My experiment") as exp:
+        exp.last_updated = datetime.min
+        exp.created_at = today - timedelta(days=1)
+
+    assert project["my-experiment"] == project.experiments[-1]
+    assert (
+        project[f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}"]
+        == project.experiments[-1]
+    )
+    assert project["my-experiment"].dirty is True
+
+    assert (
+        f"Returning experiment last saved, with ``last_updated`` manually set as {project.experiments[-1].last_updated}. \
+                            The latest ``last_updated`` timestamp is {today}."
+        in caplog.text
+    )
 
 
 def test_invalid_project_mode():
