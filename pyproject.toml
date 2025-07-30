@@ -18,7 +18,7 @@ classifiers = [
 	"Programming Language :: Python :: 3.12",
 	"Programming Language :: Python :: 3.13",
 ]
-dependencies = ["attrs<=25.1.0,>=21.2.0", "importlib-metadata<=8.5.0,>=6.0", "python-slugify<=8.0.4,>=5.0.0", "fsspec<=2025.2.0,>=0.4.0"]
+dependencies = ["attrs<=25.3.0,>=21.2.0", "importlib-metadata<=8.7.0,>=6.0", "python-slugify<=8.0.4,>=5.0.0", "fsspec<=2025.5.1,>=0.4.0"]
 
 dynamic = ["readme", "version"]
 
@@ -64,7 +64,7 @@ readme = {file = ["README.md"], content-type = "text/markdown"}
 # COMMITIZEN -----------------------------------------------------------------
 
 [tool.commitizen]
-version = "1.1.0"
+version = "1.2.0"
 tag_format = "v$version"
 update_changelog_on_bump = true
 version_files = [
