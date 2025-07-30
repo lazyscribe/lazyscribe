@@ -1,3 +1,9 @@
+## v1.2.0 (2025-07-30)
+
+### Feat
+
+- **project,experiment**: return the last experiment with the matched short_slug instead of the first (#141)
+
 ## v1.1.0 (2025-03-14)
 
 ### Feat
