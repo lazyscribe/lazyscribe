@@ -2,7 +2,7 @@ Filter experiments within your project
 ======================================
 
 In this guide, we will discuss how you can use a function to iterate through and
-filter experiments. First, create a :py:class:`lazyscribe.Project`.
+filter experiments. First, create a :py:class:`lazyscribe.project.Project`.
 
 .. code-block:: python
 
@@ -27,8 +27,8 @@ Then, let's log a couple of experiments.
         exp.log_parameter("build_period", "6M")
 
 Suppose you want to look at all experiments with a 6 month build period. We can use
-:py:meth:`lazyscribe.Project.filter` to do so. All we have to do is write a lambda
-function that takes in :py:class:`lazyscribe.Experiment` and outputs a boolean.
+:py:meth:`lazyscribe.project.Project.filter` to do so. All we have to do is write a lambda
+function that takes in :py:class:`lazyscribe.experiment.Experiment` and outputs a boolean.
 
 .. code-block:: python
 
@@ -36,5 +36,5 @@ function that takes in :py:class:`lazyscribe.Experiment` and outputs a boolean.
         project.filter(func=lambda x: x.parameters["build_period"] == "6M")
     )
 
-This will return our final two experiments as a list of :py:class:`lazyscribe.Experiment`
+This will return our final two experiments as a list of :py:class:`lazyscribe.experiment.Experiment`
 objects.
