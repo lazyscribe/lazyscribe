@@ -71,9 +71,6 @@ def test_logging_experiment(project_kwargs):
         project["not a real experiment"]
 
 
-LOG = logging.getLogger(__name__)
-
-
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
