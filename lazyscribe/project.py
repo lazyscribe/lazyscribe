@@ -108,7 +108,7 @@ class Project:
                     project = upstream_projects.get(project_name)
                     if not project:
                         project = Project(
-                            fpath=parent / project_name,
+                            fpath=f"{self.protocol}://" + str(parent / project_name),
                             mode="r",
                             **self.storage_options,
                         )
