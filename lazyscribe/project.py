@@ -97,7 +97,6 @@ class Project:
             data[idx]["created_at"] = datetime.fromisoformat(entry["created_at"])
             data[idx]["last_updated"] = datetime.fromisoformat(entry["last_updated"])
 
-        parent = self.fpath.parent
         upstream_projects: dict[str, Project] = {}
         for exp in data:
             dependencies = {}
@@ -108,7 +107,7 @@ class Project:
                     project = upstream_projects.get(project_name)
                     if not project:
                         project = Project(
-                            fpath=f"{self.protocol}://" + str(parent / project_name),
+                            fpath=f"{self.protocol}://{project_name}",
                             mode="r",
                             **self.storage_options,
                         )
