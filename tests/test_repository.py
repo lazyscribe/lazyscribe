@@ -12,7 +12,7 @@ import pytest
 import time_machine
 
 from lazyscribe.artifacts.base import Artifact
-from lazyscribe.exception import ArtifactLoadError, ReadOnlyError
+from lazyscribe.exception import ArtifactLoadError, ReadOnlyError, SaveError
 from lazyscribe.repository import Repository
 from tests.conftest import TestArtifact
 
@@ -85,6 +85,47 @@ def test_save_repository(tmp_path):
     with open(location / "my-dict" / expected_fname) as infile:
         artifact_read = json.load(infile)
     assert artifact_loaded == artifact_read == {"a": 1}
+
+
+def test_save_repository_transaction(tmp_path):
+    """Test failing to save a repository due to a SaveError."""
+    location = tmp_path / "my-repository"
+    location.mkdir()
+    repository_location = location / "repository.json"
+
+    repository = Repository(repository_location)
+    repository.log_artifact(name="should-not-work", value=int, handler="json")
+
+    with pytest.raises(SaveError):
+        repository.save()
+
+    assert not repository_location.is_file()
+
+
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
+def test_update_repository_transaction(tmp_path):
+    """Test failing to update a repository due to a SaveError."""
+    location = tmp_path / "my-repository"
+    location.mkdir()
+    repository_location = location / "repository.json"
+
+    repository = Repository(repository_location)
+    repository.log_artifact("my-dict", {"a": 1}, handler="json")
+
+    repository.save()
+
+    repository_w = Repository(repository_location, mode="w+")
+    repository_w.log_artifact(name="should-not-work", value=int, handler="json")
+
+    with pytest.raises(SaveError):
+        repository_w.save()
+
+    # Read in the repository, compare it to the first version
+    repository_r = Repository(repository_location, mode="r")
+
+    assert repository_r.artifacts == repository.artifacts
 
 
 @time_machine.travel(

@@ -181,51 +181,56 @@ class Project:
                     exp.last_updated_by = self.author
 
         data = list(self)
-        try:
-            self.fs.makedirs(str(self.fpath.parent), exist_ok=True)
-            with self.fs.open(str(self.fpath), "w") as outfile:
-                json.dump(data, outfile, sort_keys=True, indent=4)
-        except Exception as exc:
-            raise SaveError(
-                f"Unable to save the Project JSON file to {self.fpath!s}"
-            ) from exc
+        with self.fs.transaction:
+            try:
+                self.fs.makedirs(str(self.fpath.parent), exist_ok=True)
+                with self.fs.open(str(self.fpath), "w") as outfile:
+                    json.dump(data, outfile, sort_keys=True, indent=4)
+            except Exception as exc:
+                raise SaveError(
+                    f"Unable to save the Project JSON file to {self.fpath!s}"
+                ) from exc
 
-        mutable_: list[Experiment] = [
-            exp for exp in self.experiments if not isinstance(exp, ReadOnlyExperiment)
-        ]
-        for exp in mutable_:
-            if not exp.dirty:
-                LOG.debug(f"{exp.slug} has not been updated. Skipping...")
-                continue
-            # Write the artifact data
-            LOG.info(f"Saving artifacts for {exp.slug}")
-            for artifact in exp.artifacts:
-                fmode = "wb" if artifact.binary else "w"
-                fpath = exp.path / artifact.fname
-                if not artifact.dirty:
-                    LOG.debug(f"Artifact '{artifact.name}' has not been updated")
+            mutable_: list[Experiment] = [
+                exp
+                for exp in self.experiments
+                if not isinstance(exp, ReadOnlyExperiment)
+            ]
+            for exp in mutable_:
+                if not exp.dirty:
+                    LOG.debug(f"{exp.slug} has not been updated. Skipping...")
                     continue
+                # Write the artifact data
+                LOG.info(f"Saving artifacts for {exp.slug}")
+                for artifact in exp.artifacts:
+                    fmode = "wb" if artifact.binary else "w"
+                    fpath = exp.path / artifact.fname
+                    if not artifact.dirty:
+                        LOG.debug(f"Artifact '{artifact.name}' has not been updated")
+                        continue
 
-                try:
-                    self.fs.makedirs(str(exp.path), exist_ok=True)
-                    LOG.debug(f"Saving '{artifact.name}' to {fpath!s}...")
-                    with self.fs.open(str(fpath), fmode) as buf:
-                        artifact.write(artifact.value, buf, **artifact.writer_kwargs)
-                except Exception as exc:
-                    raise SaveError(
-                        f"Unable to write '{artifact.name}' to '{fpath!s}'"
-                    ) from exc
+                    try:
+                        self.fs.makedirs(str(exp.path), exist_ok=True)
+                        LOG.debug(f"Saving '{artifact.name}' to {fpath!s}...")
+                        with self.fs.open(str(fpath), fmode) as buf:
+                            artifact.write(
+                                artifact.value, buf, **artifact.writer_kwargs
+                            )
+                    except Exception as exc:
+                        raise SaveError(
+                            f"Unable to write '{artifact.name}' to '{fpath!s}'"
+                        ) from exc
 
-                # Reset the `dirty` flag since we have the updated artifact on disk
-                artifact.dirty = False
-                if artifact.output_only:
-                    warnings.warn(
-                        f"Artifact '{artifact.name}' is added. It is not meant to be read back as Python Object",
-                        UserWarning,
-                        stacklevel=2,
-                    )
+                    # Reset the `dirty` flag since we have the updated artifact on disk
+                    artifact.dirty = False
+                    if artifact.output_only:
+                        warnings.warn(
+                            f"Artifact '{artifact.name}' is added. It is not meant to be read back as Python Object",
+                            UserWarning,
+                            stacklevel=2,
+                        )
 
-            exp.dirty = False
+                exp.dirty = False
 
     def merge(self, other: Project) -> Project:
         """Merge two projects.

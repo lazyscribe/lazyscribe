@@ -288,44 +288,45 @@ class Repository:
             raise ReadOnlyError("Repository is in read-only mode.")
 
         data = list(self)
-        try:
-            self.fs.makedirs(str(self.fpath.parent), exist_ok=True)
-            with self.fs.open(str(self.fpath), "w") as outfile:
-                json.dump(data, outfile, sort_keys=True, indent=4)
-        except Exception as exc:
-            raise SaveError(
-                f"Unable to save the Repository JSON file to {self.fpath!s}"
-            ) from exc
-
-        for artifact in self.artifacts:
-            # Write the artifact data
-            fmode = "wb" if artifact.binary else "w"
-            artifact_dir = self.dir / artifact.name
-            fpath = artifact_dir / artifact.fname
-            if not artifact.dirty:
-                LOG.debug(
-                    f"Artifact {artifact.name} v{artifact.version} already exists and has not been updated"
-                )
-                continue
-
+        with self.fs.transaction:
             try:
-                self.fs.makedirs(str(artifact_dir), exist_ok=True)
-                LOG.debug(f"Saving '{artifact.name}' to {fpath!s}...")
-                with self.fs.open(str(fpath), fmode) as buf:
-                    artifact.write(artifact.value, buf, **artifact.writer_kwargs)
+                self.fs.makedirs(str(self.fpath.parent), exist_ok=True)
+                with self.fs.open(str(self.fpath), "w") as outfile:
+                    json.dump(data, outfile, sort_keys=True, indent=4)
             except Exception as exc:
                 raise SaveError(
-                    f"Unable to write '{artifact.name}' to '{fpath!s}'"
+                    f"Unable to save the Repository JSON file to {self.fpath!s}"
                 ) from exc
 
-            # Reset the `dirty` flag since we have the updated artifact on disk
-            artifact.dirty = False
-            if artifact.output_only:
-                warnings.warn(
-                    f"Artifact '{artifact.name}' is added. It is not meant to be read back as Python Object",
-                    UserWarning,
-                    stacklevel=2,
-                )
+            for artifact in self.artifacts:
+                # Write the artifact data
+                fmode = "wb" if artifact.binary else "w"
+                artifact_dir = self.dir / artifact.name
+                fpath = artifact_dir / artifact.fname
+                if not artifact.dirty:
+                    LOG.debug(
+                        f"Artifact {artifact.name} v{artifact.version} already exists and has not been updated"
+                    )
+                    continue
+
+                try:
+                    self.fs.makedirs(str(artifact_dir), exist_ok=True)
+                    LOG.debug(f"Saving '{artifact.name}' to {fpath!s}...")
+                    with self.fs.open(str(fpath), fmode) as buf:
+                        artifact.write(artifact.value, buf, **artifact.writer_kwargs)
+                except Exception as exc:
+                    raise SaveError(
+                        f"Unable to write '{artifact.name}' to '{fpath!s}'"
+                    ) from exc
+
+                # Reset the `dirty` flag since we have the updated artifact on disk
+                artifact.dirty = False
+                if artifact.output_only:
+                    warnings.warn(
+                        f"Artifact '{artifact.name}' is added. It is not meant to be read back as Python Object",
+                        UserWarning,
+                        stacklevel=2,
+                    )
 
     def _search_artifact_versions(
         self,
