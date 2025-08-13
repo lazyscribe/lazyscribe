@@ -13,7 +13,7 @@ import pytest
 import time_machine
 
 from lazyscribe import Project
-from lazyscribe.exception import ArtifactLoadError, ReadOnlyError
+from lazyscribe.exception import ArtifactLoadError, ReadOnlyError, SaveError
 from lazyscribe.experiment import Experiment, ReadOnlyExperiment
 from lazyscribe.test import ReadOnlyTest, Test
 from tests.conftest import TestArtifact
@@ -204,6 +204,64 @@ def test_save_project(tmp_path):
             "tags": [],
         }
     ]
+
+
+def test_save_project_metric_transaction(tmp_path):
+    """Test not saving a project due to errors in writing a parameter."""
+    location = tmp_path / "my-project"
+    project_location = location / "project.json"
+
+    project = Project(fpath=project_location, author="root")
+    with project.log(name="My experiment") as exp:
+        exp.log_parameter("data-type", int)
+
+    with pytest.raises(SaveError):
+        project.save()
+
+    assert not project_location.is_file()
+
+
+def test_save_project_transaction(tmp_path):
+    """Test not saving a project due to errors in writing an artifact."""
+    location = tmp_path / "my-project"
+    project_location = location / "project.json"
+
+    project = Project(fpath=project_location, author="root")
+    with project.log(name="My experiment") as exp:
+        exp.log_artifact(name="should-not-work", value=int, handler="json")
+
+    with pytest.raises(SaveError):
+        project.save()
+
+    assert not project_location.is_file()
+
+
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
+def test_update_project_transaction(tmp_path):
+    """Test failing to update a project and rolling back the change."""
+    location = tmp_path / "my-project"
+    project_location = location / "project.json"
+
+    project = Project(fpath=project_location, author="root")
+    with project.log(name="My experiment") as exp:
+        exp.log_metric("metric", 0.5)
+
+    project.save()
+
+    # Re-open the project and fail to log
+    project_w = Project(fpath=project_location, mode="w+")
+    with project_w.log(name="My second experiment") as exp:
+        exp.log_artifact(name="should-not-work", value=int, handler="json")
+
+    with pytest.raises(SaveError):
+        project_w.save()
+
+    # Read in the project, compare it to the first version
+    project_r = Project(fpath=project_location, mode="w+")
+
+    assert project.experiments == project_r.experiments
 
 
 @time_machine.travel(
