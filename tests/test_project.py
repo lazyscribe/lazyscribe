@@ -206,6 +206,21 @@ def test_save_project(tmp_path):
     ]
 
 
+def test_save_project_metric_transaction(tmp_path):
+    """Test not saving a project due to errors in writing a parameter."""
+    location = tmp_path / "my-project"
+    project_location = location / "project.json"
+
+    project = Project(fpath=project_location, author="root")
+    with project.log(name="My experiment") as exp:
+        exp.log_parameter("data-type", int)
+
+    with pytest.raises(SaveError):
+        project.save()
+
+    assert not project_location.is_file()
+
+
 def test_save_project_transaction(tmp_path):
     """Test not saving a project due to errors in writing an artifact."""
     location = tmp_path / "my-project"
