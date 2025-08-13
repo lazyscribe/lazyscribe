@@ -1,4 +1,4 @@
-# This workflow runs edgetest on lazyscribe @ 17:20 UTC Fridays.
+# This workflow runs edgetest on lazyscribe @ 17:35 UTC Fridays.
 # https://github.com/edgetest-dev/run-edgetest-action
 
 name: Run edgetest
@@ -14,7 +14,7 @@ jobs:
         with:
           ref: develop
       - id: run-edgetest
-        uses: edgetest-dev/run-edgetest-action@v1
+        uses: edgetest-dev/run-edgetest-action@v1.6<M-F5>
         with:
           edgetest-flags: '-c pyproject.toml -r requirements.txt --export'
           base-branch: 'develop'
