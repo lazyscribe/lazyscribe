@@ -14,13 +14,14 @@ repos:
     rev: v1.16.0
     hooks:
       - id: mypy
-        exclude: ^(docs|tests)\/
+        exclude: (^docs\/|^lazyscribe\/prefect\/^tests\/)
         language_version: python3.9
         pass_filenames: false
         args: [
           --namespace-packages,
           --explicit-package-bases,
           --ignore-missing-imports,
+          --disallow-untyped-defs,
           --non-interactive,
           --install-types
         ]

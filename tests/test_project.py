@@ -71,9 +71,6 @@ def test_logging_experiment(project_kwargs):
         project["not a real experiment"]
 
 
-LOG = logging.getLogger(__name__)
-
-
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
@@ -88,6 +85,7 @@ LOG = logging.getLogger(__name__)
     ],
 )
 def test_logging(caplog, project_kwargs):
+    """Test logging to a project."""
     project = Project(**project_kwargs)
     today = datetime.now()
     caplog.set_level(logging.WARNING)
@@ -361,7 +359,7 @@ def test_save_project_artifact_failed_validation(mock_version, tmp_path):
     with pytest.raises(ArtifactLoadError):
         project2 = Project(project_location, mode="r")
         exp2 = project2["my-experiment"]
-        model_load = exp2.load_artifact(name="estimator")
+        exp2.load_artifact(name="estimator")
 
 
 def test_save_project_artifact_multi_experiment(tmp_path):
