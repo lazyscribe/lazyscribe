@@ -87,7 +87,7 @@ class JoblibArtifact(Artifact):
             The filename for the artifact. If set to ``None`` or not provided, it will be derived from
             the name of the artifact and the suffix for the class.
         created_at : datetime.datetime, optional (default ``lazyscribe._utils.utcnow()``)
-            When the artifact was created.
+            When the artifact was created (in UTC).
         writer_kwargs : dict[str, Any], optional (default {})
             Keyword arguments for writing an artifact to the filesystem. Provided when an artifact
             is logged to an experiment.
@@ -168,7 +168,7 @@ class JoblibArtifact(Artifact):
         ----------
         buf : file-like object
             The buffer from the ``fsspec`` filesystem.
-        kwargs : dict
+        **kwargs
             Keyword arguments for ``joblib.load``.
 
         Returns
@@ -190,7 +190,7 @@ class JoblibArtifact(Artifact):
             The Python object to write.
         buf : file-like object
             The buffer from the ``fsspec`` filesystem.
-        kwargs : dict
+        **kwargs
             Keyword arguments for :py:meth:`joblib.load`.
         """
         from joblib import dump

@@ -106,7 +106,7 @@ class YAMLArtifact(Artifact):
         ----------
         buf : file-like object
             The buffer from a ``fsspec`` filesystem.
-        kwargs : dict
+        **kwargs
             Keyword arguments for the read method.
 
         Returns
@@ -130,7 +130,7 @@ class YAMLArtifact(Artifact):
             The YAML-serializable object.
         buf : file-like object
             The buffer from a ``fsspec`` filesystem.
-        kwargs : dict
+        **kwargs
             Keyword arguments for :py:meth:`yaml.dump`.
         """
         yaml.dump(obj, buf, **kwargs)

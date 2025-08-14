@@ -44,26 +44,26 @@ class Experiment:
     project : pathlib.Path
         The path to the project JSON associated with the project.
     dir : pathlib.Path, optional (default None)
-        Directory for the project and the experiment. Defaults to the parent directory for the ``project`` file.
-
+        Directory for the project and the experiment. If not supplied, the parent directory for the ``project`` file
+        will be used.
     author : str, optional (default ``getpass.getuser()``)
         The author of the experiment.
     last_updated_by : str, optional (default None)
-        Last editor of the experiment. Defaults to the ``author``.
-
+        Last editor of the experiment. If not supplied, the ``author`` will be used.
     metrics : dict[str, float | int], optional (default {})
         A dictionary of metric values. Each metric value can be an individual value or a list.
     parameters : dict[str, Any], optional (default {})
         A dictionary of experiment parameters. The key must be a string but the value can be
         anything.
     created_at : datetime.datetime, optional (default ``lazyscribe._utils.utcnow()``)
-        When the experiment was created.
+        When the experiment was created (in UTC).
     last_updated : datetime.datetime, optional (default ``lazyscribe._utils.utcnow()``)
-        When the experiment was last updated.
+        When the experiment was last updated (in UTC).
     short_slug : str, optional (default None)
         Slugified ``name``. Defaults to calling :py:meth:`slugify.slugify` on the ``name`` attribute.
     slug : str, optional (default None)
-        Unique identifier for the experiment. Deafults to the slugified ``name`` with the creation date appended in the format ``YYYY-MM-DDTHHMMSS``.
+        Unique identifier for the experiment. Deafults to the slugified ``name`` with the creation date
+        appended in the format ``YYYYMMDDHHMMSS``.
     tags : list[str], optional (default [])
         Tags for filtering and identifying experiments across a project.
     dependencies : dict[str, lazyscribe.experiment.Experiment], optional (default {})
@@ -141,7 +141,7 @@ class Experiment:
         Returns
         -------
         str
-            Experiment slug, in the format `{name}-{created_at}-{author}`.
+            Experiment slug, in the format `{name}-{created_at}`.
         """
         return slugify(f"{self.name}-{self.created_at.strftime('%Y%m%d%H%M%S')}")
 
@@ -204,7 +204,7 @@ class Experiment:
 
         Parameters
         ----------
-        args : list[str]
+        *args
             The tags.
         overwrite : bool, optional (default False)
             Whether to add or overwrite the new tags.
@@ -246,7 +246,7 @@ class Experiment:
         overwrite : bool, optional (default False)
             Whether or not to overwrite an existing artifact with the same name. If set to ``True``,
             the previous artifact will be removed and overwritten with the current artifact.
-        kwargs
+        **kwargs
             Keyword arguments for the write function of the handler.
 
         Raises
@@ -301,7 +301,7 @@ class Experiment:
         validate : bool, optional (default True)
             Whether or not to validate the runtime environment against the artifact
             metadata.
-        kwargs
+        **kwargs
             Keyword arguments for the handler read function.
 
         Returns

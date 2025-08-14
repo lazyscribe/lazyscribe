@@ -112,7 +112,7 @@ class JSONArtifact(Artifact):
         ----------
         buf : file-like object
             The buffer from a ``fsspec`` filesystem.
-        kwargs : dict
+        **kwargs
             Keyword arguments for :py:meth:`json.load`
 
         Returns
@@ -132,7 +132,7 @@ class JSONArtifact(Artifact):
             The JSON-serializable object.
         buf : file-like object
             The buffer from a ``fsspec`` filesystem.
-        kwargs : dict
+        **kwargs
             Keyword arguments for :py:meth:`json.dump`.
         """
         dump(obj, buf, **kwargs)

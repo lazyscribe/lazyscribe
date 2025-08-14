@@ -34,12 +34,11 @@ class Repository:
     mode : {"r", "a", "w", "w+"}, optional (default "w")
         The mode for opening the repository.
 
-        * ``r``: No new artifacts can be logged.
+        * ``r``: All artifacts will be loaded. No new artifacts can be logged.
         * ``a``: The same as ``w+`` (deprecated).
-        * ``w``: No existing artifacts will be loaded.
-        * ``w+``: All artifacts will be loaded.
-        * ``w+``: All artifacts will be loaded in editable mode.
-    storage_options
+        * ``w``: No existing artifacts will be loaded. Artifacts can be added.
+        * ``w+``: All artifacts will be loaded. New artifacts can be added.
+    **storage_options
         Storage options to pass to the filesystem initialization. Will be passed to
         :py:meth:`fsspec.filesystem`.
 
@@ -67,7 +66,7 @@ class Repository:
         Raises
         ------
         ValueError
-            Raises on invalid ``mode`` value.
+            Raised on invalid ``mode`` value.
         """
         if isinstance(fpath, str):
             parsed = urlparse(fpath)
@@ -133,7 +132,7 @@ class Repository:
         fname : str, optional (default None)
             The filename for the artifact. If set to ``None`` or not provided, it will be derived
             from the name of the artifact and the builtin suffix for each handler.
-        kwargs : dict
+        **kwargs
             Keyword arguments for the write function of the handler.
 
         Raises
@@ -198,7 +197,7 @@ class Repository:
             ``version``. ``exact`` will provide an artifact with the exact ``created_at``
             value provided. ``asof`` will provide the most recent version as of the
             ``version`` value.
-        kwargs : dict
+        **kwargs
             Keyword arguments for the handler read function.
 
         Returns
@@ -208,9 +207,11 @@ class Repository:
 
         Raises
         ------
+        ValueError
+            Raised on invalid ``match`` value.
+            Raised if no valid artifact was found.
         lazyscribe.exception.ArtifactLoadError
             Raised if ``validate`` and runtime environment does not match artifact metadata.
-            Raised if there is no artifact found with the name provided.
         """
         # Search for the artifact
         artifact = self._search_artifact_versions(
@@ -296,11 +297,12 @@ class Repository:
         Raises
         ------
         ValueError
-            Raises if no valid artifact was found.
-        lazyscribe.exception.ReadOnlyError
-            Raised when trying to save when the project is in read-only mode.
+            Raised on invalid ``match`` value.
+            Raised if no valid artifact was found.
         """
-        artifact = self._search_artifact_versions(name, version, match)
+        artifact = self._search_artifact_versions(
+            name=name, version=version, match=match
+        )
 
         return next(serialize_artifacts([artifact]))
 
@@ -311,6 +313,8 @@ class Repository:
 
         Raises
         ------
+        lazyscribe.exception.ReadOnlyError
+            Raised when trying to save when the project is in read-only mode.
         lazyscribe.exception.SaveError
             Raised when writing to the filesystem fails.
         """
@@ -384,7 +388,8 @@ class Repository:
         Raises
         ------
         ValueError
-            Raises if no valid artifact was found.
+            Raised on invalid ``match`` value.
+            Raised if no valid artifact was found.
         """
         artifacts_matching_name = sorted(
             [art for art in self.artifacts if art.name == name],

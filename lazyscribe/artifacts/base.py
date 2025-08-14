@@ -101,7 +101,7 @@ class Artifact(metaclass=ABCMeta):
             Whether or not this artifact should be saved when :py:meth:`lazyscribe.project.Project.save`
             or :py:meth:`lazyscribe.repository.Repository.save` is called. This decision is based
             on whether the artifact is new or has been updated.
-        kwargs : dict
+        **kwargs
             Other keyword arguments.
 
         Returns
@@ -119,7 +119,7 @@ class Artifact(metaclass=ABCMeta):
         ----------
         buf : file-like object
             The buffer from a ``fsspec`` filesystem.
-        kwargs : dict
+        **kwargs
             Keyword arguments for the read method.
 
         Returns
@@ -139,6 +139,6 @@ class Artifact(metaclass=ABCMeta):
             The object to write to the buffer.
         buf : file-like object
             The buffer from a ``fsspec`` filesystem.
-        kwargs : dict
+        **kwargs
             Keyword arguments for the write method.
         """
