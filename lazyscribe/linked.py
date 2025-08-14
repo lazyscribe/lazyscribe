@@ -63,7 +63,7 @@ class LinkedList:
         data : Any
             The new data.
         """
-        new = Node(data)
+        new = Node(data=data)
         if self.head:
             # Scroll to the end of the list
             current = self.head

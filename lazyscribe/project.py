@@ -37,12 +37,12 @@ class Project:
         The mode for opening the project.
 
         * ``r``: All existing experiments will be loaded as
-          :py:class:`lazyscribe.experiment.ReadOnlyExperiment` and no new experiments can be added.
+          :py:class:`lazyscribe.experiment.ReadOnlyExperiment`. No new experiments can be added.
         * ``a``: All existing experiments will be loaded as
-          :py:class:`lazyscribe.experiment.ReadOnlyExperiment` and new experiments can be added.
+          :py:class:`lazyscribe.experiment.ReadOnlyExperiment`. New experiments can be added.
         * ``w``: No existing experiments will be loaded.
         * ``w+``: All experiments will be loaded in editable mode as
-          :py:class:`lazyscribe.experiment.Experiment`.
+          :py:class:`lazyscribe.experiment.Experiment`. Experiments can be added.
     author : str, optional (default None)
         The project author. This author will be used for any new experiments or modifications to
         existing experiments. If not supplied, ``getpass.getuser()`` will be used.
@@ -58,7 +58,7 @@ class Project:
     Raises
     ------
     ValueError
-        Raises on invalid ``mode`` value.
+        Raised on invalid ``mode`` value.
     """
 
     fpath: Path
