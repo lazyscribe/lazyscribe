@@ -27,7 +27,10 @@ name "My experiment", you would have
 
 .. important::
 
-    The path to ``other-project.json`` is relative to the path to the current project JSON.
+    ``other-project.json`` is the path provided the :py:class:`lazyscribe.project.Project`
+    when ``my-experiment`` was loaded and added as a dependency. It is either relative
+    to the working directory or an absolute path (often the case with remote filesystems
+    like S3).
 
 
 When you load the experiment through :py:class:`lazyscribe.Project`, the dependencies
