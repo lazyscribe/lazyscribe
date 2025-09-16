@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
 from datetime import datetime
+from io import IOBase
 from typing import Any, ClassVar
 
 from attrs import define, field
@@ -15,8 +16,22 @@ class Artifact(metaclass=ABCMeta):
 
     Artifact handlers are not meant to be initialized directly.
 
-    Parameters
+    Attributes
     ----------
+    alias : str
+        The alias for the artifact handler. This value will be supplied to
+        :py:meth:`lazyscribe.experiment.Experiment.log_artifact`.
+        (A class attribute.)
+    suffix : str
+        The standard suffix for the files written and read by this handler.
+        (A class attribute.)
+    binary : bool
+        Whether or not the file format for the handler is binary in nature. This
+        affects whether or not the file handler uses ``w`` or ``wb``.
+        (A class attribute.)
+    output_only : bool
+        Whether or not the file output by the handler is meant to be read as the orginal project.
+        (A class attribute.)
     name : str
         The name of the artifact.
     fname : str
@@ -32,25 +47,6 @@ class Artifact(metaclass=ABCMeta):
         Whether or not this artifact should be saved when :py:meth:`lazyscribe.project.Project.save`
         or :py:meth:`lazyscribe.repository.Repository.save` is called. This decision is based
         on whether the artifact is new or has been updated.
-
-    Attributes
-    ----------
-    alias : str
-        The alias for the artifact handler. This value will be supplied to
-        :py:meth:`lazyscribe.Experiment.log_artifact`.
-    suffix : str
-        The standard suffix for the files written and read by this handler.
-    binary : bool
-        Whether or not the file format for the handler is binary in nature. This
-        affects whether or not the file handler uses ``w`` or ``wb``.
-    output_only : bool
-        Whether or not the file output by the handler is meant to be read as the orginal project.
-    name : str
-        The name of the artifact.
-    fname : str
-        The filename for the artifact.
-    value : object
-        The value for the artifact.
     """
 
     alias: ClassVar[str]
@@ -58,11 +54,11 @@ class Artifact(metaclass=ABCMeta):
     binary: ClassVar[bool]
     output_only: ClassVar[
         bool
-    ]  # Describes if the artifact will reconstruct to a python object on read
+    ]  # Describes if the artifact will reconstruct to a Python object on read
     name: str = field(eq=False)
     fname: str = field(eq=False)
     value: Any = field(eq=False)
-    writer_kwargs: dict = field(eq=False)
+    writer_kwargs: dict[str, Any] = field(eq=False)
     created_at: datetime = field(eq=False)
     version: int = field(eq=False)
     dirty: bool = field(eq=False)
@@ -75,11 +71,11 @@ class Artifact(metaclass=ABCMeta):
         value: Any = None,
         fname: str | None = None,
         created_at: datetime | None = None,
-        writer_kwargs: dict | None = None,
+        writer_kwargs: dict[str, Any] | None = None,
         version: int = 0,
         dirty: bool = True,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> Artifact:
         """Construct the artifact handler.
 
         This method should use environment variables to capture information that
@@ -89,15 +85,14 @@ class Artifact(metaclass=ABCMeta):
         ----------
         name : str
             The name of the artifact.
-        value : object, optional (default None)
-            The value for the artifact. The default value of ``None`` is used when
-            an experiment is loaded from the project JSON.
+        value : Any, optional (default None)
+            The value for the artifact.
         fname : str, optional (default None)
-            The filename of the artifact. If not provided, this value will be derived from
+            The filename for the artifact. If set to ``None`` or not provided, it will be derived from
             the name of the artifact and the suffix for the class.
-        created_at : datetime, optional (default None)
-            When the artifact was created. If not supplied, :py:meth:`datetime.now` will be used.
-        writer_kwargs : dict, optional (default None)
+        created_at : datetime.datetime, optional (default ``lazyscribe._utils.utcnow()``)
+            When the artifact was created.
+        writer_kwargs : dict, optional (default {})
             Keyword arguments for writing an artifact to the filesystem. Provided when an artifact
             is logged to an experiment.
         version : int, optional (default 0)
@@ -106,41 +101,44 @@ class Artifact(metaclass=ABCMeta):
             Whether or not this artifact should be saved when :py:meth:`lazyscribe.project.Project.save`
             or :py:meth:`lazyscribe.repository.Repository.save` is called. This decision is based
             on whether the artifact is new or has been updated.
-        **kwargs : dict
+        **kwargs
             Other keyword arguments.
-            Usually class attributes obtained from a project JSON.
+
+        Returns
+        -------
+        Artifact
+            The artifact.
         """
-        pass
 
     @classmethod
     @abstractmethod
-    def read(cls, buf, **kwargs):
+    def read(cls, buf: IOBase, **kwargs: Any) -> Any:
         """Read in the artifact.
 
         Parameters
         ----------
         buf : file-like object
             The buffer from a ``fsspec`` filesystem.
-        **kwargs : dict
+        **kwargs
             Keyword arguments for the read method.
 
         Returns
         -------
         Any
-            The artifact.
+            The artifact object.
         """
 
     @classmethod
     @abstractmethod
-    def write(cls, obj, buf, **kwargs):
+    def write(cls, obj: Any, buf: IOBase, **kwargs: Any) -> None:
         """Write the artifact to the filesystem.
 
         Parameters
         ----------
-        obj : object
+        obj : Any
             The object to write to the buffer.
         buf : file-like object
             The buffer from a ``fsspec`` filesystem.
-        **kwargs : dict
+        **kwargs
             Keyword arguments for the write method.
         """

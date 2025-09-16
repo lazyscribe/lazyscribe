@@ -2,7 +2,7 @@ Represent the project as a table
 ================================
 
 To aid in visualization and comparison, ``lazyscribe`` has a built-in method
-:py:meth:`lazyscribe.Project.to_tabular` for generating a ``pandas``-ready format:
+:py:meth:`lazyscribe.project.Project.to_tabular` for generating a ``pandas``-ready format:
 
 .. code-block:: python
 

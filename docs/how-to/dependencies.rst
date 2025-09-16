@@ -33,7 +33,7 @@ name "My experiment", you would have
     like S3).
 
 
-When you load the experiment through :py:class:`lazyscribe.Project`, the dependencies
+When you load the experiment through :py:class:`lazyscribe.project.Project`, the dependencies
 will be accessible through a dictionary, using the ``short_slug`` as a key:
 
 .. code-block:: python

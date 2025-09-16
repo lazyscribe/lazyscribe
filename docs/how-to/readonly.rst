@@ -7,7 +7,7 @@ project.
 Read-only mode
 --------------
 
-If you open a :py:class:`lazyscribe.Project` with ``mode="r"``, all experiments will be
+If you open a :py:class:`lazyscribe.project.Project` with ``mode="r"``, all experiments will be
 loaded into a :py:class:`lazyscribe.experiment.ReadOnlyExperiment` class. You **cannot**
 
 #. set any attributes directly for an experiment,
@@ -24,9 +24,9 @@ Editable mode
 -------------
 
 If you open a project with ``mode="w+"``, you have complete control. All experiments will be loaded
-into an editable :py:class:`lazyscribe.Experiment` class and you can make any changes.
+into an editable :py:class:`lazyscribe.experiment.Experiment` class and you can make any changes.
 
 .. note::
 
-    When you save the updated JSON, the ``last_updated_by`` experiment attribute will be updated to
+    When you save the project, the ``last_updated_by`` experiment attribute will be updated to
     match the ``author`` that opened the project in editable mode.
