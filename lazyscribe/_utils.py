@@ -1,7 +1,7 @@
 """Util methods."""
 
 from collections.abc import Iterator
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from attrs import Attribute, asdict, fields, filters
@@ -72,4 +72,4 @@ def utcnow() -> datetime:
     datetime.datetime
         Now in UTC, without timezone info.
     """
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+    return datetime.now(UTC).replace(tzinfo=None)

@@ -458,7 +458,7 @@ class Experiment:
             **{
                 ("parameters", key): value
                 for key, value in d["parameters"].items()
-                if not isinstance(value, (tuple, list, dict))
+                if not isinstance(value, tuple | list | dict)
             },
             **{("metrics", key): value for key, value in d["metrics"].items()},
         }
