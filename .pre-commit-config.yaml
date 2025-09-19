@@ -37,6 +37,10 @@ repos:
         name: pip-compile dev requirements
         args: [pyproject.toml, -o, dev-requirements.txt, --extra, dev, --upgrade]
         files: ^pyproject\.toml$
+  - repo: https://github.com/tox-dev/pyproject-fmt
+    rev: "v2.6.0"
+    hooks:
+      - id: pyproject-fmt
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:

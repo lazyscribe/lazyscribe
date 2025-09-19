@@ -225,7 +225,9 @@ pygments==2.19.2
 pyparsing==3.2.4
     # via matplotlib
 pyproject-fmt==2.6.0
-    # via edgetest
+    # via
+    #   lazyscribe (pyproject.toml)
+    #   edgetest
 pyproject-hooks==1.2.0
     # via
     #   build
