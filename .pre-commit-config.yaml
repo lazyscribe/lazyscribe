@@ -15,7 +15,7 @@ repos:
     hooks:
       - id: mypy
         exclude: (^docs\/|^lazyscribe\/prefect\/^tests\/)
-        language_version: python3.12
+        language_version: python3.10
         pass_filenames: false
         args: [
           --namespace-packages,

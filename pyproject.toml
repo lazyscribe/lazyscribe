@@ -85,7 +85,7 @@ version = { attr = "lazyscribe._meta.__version__" }
 readme = { file = [ "README.md" ], content-type = "text/markdown" }
 
 [tool.ruff]
-target-version = "py312"
+target-version = "py310"
 exclude = [
     "docs/",
     "lazyscribe/prefect/",
@@ -129,7 +129,7 @@ keep_full_version = true
 max_supported_python = "3.13"
 
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.10"
 exclude = [
     '^docs\/',
     '^lazyscribe\/prefect\/',
