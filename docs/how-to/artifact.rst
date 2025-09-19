@@ -47,7 +47,7 @@ experiment data. For this reason, artifacts are *not persisted to the filesystem
 :py:meth:`lazyscribe.experiment.Experiment.log_artifact`. Artifacts are **only** saved when you
 call :py:meth:`lazyscribe.project.Project.save`.
 
-Below, we have included a list of currently supported artifact handlers and their aliases:
+We have a selection of builtin artifact handlers, specified below:
 
 .. list-table:: Builtin artifact handlers
     :header-rows: 1
@@ -60,15 +60,31 @@ Below, we have included a list of currently supported artifact handlers and thei
       - json
       - Artifacts written using :py:meth:`json.dump` and read using :py:meth:`json.load`
       - N/A
-    * - :py:class:`lazyscribe.artifacts.joblib.JoblibArtifact`
-      - joblib
-      - Artifacts written using :py:meth:`joblib.dump` and read using :py:meth:`joblib.load`
-      - ``joblib``
     * - :py:class:`lazyscribe.artifacts.yaml.YAMLArtifact`
       - yaml
       - Artifacts written using :py:meth:`yaml.dump` and read using :py:meth:`yaml.load`. You can specify the dumper using the ``Dumper`` keyword argument and the loader using the ``Loader`` keyword argument. Defaults to :py:class:`yaml.FullDumper` and :py:class:`yaml.SafeLoader` respectively if not specified.
       - ``PyYAML``
 
+We also provide first-party supported artifact handlers through separately distributed projects:
+
+.. list-table:: Builtin artifact handlers
+    :header-rows: 1
+
+    * - Alias
+      - Description
+      - Installation
+    * - joblib
+      - Artifacts written using :py:meth:`joblib.dump` and read using :py:meth:`joblib.load`
+      - `lazyscribe-joblib <https://github.com/lazyscribe/lazyscribe-joblib>`_
+    * - csv
+      - Artifacts written to CSV files using PyArrow
+      - `lazyscribe-arrow <https://github.com/lazyscribe/lazyscribe-arrow>`_
+    * - parquet
+      - Artifacts written to parquet files using PyArrow
+      - `lazyscribe-arrow <https://github.com/lazyscribe/lazyscribe-arrow>`_
+    * - onnx
+      - Artifacts written to ONNX model objects
+      - `lazyscribe-onnx <https://github.com/lazyscribe/lazyscribe-onnx>`_
 
 Loading and validation
 ----------------------
