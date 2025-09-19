@@ -70,7 +70,6 @@ optional-dependencies.tests = [
 urls.documentation = "https://lazyscribe.github.io/lazyscribe/"
 urls.repository = "https://github.com/lazyscribe/lazyscribe"
 
-# Build system
 entry-points."lazyscribe.artifact_type".base = "lazyscribe.artifacts.base:Artifact"
 entry-points."lazyscribe.artifact_type".joblib = "lazyscribe.artifacts.joblib:JoblibArtifact"
 entry-points."lazyscribe.artifact_type".json = "lazyscribe.artifacts.json:JSONArtifact"
