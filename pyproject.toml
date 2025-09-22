@@ -40,6 +40,7 @@ optional-dependencies.dev = [
 ]
 optional-dependencies.docs = [
     "furo",
+    "lazyscribe-joblib",
     "matplotlib",
     "pandas",
     "pillow",
