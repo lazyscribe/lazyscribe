@@ -60,6 +60,7 @@ optional-dependencies.qa = [
     "types-pyyaml",
 ]
 optional-dependencies.tests = [
+    "lazyscribe-joblib",
     "prefect>=1.0,<2",
     "pytest",
     "pytest-cov",
@@ -71,7 +72,6 @@ urls.documentation = "https://lazyscribe.github.io/lazyscribe/"
 urls.repository = "https://github.com/lazyscribe/lazyscribe"
 
 entry-points."lazyscribe.artifact_type".base = "lazyscribe.artifacts.base:Artifact"
-entry-points."lazyscribe.artifact_type".joblib = "lazyscribe.artifacts.joblib:JoblibArtifact"
 entry-points."lazyscribe.artifact_type".json = "lazyscribe.artifacts.json:JSONArtifact"
 entry-points."lazyscribe.artifact_type".yaml = "lazyscribe.artifacts.yaml:YAMLArtifact"
 
@@ -153,3 +153,6 @@ version_files = [
 extras = [ "tests" ]
 upgrade = [ "attrs", "python-slugify", "fsspec" ]
 command = "pytest tests"
+
+[tool.uv.sources]
+lazyscribe-joblib = { git = "https://github.com/lazyscribe/lazyscribe-joblib", branch = "develop" }

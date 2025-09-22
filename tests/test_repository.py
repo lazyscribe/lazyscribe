@@ -337,7 +337,7 @@ def test_save_repository_multiple_artifact(tmp_path):
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
-@patch("lazyscribe.artifacts.joblib.importlib_version", side_effect=["1.2.2", "0.0.0"])
+@patch("lazyscribe_joblib.importlib_version", side_effect=["1.2.2", "0.0.0"])
 def test_save_repository_artifact_failed_validation(mock_version, tmp_path):
     """Test saving and loading repository with an artifact."""
     location = tmp_path / "my-repository"
