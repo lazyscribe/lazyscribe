@@ -91,7 +91,7 @@ celerybeat-schedule
 .env
 
 # virtualenv
-.venv
+.venv/
 venv/
 ENV/
 
@@ -110,5 +110,6 @@ ENV/
 
 # IDE settings
 .vscode/
+.devcontainer/
 
 .DS_Store

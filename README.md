@@ -12,7 +12,7 @@ view of all executed experiments.
 
 # Installation
 
-Python 3.9 and above is required. Use `pip` to install:
+Python 3.10 and above is required. Use `pip` to install:
 ```console
 $ python -m pip install lazyscribe
 ```

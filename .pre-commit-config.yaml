@@ -2,7 +2,7 @@ default_stages: [pre-commit]
 default_install_hook_types: [commit-msg, pre-commit]
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.13
+    rev: v0.13.1
     hooks:
       # Run the linter.
       - id: ruff
@@ -11,11 +11,11 @@ repos:
       - id: ruff-format
         types_or: [ python, jupyter ]
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.16.0
+    rev: v1.18.2
     hooks:
       - id: mypy
         exclude: (^docs\/|^lazyscribe\/prefect\/^tests\/)
-        language_version: python3.9
+        language_version: python3.10
         pass_filenames: false
         args: [
           --namespace-packages,
@@ -26,7 +26,7 @@ repos:
           --install-types
         ]
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.7.13
+    rev: 0.8.18
     hooks:
       # Compile requirements
       - id: pip-compile
@@ -37,8 +37,12 @@ repos:
         name: pip-compile dev requirements
         args: [pyproject.toml, -o, dev-requirements.txt, --extra, dev, --upgrade]
         files: ^pyproject\.toml$
+  - repo: https://github.com/tox-dev/pyproject-fmt
+    rev: "v2.6.0"
+    hooks:
+      - id: pyproject-fmt
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: trailing-whitespace
       - id: debug-statements

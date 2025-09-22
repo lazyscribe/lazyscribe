@@ -1,67 +1,144 @@
-[project]
-name = "lazyscribe"
-requires-python = ">=3.9.0"
-description = "Lightweight and lazy experiment logging"
-authors = [
-    {name = "Akshay Gupta", email="akgcodes@gmail.com"}
-]
-license = {text = "MIT license"}
-classifiers = [
-	"Development Status :: 4 - Beta",
-	"License :: OSI Approved :: MIT License",
-	"Natural Language :: English",
-	"Programming Language :: Python :: 3",
-	"Programming Language :: Python :: 3 :: Only",
-	"Programming Language :: Python :: 3.9",
-	"Programming Language :: Python :: 3.10",
-	"Programming Language :: Python :: 3.11",
-	"Programming Language :: Python :: 3.12",
-	"Programming Language :: Python :: 3.13",
-]
-dependencies = ["attrs<=25.3.0,>=21.2.0", "importlib-metadata<=8.7.0,>=6.0", "python-slugify<=8.0.4,>=5.0.0", "fsspec<=2025.5.1,>=0.4.0"]
-
-dynamic = ["readme", "version"]
-
-[project.optional-dependencies]
-build = ["build", "commitizen", "twine", "wheel"]
-docs = ["furo", "matplotlib", "pandas", "pillow", "prefect<2,>=1.0", "scikit-learn", "sphinx", "sphinx-gallery", "sphinx-inline-tabs"]
-qa = ["ruff==0.7.3", "edgetest", "mypy", "pip-tools", "pre-commit", "types-python-slugify", "types-PyYAML"]
-tests = ["scikit-learn", "prefect<2,>=1.0", "pytest", "pytest-cov", "time-machine", "PyYAML"]
-dev = ["lazyscribe[build]", "lazyscribe[docs]", "lazyscribe[qa]", "lazyscribe[tests]"]
-
-[project.urls]
-documentation = "https://lazyscribe.github.io/lazyscribe/"
-repository = "https://github.com/lazyscribe/lazyscribe"
-
-# Build system
 [build-system]
-requires = ["setuptools>=64.0.0"]
 build-backend = "setuptools.build_meta"
 
-[project.entry-points."lazyscribe.artifact_type"]
-base = "lazyscribe.artifacts.base:Artifact"
-joblib = "lazyscribe.artifacts.joblib:JoblibArtifact"
-json = "lazyscribe.artifacts.json:JSONArtifact"
-yaml = "lazyscribe.artifacts.yaml:YAMLArtifact"
+requires = [ "setuptools>=64.0.0" ]
 
-##############################################################################
-# Setuptools configuration
-##############################################################################
+[project]
+name = "lazyscribe"
+description = "Lightweight and lazy experiment logging"
+license = { text = "MIT license" }
+authors = [
+    { name = "Akshay Gupta", email = "akgcodes@gmail.com" },
+]
+requires-python = ">=3.10.0"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+dynamic = [ "readme", "version" ]
+
+dependencies = [
+    "attrs>=21.2.0,<=25.3.0",
+    "fsspec>=0.4.0,<=2025.5.1",
+    "importlib-metadata>=6.0,<=8.7.0",
+    "python-slugify>=5.0.0,<=8.0.4",
+]
+
+optional-dependencies.build = [ "build", "commitizen", "twine", "wheel" ]
+optional-dependencies.dev = [
+    "lazyscribe[build]",
+    "lazyscribe[docs]",
+    "lazyscribe[qa]",
+    "lazyscribe[tests]",
+]
+optional-dependencies.docs = [
+    "furo",
+    "matplotlib",
+    "pandas",
+    "pillow",
+    "prefect>=1.0,<2",
+    "scikit-learn",
+    "sphinx",
+    "sphinx-gallery",
+    "sphinx-inline-tabs",
+]
+optional-dependencies.qa = [
+    "edgetest",
+    "edgetest-pip-tools",
+    "mypy",
+    "pip-tools",
+    "pre-commit",
+    "pyproject-fmt",
+    "ruff==0.7.3",
+    "types-python-slugify",
+    "types-pyyaml",
+]
+optional-dependencies.tests = [
+    "prefect>=1.0,<2",
+    "pytest",
+    "pytest-cov",
+    "pyyaml",
+    "scikit-learn",
+    "time-machine",
+]
+urls.documentation = "https://lazyscribe.github.io/lazyscribe/"
+urls.repository = "https://github.com/lazyscribe/lazyscribe"
+
+entry-points."lazyscribe.artifact_type".base = "lazyscribe.artifacts.base:Artifact"
+entry-points."lazyscribe.artifact_type".joblib = "lazyscribe.artifacts.joblib:JoblibArtifact"
+entry-points."lazyscribe.artifact_type".json = "lazyscribe.artifacts.json:JSONArtifact"
+entry-points."lazyscribe.artifact_type".yaml = "lazyscribe.artifacts.yaml:YAMLArtifact"
 
 [tool.setuptools]
 include-package-data = true
 zip-safe = false
-packages = ["lazyscribe", "lazyscribe.prefect", "lazyscribe.artifacts"]
+packages = [ "lazyscribe", "lazyscribe.prefect", "lazyscribe.artifacts" ]
 
 [tool.setuptools.dynamic]
-version = {attr = "lazyscribe._meta.__version__"}
-readme = {file = ["README.md"], content-type = "text/markdown"}
+version = { attr = "lazyscribe._meta.__version__" }
+readme = { file = [ "README.md" ], content-type = "text/markdown" }
 
-##############################################################################
-# Tooling
-##############################################################################
+[tool.ruff]
+target-version = "py310"
+exclude = [
+    "docs/",
+    "lazyscribe/prefect/",
+    "tests/test_prefect.py",
+]
 
-# COMMITIZEN -----------------------------------------------------------------
+lint.select = [
+    "ANN",    # flake8-annotations
+    "B",      # flake8-bugbear
+    "C",      # flake8-comprehensions
+    "D",      # pydocstyle
+    "E",      # pycodestyle errors
+    "F",      # pyflakes
+    "I",      # isort
+    "LOG",    # flake8-logging
+    "RUF",    # Ruff errors,
+    "SIM",    # flake8-simplify
+    "T20",    # flake8-print
+    "TID252", # flake8-tidy-imports ban relative imports
+    "UP",     # pyupgrade
+    "W",      # pycodestyle warnings
+]
+lint.ignore = [
+    "ANN401", # `Any` usage
+    "C901",   # Function/method is too complex. (Add back in later.)
+    "E501",   # Line too long. Using formatter instead.
+]
+lint.per-file-ignores."__init__.py" = [ "E402" ]
+lint.per-file-ignores."tests/**/*" = [ "ANN" ]
+lint.per-file-ignores."tutorials/*" = [ "D205", "D400", "T201" ]
+lint.per-file-ignores."{tests,docs}/**/*" = [ "E402" ]
+lint.flake8-tidy-imports.ban-relative-imports = "all"
+lint.flake8-type-checking.strict = true
+lint.pydocstyle.convention = "numpy"
+lint.preview = true
+
+[tool.pyproject-fmt]
+column_width = 88
+indent = 4
+keep_full_version = true
+max_supported_python = "3.13"
+
+[tool.mypy]
+python_version = "3.10"
+exclude = [
+    '^docs\/',
+    '^lazyscribe\/prefect\/',
+    '^tests\/',
+]
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
 
 [tool.commitizen]
 version = "1.2.0"
@@ -69,76 +146,10 @@ tag_format = "v$version"
 update_changelog_on_bump = true
 version_files = [
     "lazyscribe/_meta.py:__version__",
-	"docs/conf.py:version",
+    "docs/conf.py:version",
 ]
-
-# EDGETEST -------------------------------------------------------------------
 
 [edgetest.envs.core]
-python_version = "3.9"
-extras = ["tests"]
-upgrade = ["attrs", "python-slugify", "fsspec"]
+extras = [ "tests" ]
+upgrade = [ "attrs", "python-slugify", "fsspec" ]
 command = "pytest tests"
-
-# RUFF -----------------------------------------------------------------------
-
-[tool.ruff]
-target-version = "py39"
-exclude = [
-	'docs/',
-	'lazyscribe/prefect/',
-	'tests/test_prefect.py'
-]
-
-[tool.ruff.lint]
-preview = true
-select = [
-	"E",  # pycodestyle errors
-	"W",  # pycodestyle warnings
-	"F",  # pyflakes
-	"D",  # pydocstyle
-	"I",  # isort
-	"UP",  # pyupgrade
-	"B",  # flake8-bugbear
-	"C",  # flake8-comprehensions
-	"T20",  # flake8-print
-	"TID252",  # flake8-tidy-imports ban relative imports
-	"SIM",  # flake8-simplify
-	"LOG",  # flake8-logging
-	"ANN",  # flake8-annotations
-	"RUF",  # Ruff errors,
-]
-ignore = [
-	"C901",  # Function/method is too complex. (Add back in later.)
-	"E501",  # Line too long. Using formatter instead.
-	"ANN401",  # `Any` usage
-]
-
-[tool.ruff.lint.flake8-type-checking]
-strict = true
-
-[tool.ruff.lint.per-file-ignores]
-"__init__.py" = ["E402"]
-"tests/**/*" = ["ANN"]
-"{tests,docs}/**/*" = ["E402"]
-"tutorials/*" = ["T201", "D205", "D400"]
-
-[tool.ruff.lint.flake8-tidy-imports]
-ban-relative-imports = "all"
-
-[tool.ruff.lint.pydocstyle]
-convention = "numpy"
-
-# MYPY -----------------------------------------------------------------------
-
-[tool.mypy]
-python_version = 3.9
-exclude = [
-	'^docs\/',
-	'^lazyscribe\/prefect\/',
-	'^tests\/'
-]
-strict = true
-warn_return_any = true
-warn_unused_configs = true
-ignore_missing_imports = true
