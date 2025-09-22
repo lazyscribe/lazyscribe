@@ -1054,8 +1054,8 @@ requires-dist = [
     { name = "lazyscribe", extras = ["docs"], marker = "extra == 'dev'" },
     { name = "lazyscribe", extras = ["qa"], marker = "extra == 'dev'" },
     { name = "lazyscribe", extras = ["tests"], marker = "extra == 'dev'" },
-    { name = "lazyscribe-joblib", marker = "extra == 'docs'", git = "https://github.com/lazyscribe/lazyscribe-joblib?branch=develop" },
-    { name = "lazyscribe-joblib", marker = "extra == 'tests'", git = "https://github.com/lazyscribe/lazyscribe-joblib?branch=develop" },
+    { name = "lazyscribe-joblib", marker = "extra == 'docs'" },
+    { name = "lazyscribe-joblib", marker = "extra == 'tests'" },
     { name = "matplotlib", marker = "extra == 'docs'" },
     { name = "mypy", marker = "extra == 'qa'" },
     { name = "pandas", marker = "extra == 'docs'" },
@@ -1085,12 +1085,16 @@ provides-extras = ["build", "dev", "docs", "qa", "tests"]
 [[package]]
 name = "lazyscribe-joblib"
 version = "0.1.0"
-source = { git = "https://github.com/lazyscribe/lazyscribe-joblib?branch=develop#b781ca21dfca3537a6fd052c8e0e76411ff81b06" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "attrs" },
     { name = "joblib" },
     { name = "lazyscribe" },
     { name = "python-slugify" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/7a/57/3fa316a2eedbd6a28339fe37f5cb9b169b8d34122ea9fb6dcf6c108d23cb/lazyscribe_joblib-0.1.0.tar.gz", hash = "sha256:3a9df0643dcdc2e4c6ae7b2eec21f1ec05aeab0d0f0deef1bf64dde06ac3a8e3", size = 4102, upload-time = "2025-09-22T20:02:13.861Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/42/ad/b3072b0ec03d10ce06e03a1a71e523134c5635a5a0af157d49a6ddd956c1/lazyscribe_joblib-0.1.0-py3-none-any.whl", hash = "sha256:118ef8cbb9fa694d5cd2fa4180c70dce1f7aa868f4eba6375a791c1dcb2947a8", size = 4413, upload-time = "2025-09-22T20:02:12.716Z" },
 ]
 
 [[package]]

@@ -148,9 +148,6 @@ extras = [ "tests" ]
 upgrade = [ "attrs", "python-slugify", "fsspec" ]
 command = "pytest tests"
 
-[tool.uv.sources]
-lazyscribe-joblib = { git = "https://github.com/lazyscribe/lazyscribe-joblib", branch = "develop" }
-
 [tool.uv.build-backend]
 module-name = "lazyscribe"
 module-root = ""

@@ -116,7 +116,7 @@ kiwisolver==1.4.9
     # via matplotlib
 lazyscribe==1.2.0
     # via lazyscribe-joblib
-lazyscribe-joblib @ git+https://github.com/lazyscribe/lazyscribe-joblib@b781ca21dfca3537a6fd052c8e0e76411ff81b06
+lazyscribe-joblib==0.1.0
     # via lazyscribe (pyproject.toml)
 locket==1.0.0
     # via
@@ -361,7 +361,7 @@ uv==0.8.13
     #   edgetest
 virtualenv==20.34.0
     # via pre-commit
-wcwidth==0.2.13
+wcwidth==0.2.14
     # via prompt-toolkit
 wheel==0.45.1
     # via pip-tools
