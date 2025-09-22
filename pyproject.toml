@@ -8,7 +8,7 @@ name = "lazyscribe"
 version = "1.2.0"
 
 description = "Lightweight and lazy experiment logging"
-readme = { file = [ "README.md" ], content-type = "text/markdown" }
+readme = { file = "README.md", content-type = "text/markdown" }
 license = { text = "MIT license" }
 authors = [
     { name = "Akshay Gupta", email = "akgcodes@gmail.com" },
@@ -76,14 +76,6 @@ urls.repository = "https://github.com/lazyscribe/lazyscribe"
 entry-points."lazyscribe.artifact_type".base = "lazyscribe.artifacts.base:Artifact"
 entry-points."lazyscribe.artifact_type".json = "lazyscribe.artifacts.json:JSONArtifact"
 entry-points."lazyscribe.artifact_type".yaml = "lazyscribe.artifacts.yaml:YAMLArtifact"
-
-[tool.setuptools]
-include-package-data = true
-zip-safe = false
-packages = [ "lazyscribe", "lazyscribe.prefect", "lazyscribe.artifacts" ]
-
-[tool.setuptools.dynamic]
-version = { attr = "lazyscribe._meta.__version__" }
 
 [tool.ruff]
 target-version = "py310"
@@ -158,3 +150,7 @@ command = "pytest tests"
 
 [tool.uv.sources]
 lazyscribe-joblib = { git = "https://github.com/lazyscribe/lazyscribe-joblib", branch = "develop" }
+
+[tool.uv.build-backend]
+module-name = "lazyscribe"
+module-root = ""

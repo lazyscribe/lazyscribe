@@ -57,7 +57,7 @@ def test_promoting_old_artifact(tmp_path):
         project.save()
 
     reload_project = Project(project_location, mode="r")
-    reload_repository = Repository(repository_location, mode="a")
+    reload_repository = Repository(repository_location, mode="w+")
 
     with pytest.raises(ArtifactLogError):
         reload_project["my-experiment"].promote_artifact(reload_repository, "features")
@@ -84,7 +84,7 @@ def test_promote_equal_artifact(tmp_path):
     project.save()
 
     reload_project = Project(project_location, mode="r")
-    reload_repository = Repository(repository_location, mode="a")
+    reload_repository = Repository(repository_location, mode="w+")
 
     with pytest.raises(ArtifactLogError):
         reload_project["my-experiment"].promote_artifact(reload_repository, "features")
@@ -204,7 +204,7 @@ def test_promote_artifact_new_version(tmp_path):
 
     # Reload the project and repository, promote the new object
     reload_project = Project(project_location, mode="r")
-    reload_repository = Repository(repository_location, mode="a")
+    reload_repository = Repository(repository_location, mode="w+")
 
     reload_project["my-experiment"].promote_artifact(reload_repository, "features")
 
