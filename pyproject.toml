@@ -1,11 +1,14 @@
 [build-system]
-build-backend = "setuptools.build_meta"
+build-backend = "uv_build"
 
-requires = [ "setuptools>=64.0.0" ]
+requires = [ "uv-build>=0.8.0,<0.9.0" ]
 
 [project]
 name = "lazyscribe"
+version = "1.2.0"
+
 description = "Lightweight and lazy experiment logging"
+readme = { file = [ "README.md" ], content-type = "text/markdown" }
 license = { text = "MIT license" }
 authors = [
     { name = "Akshay Gupta", email = "akgcodes@gmail.com" },
@@ -21,8 +24,6 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
 ]
-dynamic = [ "readme", "version" ]
-
 dependencies = [
     "attrs>=21.2.0,<=25.3.0",
     "fsspec>=0.4.0,<=2025.5.1",
@@ -30,7 +31,7 @@ dependencies = [
     "python-slugify>=5.0.0,<=8.0.4",
 ]
 
-optional-dependencies.build = [ "build", "commitizen", "twine", "wheel" ]
+optional-dependencies.build = [ "commitizen", "uv" ]
 optional-dependencies.dev = [
     "lazyscribe[build]",
     "lazyscribe[docs]",
@@ -82,7 +83,6 @@ packages = [ "lazyscribe", "lazyscribe.prefect", "lazyscribe.artifacts" ]
 
 [tool.setuptools.dynamic]
 version = { attr = "lazyscribe._meta.__version__" }
-readme = { file = [ "README.md" ], content-type = "text/markdown" }
 
 [tool.ruff]
 target-version = "py310"
@@ -141,8 +141,9 @@ warn_unused_configs = true
 ignore_missing_imports = true
 
 [tool.commitizen]
-version = "1.2.0"
+version_provider = "pep621"
 tag_format = "v$version"
+bump_message = "chore: version $current_version -> $new_version"
 update_changelog_on_bump = true
 version_files = [
     "lazyscribe/_meta.py:__version__",
