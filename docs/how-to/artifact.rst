@@ -61,7 +61,9 @@ We have a selection of builtin artifact handlers, specified below:
       - Artifacts written using :py:meth:`json.dump` and read using :py:meth:`json.load`
       - N/A
     * - :py:class:`lazyscribe.artifacts.pickle:PickleArtifact`
+      - pickle
       - Artifacts written using :py:meth:`pickle.dump` and read using :py:meth:`pickle.load`
+      - N/A
     * - :py:class:`lazyscribe.artifacts.yaml.YAMLArtifact`
       - yaml
       - Artifacts written using :py:meth:`yaml.dump` and read using :py:meth:`yaml.load`. You can specify the dumper using the ``Dumper`` keyword argument and the loader using the ``Loader`` keyword argument. Defaults to :py:class:`yaml.FullDumper` and :py:class:`yaml.SafeLoader` respectively if not specified.
