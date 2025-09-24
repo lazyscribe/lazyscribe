@@ -23,8 +23,6 @@ The basic usage involves instantiating a ``Project`` and using the context manag
 an experiment:
 
 ```python
-import json
-
 from lazyscribe import Project
 
 project = Project(fpath="project.json")
@@ -36,6 +34,8 @@ with project.log(name="My experiment") as exp:
 You've created an experiment! You can view the experimental data by using ``list``:
 
 ```python
+import json
+
 print(json.dumps(list(project), indent=4))
 ```
 
