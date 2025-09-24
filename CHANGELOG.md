@@ -1,3 +1,19 @@
+## v2.0.0a0 (2025-09-24)
+
+### Feat
+
+- adding a pickle-based handler (wip)
+- **project,repository**: adding transaction-based filesystem interactions (#152)
+
+### Fix
+
+- **project**: ensure that experiment dependencies use the same fsspec protocol as the current project (#149)
+
+### Refactor
+
+- removing the joblib handler from lazyscribe and moving to the uv-build backend (#154)
+- stricter typing annotations and documentation updates (#118)
+
 ## v1.2.0 (2025-07-30)
 
 ### Feat
