@@ -10,6 +10,7 @@ import yaml
 
 from lazyscribe.artifacts import _get_handler
 from lazyscribe.artifacts.json import JSONArtifact
+from lazyscribe.artifacts.pickle import PickleArtifact
 from lazyscribe.artifacts.yaml import YAMLArtifact
 
 
@@ -117,6 +118,33 @@ def test_yaml_handler_defaults_to_safeloader(tmp_path):
         pytest.raises(yaml.constructor.ConstructorError),
     ):
         handler.read(buf)
+
+
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
+def test_pickle_handler(tmp_path):
+    """Test reading and writing pickle artifacts with the handler."""
+    location = tmp_path / "my-location"
+    location.mkdir()
+
+    data = [{"key": "value"}]
+    handler = PickleArtifact.construct(name="My output pickle")
+
+    assert (
+        handler.fname
+        == f"my-output-pickle-{datetime.now().strftime('%Y%m%d%H%M%S')}.pkl"
+    )
+
+    with open(location / handler.fname, "wb") as buf:
+        handler.write(data, buf)
+
+    assert (location / handler.fname).is_file()
+
+    with open(location / handler.fname, "rb") as buf:
+        out = handler.read(buf)
+
+    assert data == out
 
 
 def test_get_handler():
