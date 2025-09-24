@@ -6,15 +6,6 @@ In this tutorial, we will demonstrate how you can create a repository and log ar
 
 A repository is an organized structure that stores and versions your artifacts.
 It makes it easy to retrieve older versions of artifacts, log new ones or time travel.
-
-.. note::
-
-    To run this tutorial, you will need to install our first-party managed artifact handler
-    for joblib:
-
-    .. code-block:: bash
-
-        uv pip install lazyscribe-joblib
 """
 
 # %%
@@ -42,7 +33,7 @@ repository = Repository(tmpdir / "repository.json", mode="w")
 # %%
 # Let's log version 0 of our model to our repository. Remember to save! Nothing is actually written to file until you save.
 
-repository.log_artifact("model", model, handler="joblib")
+repository.log_artifact("model", model, handler="pickle")
 repository.save()
 
 # %%
@@ -56,7 +47,7 @@ repository_read.load_artifact("model")
 
 modelv1 = LogisticRegression()
 modelv1.fit(X, y)
-repository.log_artifact("model", modelv1, handler="joblib")
+repository.log_artifact("model", modelv1, handler="pickle")
 repository.save()
 
 # %%

@@ -2,6 +2,7 @@
 
 import json
 import logging
+import sys
 import warnings
 import zoneinfo
 from datetime import datetime, timedelta
@@ -325,7 +326,10 @@ def test_save_project_artifact_str_path(tmp_path):
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
-@patch("lazyscribe_joblib.importlib_version", side_effect=["1.2.2", "0.0.0"])
+@patch(
+    "lazyscribe.artifacts.pickle.sys.version_info",
+    side_effect=[".".join(str(i) for i in sys.version_info[:2]), "2.7"],
+)
 def test_save_project_artifact_failed_validation(mock_version, tmp_path):
     """Test saving and loading project with an artifact."""
     location = tmp_path / "my-project"
@@ -340,7 +344,7 @@ def test_save_project_artifact_failed_validation(mock_version, tmp_path):
         X, y = datasets.make_classification(n_samples=100, n_features=10)
         estimator = svm.SVC(kernel="linear")
         estimator.fit(X, y)
-        exp.log_artifact(name="estimator", value=estimator, handler="joblib")
+        exp.log_artifact(name="estimator", value=estimator, handler="pickle")
 
     assert project["my-experiment"].dirty is True
 
@@ -352,7 +356,7 @@ def test_save_project_artifact_failed_validation(mock_version, tmp_path):
     assert (
         location
         / f"my-experiment-{exp.last_updated.strftime('%Y%m%d%H%M%S')}"
-        / f"estimator-{exp.last_updated.strftime('%Y%m%d%H%M%S')}.joblib"
+        / f"estimator-{exp.last_updated.strftime('%Y%m%d%H%M%S')}.pkl"
     ).is_file()
 
     # Reload project and validate experiment

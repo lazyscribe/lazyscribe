@@ -7,10 +7,7 @@ alabaster==1.0.0
 argcomplete==3.6.2
     # via commitizen
 attrs==25.3.0
-    # via
-    #   lazyscribe (pyproject.toml)
-    #   lazyscribe
-    #   lazyscribe-joblib
+    # via lazyscribe (pyproject.toml)
 babel==2.17.0
     # via sphinx
 backports-datetime-fromisoformat==2.0.3
@@ -85,7 +82,6 @@ fsspec==2025.5.1
     # via
     #   lazyscribe (pyproject.toml)
     #   dask
-    #   lazyscribe
 furo==2025.7.19
     # via lazyscribe (pyproject.toml)
 identify==2.6.14
@@ -98,7 +94,6 @@ importlib-metadata==8.7.0
     # via
     #   lazyscribe (pyproject.toml)
     #   dask
-    #   lazyscribe
 importlib-resources==6.5.2
     # via prefect
 iniconfig==2.1.0
@@ -109,15 +104,9 @@ jinja2==3.1.6
     #   distributed
     #   sphinx
 joblib==1.5.2
-    # via
-    #   lazyscribe-joblib
-    #   scikit-learn
+    # via scikit-learn
 kiwisolver==1.4.9
     # via matplotlib
-lazyscribe==1.2.0
-    # via lazyscribe-joblib
-lazyscribe-joblib==0.1.0
-    # via lazyscribe (pyproject.toml)
 locket==1.0.0
     # via
     #   distributed
@@ -231,8 +220,6 @@ python-dateutil==2.9.0.post0
 python-slugify==8.0.4
     # via
     #   lazyscribe (pyproject.toml)
-    #   lazyscribe
-    #   lazyscribe-joblib
     #   prefect
 pytz==2025.2
     # via
