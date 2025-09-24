@@ -1,11 +1,14 @@
 [build-system]
-build-backend = "setuptools.build_meta"
+build-backend = "uv_build"
 
-requires = [ "setuptools>=64.0.0" ]
+requires = [ "uv-build>=0.8.0,<0.9.0" ]
 
 [project]
 name = "lazyscribe"
+version = "1.2.0"
+
 description = "Lightweight and lazy experiment logging"
+readme = { file = "README.md", content-type = "text/markdown" }
 license = { text = "MIT license" }
 authors = [
     { name = "Akshay Gupta", email = "akgcodes@gmail.com" },
@@ -21,8 +24,6 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
 ]
-dynamic = [ "readme", "version" ]
-
 dependencies = [
     "attrs>=21.2.0,<=25.3.0",
     "fsspec>=0.4.0,<=2025.5.1",
@@ -30,7 +31,7 @@ dependencies = [
     "python-slugify>=5.0.0,<=8.0.4",
 ]
 
-optional-dependencies.build = [ "build", "commitizen", "twine", "wheel" ]
+optional-dependencies.build = [ "commitizen", "uv" ]
 optional-dependencies.dev = [
     "lazyscribe[build]",
     "lazyscribe[docs]",
@@ -39,6 +40,7 @@ optional-dependencies.dev = [
 ]
 optional-dependencies.docs = [
     "furo",
+    "lazyscribe-joblib",
     "matplotlib",
     "pandas",
     "pillow",
@@ -60,6 +62,7 @@ optional-dependencies.qa = [
     "types-pyyaml",
 ]
 optional-dependencies.tests = [
+    "lazyscribe-joblib",
     "prefect>=1.0,<2",
     "pytest",
     "pytest-cov",
@@ -71,18 +74,8 @@ urls.documentation = "https://lazyscribe.github.io/lazyscribe/"
 urls.repository = "https://github.com/lazyscribe/lazyscribe"
 
 entry-points."lazyscribe.artifact_type".base = "lazyscribe.artifacts.base:Artifact"
-entry-points."lazyscribe.artifact_type".joblib = "lazyscribe.artifacts.joblib:JoblibArtifact"
 entry-points."lazyscribe.artifact_type".json = "lazyscribe.artifacts.json:JSONArtifact"
 entry-points."lazyscribe.artifact_type".yaml = "lazyscribe.artifacts.yaml:YAMLArtifact"
-
-[tool.setuptools]
-include-package-data = true
-zip-safe = false
-packages = [ "lazyscribe", "lazyscribe.prefect", "lazyscribe.artifacts" ]
-
-[tool.setuptools.dynamic]
-version = { attr = "lazyscribe._meta.__version__" }
-readme = { file = [ "README.md" ], content-type = "text/markdown" }
 
 [tool.ruff]
 target-version = "py310"
@@ -141,8 +134,9 @@ warn_unused_configs = true
 ignore_missing_imports = true
 
 [tool.commitizen]
-version = "1.2.0"
+version_provider = "uv"
 tag_format = "v$version"
+bump_message = "chore: version $current_version -> $new_version"
 update_changelog_on_bump = true
 version_files = [
     "lazyscribe/_meta.py:__version__",
@@ -153,3 +147,7 @@ version_files = [
 extras = [ "tests" ]
 upgrade = [ "attrs", "python-slugify", "fsspec" ]
 command = "pytest tests"
+
+[tool.uv.build-backend]
+module-name = "lazyscribe"
+module-root = ""
