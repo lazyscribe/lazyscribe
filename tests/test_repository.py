@@ -337,11 +337,7 @@ def test_save_repository_multiple_artifact(tmp_path):
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
-@patch(
-    "lazyscribe.artifacts.pickle.sys.version_info",
-    side_effect=[".".join(str(i) for i in sys.version_info[:2]), "2.7"],
-)
-def test_save_repository_artifact_failed_validation(mock_version, tmp_path):
+def test_save_repository_artifact_failed_validation(tmp_path):
     """Test saving and loading repository with an artifact."""
     location = tmp_path / "my-repository"
     location.mkdir()
@@ -362,7 +358,11 @@ def test_save_repository_artifact_failed_validation(mock_version, tmp_path):
     assert (location / "estimator" / "estimator-20250120132330.pkl").is_file()
 
     # Reload repository and validate experiment
-    with pytest.raises(ArtifactLoadError):
+    with (
+        pytest.raises(ArtifactLoadError),
+        patch("lazyscribe.artifacts.pickle.sys.version_info") as mock_version,
+    ):
+        mock_version.return_value = (3, 9)
         repository2 = Repository(repository_location, mode="r")
         repository2.load_artifact(name="estimator")
 

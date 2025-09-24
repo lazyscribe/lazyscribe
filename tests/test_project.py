@@ -2,7 +2,6 @@
 
 import json
 import logging
-import sys
 import warnings
 import zoneinfo
 from datetime import datetime, timedelta
@@ -326,11 +325,7 @@ def test_save_project_artifact_str_path(tmp_path):
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
-@patch(
-    "lazyscribe.artifacts.pickle.sys.version_info",
-    side_effect=[".".join(str(i) for i in sys.version_info[:2]), "2.7"],
-)
-def test_save_project_artifact_failed_validation(mock_version, tmp_path):
+def test_save_project_artifact_failed_validation(tmp_path):
     """Test saving and loading project with an artifact."""
     location = tmp_path / "my-project"
     project_location = location / "project.json"
@@ -360,7 +355,11 @@ def test_save_project_artifact_failed_validation(mock_version, tmp_path):
     ).is_file()
 
     # Reload project and validate experiment
-    with pytest.raises(ArtifactLoadError):
+    with (
+        pytest.raises(ArtifactLoadError),
+        patch("lazyscribe.artifacts.pickle.sys.version_info") as mock_version,
+    ):
+        mock_version.return_value = (3, 9)
         project2 = Project(project_location, mode="r")
         exp2 = project2["my-experiment"]
         exp2.load_artifact(name="estimator")
