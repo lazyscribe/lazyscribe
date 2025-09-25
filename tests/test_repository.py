@@ -337,8 +337,7 @@ def test_save_repository_multiple_artifact(tmp_path):
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
-@patch("lazyscribe_joblib.importlib_version", side_effect=["1.2.2", "0.0.0"])
-def test_save_repository_artifact_failed_validation(mock_version, tmp_path):
+def test_save_repository_artifact_failed_validation(tmp_path):
     """Test saving and loading repository with an artifact."""
     location = tmp_path / "my-repository"
     location.mkdir()
@@ -352,14 +351,18 @@ def test_save_repository_artifact_failed_validation(mock_version, tmp_path):
     X, y = datasets.make_classification(n_samples=100, n_features=10)
     estimator = svm.SVC(kernel="linear")
     estimator.fit(X, y)
-    repository.log_artifact(name="estimator", value=estimator, handler="joblib")
+    repository.log_artifact(name="estimator", value=estimator, handler="pickle")
     repository.save()
 
     assert repository_location.is_file()
-    assert (location / "estimator" / "estimator-20250120132330.joblib").is_file()
+    assert (location / "estimator" / "estimator-20250120132330.pkl").is_file()
 
     # Reload repository and validate experiment
-    with pytest.raises(ArtifactLoadError):
+    with (
+        pytest.raises(ArtifactLoadError),
+        patch("lazyscribe.artifacts.pickle.sys.version_info") as mock_version,
+    ):
+        mock_version.return_value = (3, 9)
         repository2 = Repository(repository_location, mode="r")
         repository2.load_artifact(name="estimator")
 

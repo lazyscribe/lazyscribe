@@ -5,7 +5,7 @@ requires = [ "uv-build>=0.8.0,<0.9.0" ]
 
 [project]
 name = "lazyscribe"
-version = "1.2.0"
+version = "2.0.0a0"
 
 description = "Lightweight and lazy experiment logging"
 readme = { file = "README.md", content-type = "text/markdown" }
@@ -40,7 +40,6 @@ optional-dependencies.dev = [
 ]
 optional-dependencies.docs = [
     "furo",
-    "lazyscribe-joblib",
     "matplotlib",
     "pandas",
     "pillow",
@@ -62,7 +61,6 @@ optional-dependencies.qa = [
     "types-pyyaml",
 ]
 optional-dependencies.tests = [
-    "lazyscribe-joblib",
     "prefect>=1.0,<2",
     "pytest",
     "pytest-cov",
@@ -75,6 +73,8 @@ urls.repository = "https://github.com/lazyscribe/lazyscribe"
 
 entry-points."lazyscribe.artifact_type".base = "lazyscribe.artifacts.base:Artifact"
 entry-points."lazyscribe.artifact_type".json = "lazyscribe.artifacts.json:JSONArtifact"
+entry-points."lazyscribe.artifact_type".pickle = "lazyscribe.artifacts.pickle:PickleArtifact"
+
 entry-points."lazyscribe.artifact_type".yaml = "lazyscribe.artifacts.yaml:YAMLArtifact"
 
 [tool.ruff]

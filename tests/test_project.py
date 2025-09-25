@@ -325,8 +325,7 @@ def test_save_project_artifact_str_path(tmp_path):
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
-@patch("lazyscribe_joblib.importlib_version", side_effect=["1.2.2", "0.0.0"])
-def test_save_project_artifact_failed_validation(mock_version, tmp_path):
+def test_save_project_artifact_failed_validation(tmp_path):
     """Test saving and loading project with an artifact."""
     location = tmp_path / "my-project"
     project_location = location / "project.json"
@@ -340,7 +339,7 @@ def test_save_project_artifact_failed_validation(mock_version, tmp_path):
         X, y = datasets.make_classification(n_samples=100, n_features=10)
         estimator = svm.SVC(kernel="linear")
         estimator.fit(X, y)
-        exp.log_artifact(name="estimator", value=estimator, handler="joblib")
+        exp.log_artifact(name="estimator", value=estimator, handler="pickle")
 
     assert project["my-experiment"].dirty is True
 
@@ -352,11 +351,15 @@ def test_save_project_artifact_failed_validation(mock_version, tmp_path):
     assert (
         location
         / f"my-experiment-{exp.last_updated.strftime('%Y%m%d%H%M%S')}"
-        / f"estimator-{exp.last_updated.strftime('%Y%m%d%H%M%S')}.joblib"
+        / f"estimator-{exp.last_updated.strftime('%Y%m%d%H%M%S')}.pkl"
     ).is_file()
 
     # Reload project and validate experiment
-    with pytest.raises(ArtifactLoadError):
+    with (
+        pytest.raises(ArtifactLoadError),
+        patch("lazyscribe.artifacts.pickle.sys.version_info") as mock_version,
+    ):
+        mock_version.return_value = (3, 9)
         project2 = Project(project_location, mode="r")
         exp2 = project2["my-experiment"]
         exp2.load_artifact(name="estimator")
