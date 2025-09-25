@@ -15,7 +15,17 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from attrs import Factory, asdict, define, evolve, field, fields, filters, frozen
+from attrs import (
+    Attribute,
+    Factory,
+    asdict,
+    define,
+    evolve,
+    field,
+    fields,
+    filters,
+    frozen,
+)
 from fsspec.implementations.local import LocalFileSystem
 from fsspec.spec import AbstractFileSystem
 from slugify import slugify
@@ -323,11 +333,17 @@ class Experiment:
                     for x, y in inspect.getmembers(artifact)
                     if not x.startswith("_") and not inspect.ismethod(y)
                 }
-                exclude_params: list[str] = ["value", "fname", "created_at", "dirty"]
+                # Exclude parameters that don't define equality
+                exclude_fields: list[Attribute] = [
+                    attr for attr in artifact.__attrs_attrs__ if not attr.eq
+                ]
                 construct_params: list[str] = [
-                    param
-                    for param in inspect.signature(artifact.construct).parameters
-                    if param not in exclude_params
+                    param_name
+                    for param_name, param in inspect.signature(
+                        artifact.construct
+                    ).parameters.items()
+                    if param_name not in [attr.name for attr in exclude_fields]
+                    or param.default == param.empty
                 ]
                 artifact_attrs = {
                     key: value
@@ -339,13 +355,7 @@ class Experiment:
 
                 # Validate the handler
                 if validate and curr_handler != artifact:
-                    field_filters = filters.exclude(
-                        fields(type(artifact)).name,
-                        fields(type(artifact)).fname,
-                        fields(type(artifact)).value,
-                        fields(type(artifact)).created_at,
-                        fields(type(artifact)).dirty,
-                    )
+                    field_filters = filters.exclude(*exclude_fields)
                     raise ArtifactLoadError(
                         "Runtime environments do not match. Artifact parameters:\n\n"
                         f"{json.dumps(asdict(artifact, filter=field_filters))}"
