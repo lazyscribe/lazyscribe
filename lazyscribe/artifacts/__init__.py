@@ -1,9 +1,6 @@
 """Import the handlers."""
 
-try:
-    from importlib_metadata import entry_points
-except ImportError:
-    from importlib.metadata import entry_points  # type: ignore
+from importlib.metadata import entry_points
 
 from lazyscribe.artifacts.base import Artifact
 

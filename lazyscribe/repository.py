@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import inspect
 import json
 import logging
 import warnings
@@ -13,12 +12,11 @@ from typing import Any, Literal
 from urllib.parse import urlparse
 
 import fsspec
-from attrs import Attribute, asdict, fields, filters
 
-from lazyscribe._utils import serialize_artifacts, utcnow
+from lazyscribe._utils import serialize_artifacts, utcnow, validate_artifact_environment
 from lazyscribe.artifacts import _get_handler
 from lazyscribe.artifacts.base import Artifact
-from lazyscribe.exception import ArtifactLoadError, ReadOnlyError, SaveError
+from lazyscribe.exception import ReadOnlyError, SaveError
 
 LOG = logging.getLogger(__name__)
 
@@ -217,45 +215,13 @@ class Repository:
         artifact = self._search_artifact_versions(
             name=name, version=version, match=match
         )
-        # Construct the handler with relevant parameters.
-        artifact_attrs: dict[str, Any] = {
-            x: y
-            for x, y in inspect.getmembers(artifact)
-            if not x.startswith("_") and not inspect.ismethod(y)
-        }
-        # Exclude parameters that don't define equality
-        exclude_fields: list[Attribute] = [
-            attr for attr in fields(type(artifact)) if not attr.eq
-        ]
-        construct_params: list[str] = [
-            param_name
-            for param_name, param in inspect.signature(
-                artifact.construct
-            ).parameters.items()
-            if param_name not in [attr.name for attr in exclude_fields]
-            or param.default == param.empty
-        ]
-        artifact_attrs = {
-            key: value
-            for key, value in artifact_attrs.items()
-            if key in construct_params
-        }
+        if validate:
+            validate_artifact_environment(artifact)
 
-        curr_handler = type(artifact).construct(**artifact_attrs, dirty=False)
-
-        # Validate the handler
-        if validate and curr_handler != artifact:
-            field_filters = filters.exclude(*exclude_fields)
-            raise ArtifactLoadError(
-                "Runtime environments do not match. Artifact parameters:\n\n"
-                f"{json.dumps(asdict(artifact, filter=field_filters))}"
-                "\n\nCurrent parameters:\n\n"
-                f"{json.dumps(asdict(curr_handler, filter=field_filters))}"
-            )
         # Read in the artifact
-        mode = "rb" if curr_handler.binary else "r"
+        mode = "rb" if artifact.binary else "r"
         with self.fs.open(str(self.dir / artifact.name / artifact.fname), mode) as buf:
-            out = curr_handler.read(buf, **kwargs)
+            out = artifact.read(buf, **kwargs)
         if artifact.output_only:
             warnings.warn(
                 f"Artifact '{name}' is not the original Python Object",
