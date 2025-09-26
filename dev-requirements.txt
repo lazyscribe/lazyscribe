@@ -226,7 +226,6 @@ pytz==2025.2
     #   prefect
 pyyaml==6.0.3
     # via
-    #   lazyscribe (pyproject.toml)
     #   commitizen
     #   dask
     #   distributed
@@ -319,8 +318,6 @@ toolz==1.0.0
 tornado==6.5.2
     # via distributed
 types-python-slugify==8.0.2.20240310
-    # via lazyscribe (pyproject.toml)
-types-pyyaml==6.0.12.20250915
     # via lazyscribe (pyproject.toml)
 typing-extensions==4.15.0
     # via
