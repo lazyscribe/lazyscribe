@@ -57,13 +57,11 @@ optional-dependencies.qa = [
     "pyproject-fmt",
     "ruff==0.7.3",
     "types-python-slugify",
-    "types-pyyaml",
 ]
 optional-dependencies.tests = [
     "prefect>=1.0,<2",
     "pytest",
     "pytest-cov",
-    "pyyaml",
     "scikit-learn",
     "time-machine",
 ]
@@ -73,8 +71,6 @@ urls.repository = "https://github.com/lazyscribe/lazyscribe"
 entry-points."lazyscribe.artifact_type".base = "lazyscribe.artifacts.base:Artifact"
 entry-points."lazyscribe.artifact_type".json = "lazyscribe.artifacts.json:JSONArtifact"
 entry-points."lazyscribe.artifact_type".pickle = "lazyscribe.artifacts.pickle:PickleArtifact"
-
-entry-points."lazyscribe.artifact_type".yaml = "lazyscribe.artifacts.yaml:YAMLArtifact"
 
 [tool.ruff]
 target-version = "py310"
