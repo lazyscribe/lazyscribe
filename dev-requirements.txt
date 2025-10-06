@@ -82,7 +82,7 @@ fsspec==2025.5.1
     # via
     #   lazyscribe (pyproject.toml)
     #   dask
-furo==2025.7.19
+furo==2025.9.25
     # via lazyscribe (pyproject.toml)
 identify==2.6.14
     # via pre-commit
@@ -91,9 +91,7 @@ idna==3.10
 imagesize==1.4.1
     # via sphinx
 importlib-metadata==8.7.0
-    # via
-    #   lazyscribe (pyproject.toml)
-    #   dask
+    # via dask
 importlib-resources==6.5.2
     # via prefect
 iniconfig==2.1.0
@@ -226,7 +224,7 @@ pytz==2025.2
     #   croniter
     #   pandas
     #   prefect
-pyyaml==6.0.2
+pyyaml==6.0.3
     # via
     #   lazyscribe (pyproject.toml)
     #   commitizen

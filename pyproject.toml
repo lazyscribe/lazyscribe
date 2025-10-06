@@ -27,7 +27,6 @@ classifiers = [
 dependencies = [
     "attrs>=21.2.0,<=25.3.0",
     "fsspec>=0.4.0,<=2025.5.1",
-    "importlib-metadata>=6.0,<=8.7.0",
     "python-slugify>=5.0.0,<=8.0.4",
 ]
 
