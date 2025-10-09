@@ -3,7 +3,7 @@
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Literal, Optional, Union
+from typing import Literal, Optional
 from urllib.parse import urlparse
 
 import prefect
@@ -229,7 +229,7 @@ class LazyProject(Task):
     def log(
         self,
         name: str,
-        project: Optional[Union[str, Path, Parameter]] = None,
+        project: Optional[str | Path | Parameter] = None,
         author: Optional[str] = None,
         flow: Optional[Flow] = None,
     ) -> Iterator[Task]:
