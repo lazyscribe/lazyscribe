@@ -1,6 +1,6 @@
 """Prefect test tasks."""
 
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 from prefect import Task, task
 from prefect.utilities.tasks import defaults_from_attrs
@@ -9,7 +9,7 @@ from lazyscribe.test import Test
 
 
 @task(name="Log test metric")
-def log_test_metric(test: Test, name: str, value: Union[float, int]):
+def log_test_metric(test: Test, name: str, value: float | int):
     """Log a non-global metric to a test.
 
     Parameters
@@ -82,7 +82,7 @@ class LazyTest(Task):
 
         return Test(name=name, description=description)
 
-    def log_metric(self, name: str, value: Union[float, int]):
+    def log_metric(self, name: str, value: float | int):
         """Add a ``log_metric`` task.
 
         Parameters
