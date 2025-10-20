@@ -1,11 +1,12 @@
-"""Artifact handler for JSON-serializable objects."""
+"""Pickle-based handler for binary artifacts."""
 
 from __future__ import annotations
 
+import logging
+import pickle
 import sys
 from datetime import datetime
 from io import IOBase
-from json import dump, load
 from typing import Any, ClassVar
 
 from attrs import define, field
@@ -14,10 +15,12 @@ from slugify import slugify
 from lazyscribe._utils import utcnow
 from lazyscribe.artifacts.base import Artifact
 
+LOG = logging.getLogger(__name__)
+
 
 @define(auto_attribs=True)
-class JSONArtifact(Artifact):
-    """Handler for JSON-serializable objects.
+class PickleArtifact(Artifact):
+    """Pickle-based serialization for python objects.
 
     .. important::
 
@@ -26,12 +29,13 @@ class JSONArtifact(Artifact):
 
     .. note::
 
-        For the attributes documentation, see also "Attributes" of :py:class:`lazyscribe.artifacts.base.Artifact`.
+        For the attributes documentation, please see the "Attributes" section of
+        :py:class:`lazyscribe.artifacts.base.Artifact`.
 
     Attributes
     ----------
-    alias : str = "json"
-    suffix : str = "json"
+    alias : str = "pickle"
+    suffix : str = "pkl"
     binary : bool = False
     output_only : bool = False
 
@@ -39,9 +43,9 @@ class JSONArtifact(Artifact):
         Minor Python version (e.g. ``"3.10"``).
     """
 
-    alias: ClassVar[str] = "json"
-    suffix: ClassVar[str] = "json"
-    binary: ClassVar[bool] = False
+    alias: ClassVar[str] = "pickle"
+    suffix: ClassVar[str] = "pkl"
+    binary: ClassVar[bool] = True
     output_only: ClassVar[bool] = False
     python_version: str = field()
 
@@ -56,7 +60,7 @@ class JSONArtifact(Artifact):
         version: int = 0,
         dirty: bool = True,
         **kwargs: Any,
-    ) -> JSONArtifact:
+    ) -> PickleArtifact:
         """Construct the handler class.
 
         Parameters
@@ -106,33 +110,33 @@ class JSONArtifact(Artifact):
 
     @classmethod
     def read(cls, buf: IOBase, **kwargs: Any) -> Any:
-        """Read in the JSON file.
+        """Read in the file.
 
         Parameters
         ----------
         buf : file-like object
             The buffer from a ``fsspec`` filesystem.
         **kwargs
-            Keyword arguments for :py:meth:`json.load`
+            Keyword arguments for :py:meth:`pickle.load`.
 
         Returns
         -------
         Any
-            The deserialized JSON file.
+            The deserialized Python object.
         """
-        return load(buf, **kwargs)
+        return pickle.load(buf, **kwargs)
 
     @classmethod
     def write(cls, obj: Any, buf: IOBase, **kwargs: Any) -> None:
-        """Write the content to a JSON file.
+        """Write the content to a pickle file.
 
         Parameters
         ----------
         obj : object
-            The JSON-serializable object.
+            The serializable object.
         buf : file-like object
             The buffer from a ``fsspec`` filesystem.
         **kwargs
-            Keyword arguments for :py:meth:`json.dump`.
+            Keyword arguments for :py:meth:`pickle.dump`.
         """
-        dump(obj, buf, **kwargs)
+        pickle.dump(obj, buf, **kwargs)

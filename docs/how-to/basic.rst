@@ -1,7 +1,7 @@
 Create a basic project
 ======================
 
-To create your first project, instantiate the :py:class:`lazyscribe.Project` class.
+To create your first project, instantiate the :py:class:`lazyscribe.project.Project` class.
 
 .. code-block:: python
 
@@ -17,10 +17,10 @@ Then, use the context manager to create an experiment and log it back to the pro
         exp.log_metric("metric", 0.3)
         exp.log_parameter("param", "value")
 
-When the context manager exits, the experiment will be appended to the ``Project.experiments`` list.
+When the context manager exits, the experiment will be appended to the :py:attr:`lazyscribe.project.Project.experiments` list.
 Using a list allows us to preserve the order and reference a copy when associating it with the project.
 If you want to avoid using the context manager, simply instantiate your own experiment and append it
-to the ``Project.experiments`` list.
+to the :py:attr:`lazyscribe.project.Project.experiments` list.
 
 .. code-block:: python
 
@@ -31,7 +31,7 @@ to the ``Project.experiments`` list.
     exp.log_parameter("param", "value")
     project.append(exp)
 
-Once you've finished, save the project to the filesystem using :py:meth:`lazyscribe.Project.save`
+Once you've finished, save the project to the filesystem using :py:meth:`lazyscribe.project.Project.save`
 method:
 
 .. code-block:: python

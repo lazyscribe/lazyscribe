@@ -12,7 +12,7 @@ view of all executed experiments.
 
 # Installation
 
-Python 3.9 and above is required. Use `pip` to install:
+Python 3.10 and above is required. Use `pip` to install:
 ```console
 $ python -m pip install lazyscribe
 ```
@@ -68,8 +68,8 @@ Once you've finished, save the project to ``project.json``:
 project.save()
 ```
 
-Later on, you can read the project back in read-only mode ("r"), append mode ("a"),
-or editable mode ("w+"):
+Later on, you can read the project back in read-only mode (`"r"`), append mode (`"a"`),
+or editable mode (`"w+"`):
 
 ```python
 project = Project("project.json", mode="r")

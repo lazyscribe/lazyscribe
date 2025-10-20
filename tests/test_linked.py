@@ -39,7 +39,7 @@ def test_linked_list_conversion():
 
 
 def test_merge_no_overlap():
-    """Test merging two non-overlapping linked lists"""
+    """Test merging two non-overlapping linked lists."""
     first = LinkedList()
     first.append(1)
     first.append(3)

@@ -18,18 +18,18 @@ to a unique folder based on experiment slug:
     with project.log("My experiment") as exp:
         exp.path
 
-This will return ``Path("./my-experiment-YYYYMMDDHHMMSS")``, where the datetime
+This will return ``pathlib.Path("./my-experiment-YYYYMMDDHHMMSS")``, where the datetime
 corresponds to the ``created_at`` attribute.
 
 .. important::
 
   Unless you log an artifact, this directory will not be created automatically.
 
-To associate an artifact with your experiment, use :py:meth:`lazyscribe.Experiment.log_artifact`.
-Serialization is delegated to a subclass of :py:class:`lazyscribe.artifacts.Artifact`.
+To associate an artifact with your experiment, use :py:meth:`lazyscribe.experiment.Experiment.log_artifact`.
+Serialization is delegated to a subclass of :py:class:`lazyscribe.artifacts.base.Artifact`.
 
 .. code-block:: python
-    :caption: Persisting a ``scikit-learn`` estimator with ``joblib``.
+    :caption: Persisting a ``scikit-learn`` estimator with ``pickle``.
     :emphasize-lines: 8-9
 
     from lazyscribe import Project
@@ -40,14 +40,14 @@ Serialization is delegated to a subclass of :py:class:`lazyscribe.artifacts.Arti
         X, y = ...
         model = SVC()
         model.fit(X, y)
-        exp.log_artifact(name="estimator", value=model, handler="joblib")
+        exp.log_artifact(name="estimator", value=model, handler="pickle")
 
 In the case of code failures, we want to minimize the chance that you need to clean up orphaned
 experiment data. For this reason, artifacts are *not persisted to the filesystem* when you call
-:py:meth:`lazyscribe.Experiment.log_artifact`. Artifacts are **only** saved when you
-call :py:meth:`lazyscribe.Project.save`.
+:py:meth:`lazyscribe.experiment.Experiment.log_artifact`. Artifacts are **only** saved when you
+call :py:meth:`lazyscribe.project.Project.save`.
 
-Below, we have included a list of currently supported artifact handlers and their aliases:
+We have a selection of builtin artifact handlers, specified below:
 
 .. list-table:: Builtin artifact handlers
     :header-rows: 1
@@ -56,24 +56,43 @@ Below, we have included a list of currently supported artifact handlers and thei
       - Alias
       - Description
       - Additional requirements
-    * - :py:class:`lazyscribe.artifacts.JSONArtifact`
+    * - :py:class:`lazyscribe.artifacts.json.JSONArtifact`
       - json
       - Artifacts written using :py:meth:`json.dump` and read using :py:meth:`json.load`
       - N/A
-    * - :py:class:`lazyscribe.artifacts.JoblibArtifact`
-      - joblib
-      - Artifacts written using :py:meth:`joblib.dump` and read using :py:meth:`joblib.load`
-      - ``joblib``
-    * - :py:class:`lazyscribe.artifacts.YAMLArtifact`
-      - yaml
-      - Artifacts written using :py:meth:`yaml.dump` and read using :py:meth:`yaml.load`. You can specify the dumper using the ``Dumper`` keyword argument and the loader using the ``Loader`` keyword argument. Defaults to :py:class:`yaml.FullDumper` and :py:class:`yaml.SafeLoader` respectively if not specified.
-      - ``PyYAML``
+    * - :py:class:`lazyscribe.artifacts.pickle:PickleArtifact`
+      - pickle
+      - Artifacts written using :py:meth:`pickle.dump` and read using :py:meth:`pickle.load`
+      - N/A
 
+We also provide first-party supported artifact handlers (install via `pip`):
+
+.. list-table:: First-party supported artifact handlers
+    :header-rows: 1
+
+    * - Alias
+      - Description
+      - Package Installation
+    * - joblib
+      - Artifacts written using :py:meth:`joblib.dump` and read using :py:meth:`joblib.load`
+      - `lazyscribe-joblib <https://github.com/lazyscribe/lazyscribe-joblib>`_
+    * - csv
+      - Artifacts written to CSV files using PyArrow
+      - `lazyscribe-arrow <https://github.com/lazyscribe/lazyscribe-arrow>`_
+    * - parquet
+      - Artifacts written to parquet files using PyArrow
+      - `lazyscribe-arrow <https://github.com/lazyscribe/lazyscribe-arrow>`_
+    * - onnx
+      - Artifacts written to ONNX model objects
+      - `lazyscribe-onnx <https://github.com/lazyscribe/lazyscribe-onnx>`_
+    * - yaml
+      - Artifacts written using :py:meth:`yaml.dump` and read using :py:meth:`yaml.load`. You can specify the dumper using the ``Dumper`` keyword argument and the loader using the ``Loader`` keyword argument. Defaults to :py:class:`yaml.FullDumper` and :py:class:`yaml.SafeLoader` respectively if not specified.
+      - `lazyscribe-yaml <https://github.com/lazyscribe/lazyscribe-yaml>`_
 
 Loading and validation
 ----------------------
 
-To load an artifact, use :py:meth:`lazyscribe.Experiment.load_artifact`.
+To load an artifact, use :py:meth:`lazyscribe.experiment.Experiment.load_artifact`.
 
 .. code-block:: python
     :emphasize-lines: 5
@@ -86,9 +105,10 @@ To load an artifact, use :py:meth:`lazyscribe.Experiment.load_artifact`.
 
 When an artifact is persisted to the filesystem, the handler may save environment
 parameters to use for validation when attempting to load the artifact into python.
-For example, when persisting a ``scikit-learn`` model object with the :py:class:`lazyscribe.artifacts.JoblibArtifact`,
-it will include the ``scikit-learn`` and ``joblib`` versions in the artifact metadata.
-If the metadata doesn't match with a handler constructed in the current runtime environment, ``lazyscribe`` will raise
+For example, when persisting a ``scikit-learn`` model object with the ``"joblib"``
+handler from ``lazyscribe-joblib``, it will include the ``scikit-learn`` and
+``joblib`` versions in the artifact metadata. If the metadata doesn't match with a
+handler constructed in the current runtime environment, ``lazyscribe`` will raise
 an error. You can disable validation using ``validate=False``:
 
 .. code-block:: python

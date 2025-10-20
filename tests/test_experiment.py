@@ -244,10 +244,10 @@ def test_experiment_artifact_load_validation():
     estimator.fit(X, y)
 
     exp = Experiment(name="My experiment", project=Path("project.json"), author="root")
-    exp.log_artifact(name="estimator", value=estimator, handler="joblib")
+    exp.log_artifact(name="estimator", value=estimator, handler="pickle")
 
     # Edit the experiment parameters to make sure the validation fails
-    exp.artifacts[0].package_version = "0.0.0"
+    exp.artifacts[0].python_version = "2.7"
 
     with pytest.raises(ArtifactLoadError):
         exp.load_artifact(name="estimator")

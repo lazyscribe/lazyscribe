@@ -12,7 +12,7 @@ import pytest
 import time_machine
 
 from lazyscribe.artifacts.base import Artifact
-from lazyscribe.exception import ArtifactLoadError, ReadOnlyError
+from lazyscribe.exception import ArtifactLoadError, ReadOnlyError, SaveError
 from lazyscribe.repository import Repository
 from tests.conftest import TestArtifact
 
@@ -85,6 +85,47 @@ def test_save_repository(tmp_path):
     with open(location / "my-dict" / expected_fname) as infile:
         artifact_read = json.load(infile)
     assert artifact_loaded == artifact_read == {"a": 1}
+
+
+def test_save_repository_transaction(tmp_path):
+    """Test failing to save a repository due to a SaveError."""
+    location = tmp_path / "my-repository"
+    location.mkdir()
+    repository_location = location / "repository.json"
+
+    repository = Repository(repository_location)
+    repository.log_artifact(name="should-not-work", value=int, handler="json")
+
+    with pytest.raises(SaveError):
+        repository.save()
+
+    assert not repository_location.is_file()
+
+
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
+def test_update_repository_transaction(tmp_path):
+    """Test failing to update a repository due to a SaveError."""
+    location = tmp_path / "my-repository"
+    location.mkdir()
+    repository_location = location / "repository.json"
+
+    repository = Repository(repository_location)
+    repository.log_artifact("my-dict", {"a": 1}, handler="json")
+
+    repository.save()
+
+    repository_w = Repository(repository_location, mode="w+")
+    repository_w.log_artifact(name="should-not-work", value=int, handler="json")
+
+    with pytest.raises(SaveError):
+        repository_w.save()
+
+    # Read in the repository, compare it to the first version
+    repository_r = Repository(repository_location, mode="r")
+
+    assert repository_r.artifacts == repository.artifacts
 
 
 @time_machine.travel(
@@ -296,8 +337,7 @@ def test_save_repository_multiple_artifact(tmp_path):
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
-@patch("lazyscribe.artifacts.joblib.importlib_version", side_effect=["1.2.2", "0.0.0"])
-def test_save_repository_artifact_failed_validation(mock_version, tmp_path):
+def test_save_repository_artifact_failed_validation(tmp_path):
     """Test saving and loading repository with an artifact."""
     location = tmp_path / "my-repository"
     location.mkdir()
@@ -311,14 +351,18 @@ def test_save_repository_artifact_failed_validation(mock_version, tmp_path):
     X, y = datasets.make_classification(n_samples=100, n_features=10)
     estimator = svm.SVC(kernel="linear")
     estimator.fit(X, y)
-    repository.log_artifact(name="estimator", value=estimator, handler="joblib")
+    repository.log_artifact(name="estimator", value=estimator, handler="pickle")
     repository.save()
 
     assert repository_location.is_file()
-    assert (location / "estimator" / "estimator-20250120132330.joblib").is_file()
+    assert (location / "estimator" / "estimator-20250120132330.pkl").is_file()
 
     # Reload repository and validate experiment
-    with pytest.raises(ArtifactLoadError):
+    with (
+        pytest.raises(ArtifactLoadError),
+        patch("lazyscribe.artifacts.pickle.sys.version_info") as mock_version,
+    ):
+        mock_version.return_value = (3, 9)
         repository2 = Repository(repository_location, mode="r")
         repository2.load_artifact(name="estimator")
 

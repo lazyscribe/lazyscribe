@@ -13,7 +13,7 @@ import pytest
 import time_machine
 
 from lazyscribe import Project
-from lazyscribe.exception import ArtifactLoadError, ReadOnlyError
+from lazyscribe.exception import ArtifactLoadError, ReadOnlyError, SaveError
 from lazyscribe.experiment import Experiment, ReadOnlyExperiment
 from lazyscribe.test import ReadOnlyTest, Test
 from tests.conftest import TestArtifact
@@ -71,9 +71,6 @@ def test_logging_experiment(project_kwargs):
         project["not a real experiment"]
 
 
-LOG = logging.getLogger(__name__)
-
-
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
@@ -88,6 +85,7 @@ LOG = logging.getLogger(__name__)
     ],
 )
 def test_logging(caplog, project_kwargs):
+    """Test logging to a project."""
     project = Project(**project_kwargs)
     today = datetime.now()
     caplog.set_level(logging.WARNING)
@@ -206,6 +204,64 @@ def test_save_project(tmp_path):
     ]
 
 
+def test_save_project_metric_transaction(tmp_path):
+    """Test not saving a project due to errors in writing a parameter."""
+    location = tmp_path / "my-project"
+    project_location = location / "project.json"
+
+    project = Project(fpath=project_location, author="root")
+    with project.log(name="My experiment") as exp:
+        exp.log_parameter("data-type", int)
+
+    with pytest.raises(SaveError):
+        project.save()
+
+    assert not project_location.is_file()
+
+
+def test_save_project_transaction(tmp_path):
+    """Test not saving a project due to errors in writing an artifact."""
+    location = tmp_path / "my-project"
+    project_location = location / "project.json"
+
+    project = Project(fpath=project_location, author="root")
+    with project.log(name="My experiment") as exp:
+        exp.log_artifact(name="should-not-work", value=int, handler="json")
+
+    with pytest.raises(SaveError):
+        project.save()
+
+    assert not project_location.is_file()
+
+
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
+def test_update_project_transaction(tmp_path):
+    """Test failing to update a project and rolling back the change."""
+    location = tmp_path / "my-project"
+    project_location = location / "project.json"
+
+    project = Project(fpath=project_location, author="root")
+    with project.log(name="My experiment") as exp:
+        exp.log_metric("metric", 0.5)
+
+    project.save()
+
+    # Re-open the project and fail to log
+    project_w = Project(fpath=project_location, mode="w+")
+    with project_w.log(name="My second experiment") as exp:
+        exp.log_artifact(name="should-not-work", value=int, handler="json")
+
+    with pytest.raises(SaveError):
+        project_w.save()
+
+    # Read in the project, compare it to the first version
+    project_r = Project(fpath=project_location, mode="w+")
+
+    assert project.experiments == project_r.experiments
+
+
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
@@ -269,8 +325,7 @@ def test_save_project_artifact_str_path(tmp_path):
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
-@patch("lazyscribe.artifacts.joblib.importlib_version", side_effect=["1.2.2", "0.0.0"])
-def test_save_project_artifact_failed_validation(mock_version, tmp_path):
+def test_save_project_artifact_failed_validation(tmp_path):
     """Test saving and loading project with an artifact."""
     location = tmp_path / "my-project"
     project_location = location / "project.json"
@@ -284,7 +339,7 @@ def test_save_project_artifact_failed_validation(mock_version, tmp_path):
         X, y = datasets.make_classification(n_samples=100, n_features=10)
         estimator = svm.SVC(kernel="linear")
         estimator.fit(X, y)
-        exp.log_artifact(name="estimator", value=estimator, handler="joblib")
+        exp.log_artifact(name="estimator", value=estimator, handler="pickle")
 
     assert project["my-experiment"].dirty is True
 
@@ -296,14 +351,18 @@ def test_save_project_artifact_failed_validation(mock_version, tmp_path):
     assert (
         location
         / f"my-experiment-{exp.last_updated.strftime('%Y%m%d%H%M%S')}"
-        / f"estimator-{exp.last_updated.strftime('%Y%m%d%H%M%S')}.joblib"
+        / f"estimator-{exp.last_updated.strftime('%Y%m%d%H%M%S')}.pkl"
     ).is_file()
 
     # Reload project and validate experiment
-    with pytest.raises(ArtifactLoadError):
+    with (
+        pytest.raises(ArtifactLoadError),
+        patch("lazyscribe.artifacts.pickle.sys.version_info") as mock_version,
+    ):
+        mock_version.return_value = (3, 9)
         project2 = Project(project_location, mode="r")
         exp2 = project2["my-experiment"]
-        model_load = exp2.load_artifact(name="estimator")
+        exp2.load_artifact(name="estimator")
 
 
 def test_save_project_artifact_multi_experiment(tmp_path):

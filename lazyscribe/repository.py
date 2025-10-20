@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import inspect
 import json
 import logging
 import warnings
@@ -13,12 +12,11 @@ from typing import Any, Literal
 from urllib.parse import urlparse
 
 import fsspec
-from attrs import asdict, fields, filters
 
-from lazyscribe._utils import serialize_artifacts, utcnow
+from lazyscribe._utils import serialize_artifacts, utcnow, validate_artifact_environment
 from lazyscribe.artifacts import _get_handler
 from lazyscribe.artifacts.base import Artifact
-from lazyscribe.exception import ArtifactLoadError, ReadOnlyError, SaveError
+from lazyscribe.exception import ReadOnlyError, SaveError
 
 LOG = logging.getLogger(__name__)
 
@@ -34,16 +32,24 @@ class Repository:
     mode : {"r", "a", "w", "w+"}, optional (default "w")
         The mode for opening the repository.
 
-        * ``r``: No new artifacts can be logged.
+        * ``r``: All artifacts will be loaded. No new artifacts can be logged.
         * ``a``: The same as ``w+`` (deprecated).
-        * ``w``: No existing artifacts will be loaded.
-        * ``w+``: All artifacts will be loaded.
+        * ``w``: No existing artifacts will be loaded. Artifacts can be added.
+        * ``w+``: All artifacts will be loaded. New artifacts can be added.
+    **storage_options
+        Storage options to pass to the filesystem initialization. Will be passed to
+        :py:meth:`fsspec.filesystem`.
 
     Attributes
     ----------
-    artifacts : list[Artifact]
+    artifacts : list[lazyscribe.artifact.Artifact]
         The list of artifacts in the repository.
     """
+
+    fpath: Path
+    mode: Literal["r", "a", "w", "w+"]  # TODO: remove `mode="a"` in version 2.0
+    storage_options: dict[str, Any]
+    artifacts: list[Artifact]
 
     def __init__(
         self,
@@ -51,9 +57,15 @@ class Repository:
         mode: Literal[
             "r", "a", "w", "w+"
         ] = "w",  # TODO: remove `mode="a"` in version 2.0
-        **storage_options,
-    ):
-        """Init method."""
+        **storage_options: Any,
+    ) -> None:
+        """Init method.
+
+        Raises
+        ------
+        ValueError
+            Raised on invalid ``mode`` value.
+        """
         if isinstance(fpath, str):
             parsed = urlparse(fpath)
             self.fpath = Path(parsed.netloc + parsed.path)
@@ -80,12 +92,12 @@ class Repository:
         if mode in ("r", "w+") and self.fs.isfile(str(self.fpath)):
             self.load()
 
-    def load(self):
+    def load(self) -> None:
         """Load existing artifacts."""
         with self.fs.open(str(self.fpath), "r") as infile:
             data = json.load(infile)
 
-        artifacts = []
+        artifacts: list[Artifact] = []
         for artifact in data:
             handler_cls = _get_handler(artifact.pop("handler"))
             created_at = datetime.fromisoformat(artifact.pop("created_at"))
@@ -100,12 +112,12 @@ class Repository:
         value: Any,
         handler: str,
         fname: str | None = None,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> None:
         """Log an artifact to the repository.
 
         This method associates an artifact with the repository, but the artifact will
-        not be written until :py:meth:`lazyscribe.Repository.save` is called.
+        not be written until :py:meth:`lazyscribe.repository.Repository.save` is called.
 
         Parameters
         ----------
@@ -118,19 +130,21 @@ class Repository:
         fname : str, optional (default None)
             The filename for the artifact. If set to ``None`` or not provided, it will be derived
             from the name of the artifact and the builtin suffix for each handler.
-        **kwargs : dict
+        **kwargs
             Keyword arguments for the write function of the handler.
 
         Raises
         ------
-        ReadOnlyError
+        lazyscribe.exception.ReadOnlyError
             If repository is in read-only mode.
         """
         if self.mode == "r":
             raise ReadOnlyError("Repository is in read-only mode.")
         # Retrieve and construct the handler
         self.last_updated = utcnow()
-        artifacts_matching_name = [art for art in self.artifacts if art.name == name]
+        artifacts_matching_name: list[Artifact] = [
+            art for art in self.artifacts if art.name == name
+        ]
         version = (
             max(art.version for art in artifacts_matching_name) + 1
             if artifacts_matching_name
@@ -159,7 +173,7 @@ class Repository:
         validate: bool = True,
         version: datetime | str | int | None = None,
         match: Literal["asof", "exact"] = "exact",
-        **kwargs,
+        **kwargs: Any,
     ) -> Any:
         """Load a single artifact.
 
@@ -176,62 +190,38 @@ class Repository:
             a string corresponding to the ``created_at`` field in the format ``"%Y-%m-%dT%H:%M:%S"``
             (e.g. ``"2025-01-25T12:36:22"``), or an integer version.
             If set to ``None`` or not provided, defaults to the most recent version.
-        match : "asof" | "exact", optional (default "exact")
+        match : {"asof", "exact"}, optional (default "exact")
             Matching logic. Only relevant for ``str`` and ``datetime.datetime`` values for
             ``version``. ``exact`` will provide an artifact with the exact ``created_at``
             value provided. ``asof`` will provide the most recent version as of the
             ``version`` value.
-        **kwargs : dict
+        **kwargs
             Keyword arguments for the handler read function.
 
         Returns
         -------
         Any
             The artifact object.
+
+        Raises
+        ------
+        ValueError
+            Raised on invalid ``match`` value.
+            Raised if no valid artifact was found.
+        lazyscribe.exception.ArtifactLoadError
+            Raised if ``validate`` and runtime environment does not match artifact metadata.
         """
         # Search for the artifact
         artifact = self._search_artifact_versions(
             name=name, version=version, match=match
         )
-        # Construct the handler with relevant parameters.
-        artifact_attrs = {
-            x: y
-            for x, y in inspect.getmembers(artifact)
-            if not x.startswith("_") and not inspect.ismethod(y)
-        }
-        exclude_params = ["value", "fname", "created_at", "dirty"]
-        construct_params = [
-            param
-            for param in inspect.signature(artifact.construct).parameters
-            if param not in exclude_params
-        ]
-        artifact_attrs = {
-            key: value
-            for key, value in artifact_attrs.items()
-            if key in construct_params
-        }
+        if validate:
+            validate_artifact_environment(artifact)
 
-        curr_handler = type(artifact).construct(**artifact_attrs, dirty=False)
-
-        # Validate the handler
-        if validate and curr_handler != artifact:
-            field_filters = filters.exclude(
-                fields(type(artifact)).name,
-                fields(type(artifact)).fname,
-                fields(type(artifact)).value,
-                fields(type(artifact)).created_at,
-                fields(type(artifact)).dirty,
-            )
-            raise ArtifactLoadError(
-                "Runtime environments do not match. Artifact parameters:\n\n"
-                f"{json.dumps(asdict(artifact, filter=field_filters))}"
-                "\n\nCurrent parameters:\n\n"
-                f"{json.dumps(asdict(curr_handler, filter=field_filters))}"
-            )
         # Read in the artifact
-        mode = "rb" if curr_handler.binary else "r"
+        mode = "rb" if artifact.binary else "r"
         with self.fs.open(str(self.dir / artifact.name / artifact.fname), mode) as buf:
-            out = curr_handler.read(buf, **kwargs)
+            out = artifact.read(buf, **kwargs)
         if artifact.output_only:
             warnings.warn(
                 f"Artifact '{name}' is not the original Python Object",
@@ -259,7 +249,7 @@ class Repository:
             a string corresponding to the ``created_at`` field in the format ``"%Y-%m-%dT%H:%M:%S"``
             (e.g. ``"2025-01-25T12:36:22"``), or an integer version.
             If set to ``None`` or not provided, defaults to the most recent version.
-        match : "asof" | "exact", optional (default "exact")
+        match : {"asof", "exact"}, optional (default "exact")
             Matching logic. Only relevant for ``str`` and ``datetime.datetime`` values for
             ``version``. ``exact`` will provide an artifact with the exact ``created_at``
             value provided. ``asof`` will provide the most recent version as of the
@@ -267,65 +257,76 @@ class Repository:
 
         Returns
         -------
-        dict
+        dict[str, Any]
             The artifact metadata.
+
+        Raises
+        ------
+        ValueError
+            Raised on invalid ``match`` value.
+            Raised if no valid artifact was found.
         """
-        artifact = self._search_artifact_versions(name, version, match)
+        artifact = self._search_artifact_versions(
+            name=name, version=version, match=match
+        )
 
         return next(serialize_artifacts([artifact]))
 
-    def save(self):
+    def save(self) -> None:
         """Save the repository data.
 
         This includes saving any artifact data.
 
         Raises
         ------
-        SaveError
+        lazyscribe.exception.ReadOnlyError
+            Raised when trying to save when the project is in read-only mode.
+        lazyscribe.exception.SaveError
             Raised when writing to the filesystem fails.
         """
         if self.mode == "r":
             raise ReadOnlyError("Repository is in read-only mode.")
 
         data = list(self)
-        try:
-            self.fs.makedirs(str(self.fpath.parent), exist_ok=True)
-            with self.fs.open(str(self.fpath), "w") as outfile:
-                json.dump(data, outfile, sort_keys=True, indent=4)
-        except Exception as exc:
-            raise SaveError(
-                f"Unable to save the Repository JSON file to {self.fpath!s}"
-            ) from exc
-
-        for artifact in self.artifacts:
-            # Write the artifact data
-            fmode = "wb" if artifact.binary else "w"
-            artifact_dir = self.dir / artifact.name
-            fpath = artifact_dir / artifact.fname
-            if not artifact.dirty:
-                LOG.debug(
-                    f"Artifact {artifact.name} v{artifact.version} already exists and has not been updated"
-                )
-                continue
-
+        with self.fs.transaction:
             try:
-                self.fs.makedirs(str(artifact_dir), exist_ok=True)
-                LOG.debug(f"Saving '{artifact.name}' to {fpath!s}...")
-                with self.fs.open(str(fpath), fmode) as buf:
-                    artifact.write(artifact.value, buf, **artifact.writer_kwargs)
+                self.fs.makedirs(str(self.fpath.parent), exist_ok=True)
+                with self.fs.open(str(self.fpath), "w") as outfile:
+                    json.dump(data, outfile, sort_keys=True, indent=4)
             except Exception as exc:
                 raise SaveError(
-                    f"Unable to write '{artifact.name}' to '{fpath!s}'"
+                    f"Unable to save the Repository JSON file to {self.fpath!s}"
                 ) from exc
 
-            # Reset the `dirty` flag since we have the updated artifact on disk
-            artifact.dirty = False
-            if artifact.output_only:
-                warnings.warn(
-                    f"Artifact '{artifact.name}' is added. It is not meant to be read back as Python Object",
-                    UserWarning,
-                    stacklevel=2,
-                )
+            for artifact in self.artifacts:
+                # Write the artifact data
+                fmode = "wb" if artifact.binary else "w"
+                artifact_dir = self.dir / artifact.name
+                fpath = artifact_dir / artifact.fname
+                if not artifact.dirty:
+                    LOG.debug(
+                        f"Artifact {artifact.name} v{artifact.version} already exists and has not been updated"
+                    )
+                    continue
+
+                try:
+                    self.fs.makedirs(str(artifact_dir), exist_ok=True)
+                    LOG.debug(f"Saving '{artifact.name}' to {fpath!s}...")
+                    with self.fs.open(str(fpath), fmode) as buf:
+                        artifact.write(artifact.value, buf, **artifact.writer_kwargs)
+                except Exception as exc:
+                    raise SaveError(
+                        f"Unable to write '{artifact.name}' to '{fpath!s}'"
+                    ) from exc
+
+                # Reset the `dirty` flag since we have the updated artifact on disk
+                artifact.dirty = False
+                if artifact.output_only:
+                    warnings.warn(
+                        f"Artifact '{artifact.name}' is added. It is not meant to be read back as Python Object",
+                        UserWarning,
+                        stacklevel=2,
+                    )
 
     def _search_artifact_versions(
         self,
@@ -345,23 +346,29 @@ class Repository:
             a string corresponding to the ``created_at`` field in the format ``"%Y-%m-%dT%H:%M:%S"``
             (e.g. ``"2025-01-25T12:36:22"``), or an integer version.
             If set to ``None`` or not provided, defaults to the most recent version.
-        match : "asof" | "exact", optional (default "exact")
+        match : {"asof", "exact"}, optional (default "exact")
             Matching logic. Only relevant for ``str`` and ``datetime.datetime`` values for
             ``version``. ``exact`` will provide an artifact with the exact ``created_at``
             value provided. ``asof`` will provide the most recent version as of the
             ``version`` value.
+
+        Raises
+        ------
+        ValueError
+            Raised on invalid ``match`` value.
+            Raised if no valid artifact was found.
         """
         artifacts_matching_name = sorted(
             [art for art in self.artifacts if art.name == name],
             key=lambda x: x.created_at,
         )
+        if not artifacts_matching_name:
+            raise ValueError(f"No artifact with name {name}")
         version = (
             datetime.strptime(version, "%Y-%m-%dT%H:%M:%S")
             if isinstance(version, str)
             else version
         )
-        if not artifacts_matching_name:
-            raise ValueError(f"No artifact with name {name}") from None
         if version is None:
             artifact = artifacts_matching_name[-1]
         elif isinstance(version, datetime):
@@ -398,7 +405,7 @@ class Repository:
             else:
                 raise ValueError(
                     "Please provide ``exact`` or ``asof`` as the value for ``match``"
-                ) from None
+                )
         else:
             try:
                 # Integer version is 0-indexed

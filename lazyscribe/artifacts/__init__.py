@@ -1,9 +1,6 @@
 """Import the handlers."""
 
-try:
-    from importlib_metadata import entry_points
-except ImportError:
-    from importlib.metadata import entry_points  # type: ignore
+from importlib.metadata import entry_points
 
 from lazyscribe.artifacts.base import Artifact
 
@@ -20,9 +17,8 @@ def _get_handler(alias: str) -> type[Artifact]:
 
     Returns
     -------
-    Artifact
-        The artifact handler class object. This object will need to be constructed
-        using :py:meth:`lazyscribe.artifacts.Artifact.construct`.
+    type[lazyscribe.artifacts.base.Artifact]
+        The artifact handler class.
     """
     entry = entry_points(group="lazyscribe.artifact_type")
 

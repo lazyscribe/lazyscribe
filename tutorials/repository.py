@@ -33,7 +33,7 @@ repository = Repository(tmpdir / "repository.json", mode="w")
 # %%
 # Let's log version 0 of our model to our repository. Remember to save! Nothing is actually written to file until you save.
 
-repository.log_artifact("model", model, handler="joblib")
+repository.log_artifact("model", model, handler="pickle")
 repository.save()
 
 # %%
@@ -47,7 +47,7 @@ repository_read.load_artifact("model")
 
 modelv1 = LogisticRegression()
 modelv1.fit(X, y)
-repository.log_artifact("model", modelv1, handler="joblib")
+repository.log_artifact("model", modelv1, handler="pickle")
 repository.save()
 
 # %%
