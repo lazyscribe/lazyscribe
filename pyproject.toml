@@ -1,7 +1,7 @@
 [build-system]
 build-backend = "uv_build"
 
-requires = [ "uv-build>=0.8.0,<0.9.0" ]
+requires = [ "uv-build>=0.8.0,<=0.9.5" ]
 
 [project]
 name = "lazyscribe"
@@ -25,8 +25,8 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
-    "attrs>=21.2.0,<=25.3.0",
-    "fsspec>=0.4.0,<=2025.5.1",
+    "attrs>=21.2.0,<=25.4.0",
+    "fsspec>=0.4.0,<=2025.9.0",
     "python-slugify>=5.0.0,<=8.0.4",
 ]
 
@@ -55,7 +55,7 @@ optional-dependencies.qa = [
     "pip-tools",
     "pre-commit",
     "pyproject-fmt",
-    "ruff==0.7.3",
+    "ruff",
     "types-python-slugify",
 ]
 optional-dependencies.tests = [
