@@ -44,7 +44,6 @@ Contents
     how-to/external-fs
     how-to/readonly
     how-to/merge
-    how-to/prefect
 
 .. toctree::
     :maxdepth: 2

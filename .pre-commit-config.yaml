@@ -14,7 +14,7 @@ repos:
     rev: v1.18.2
     hooks:
       - id: mypy
-        exclude: (^docs\/|^lazyscribe\/prefect\/^tests\/)
+        exclude: (^docs\/|^lazyscribe\/^tests\/)
         language_version: python3.10
         pass_filenames: false
         args: [
