@@ -4,7 +4,7 @@ import getpass
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 import prefect
 from prefect import Flow, Task, task
@@ -16,7 +16,7 @@ from lazyscribe.test import Test
 
 
 @task(name="Log experiment metric")
-def log_experiment_metric(experiment: Experiment, name: str, value: Union[float, int]):
+def log_experiment_metric(experiment: Experiment, name: str, value: float | int):
     """Log a metric.
 
     Parameters
@@ -193,7 +193,7 @@ class LazyExperiment(Task):
 
         return Experiment(name=name, project=project, author=author)
 
-    def log_metric(self, name: str, value: Union[float, int]):
+    def log_metric(self, name: str, value: float | int):
         """Add a ``log_metric`` task.
 
         Parameters
