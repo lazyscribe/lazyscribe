@@ -43,7 +43,6 @@ optional-dependencies.docs = [
     "matplotlib",
     "pandas",
     "pillow",
-    "prefect>=1.0,<2",
     "scikit-learn",
     "sphinx",
     "sphinx-gallery",
@@ -60,7 +59,6 @@ optional-dependencies.qa = [
     "types-python-slugify",
 ]
 optional-dependencies.tests = [
-    "prefect>=1.0,<2",
     "pytest",
     "pytest-cov",
     "scikit-learn",
@@ -73,12 +71,14 @@ entry-points."lazyscribe.artifact_type".base = "lazyscribe.artifacts.base:Artifa
 entry-points."lazyscribe.artifact_type".json = "lazyscribe.artifacts.json:JSONArtifact"
 entry-points."lazyscribe.artifact_type".pickle = "lazyscribe.artifacts.pickle:PickleArtifact"
 
+[tool.uv.build-backend]
+module-name = "lazyscribe"
+module-root = ""
+
 [tool.ruff]
 target-version = "py310"
 exclude = [
     "docs/",
-    "lazyscribe/prefect/",
-    "tests/test_prefect.py",
 ]
 
 lint.select = [
@@ -121,7 +121,6 @@ max_supported_python = "3.14"
 python_version = "3.10"
 exclude = [
     '^docs\/',
-    '^lazyscribe\/prefect\/',
     '^tests\/',
 ]
 strict = true
@@ -143,7 +142,3 @@ version_files = [
 extras = [ "tests" ]
 upgrade = [ "attrs", "python-slugify", "fsspec" ]
 command = "pytest tests"
-
-[tool.uv.build-backend]
-module-name = "lazyscribe"
-module-root = ""
