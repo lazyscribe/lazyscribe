@@ -459,8 +459,10 @@ class Project:
         if len(short_slug_timestamp) > 0:
             latest_datetime = max(short_slug_timestamp)
             if out.last_updated != latest_datetime:
-                LOG.warning(f"Returning experiment last saved, with ``last_updated`` manually set as {exp.last_updated}. \
-                            The latest ``last_updated`` timestamp is {latest_datetime}.")
+                LOG.warning(
+                    f"Returning experiment last saved, with ``last_updated`` manually set as {exp.last_updated}. \
+                            The latest ``last_updated`` timestamp is {latest_datetime}."
+                )
 
         return out
 
