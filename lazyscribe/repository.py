@@ -385,6 +385,9 @@ class Repository:
                     ) from None
             elif match == "asof":
                 try:
+                    LOG.info(
+                        f"Searching for the latest version of '{name}' as of {version!s}..."
+                    )
                     if version < artifacts_matching_name[0].created_at:
                         msg = (
                             f"Version {version!s} predates the earliest version "
@@ -398,6 +401,9 @@ class Repository:
                             version >= art.created_at
                             and version < artifacts_matching_name[idx + 1].created_at
                         )
+                    )
+                    LOG.info(
+                        f"Found version {artifact.version} (created {artifact.created_at!s})"
                     )
                 except IndexError:
                     # Get latest
