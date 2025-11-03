@@ -300,7 +300,7 @@ class Repository:
 
         Raises
         ------
-        ArtifactLoadError
+        lazyscribe.exception.ArtifactLoadError
             Raised if the artifact does not exist on the filesystem yet.
         ValueError
             Raised if the provided artifact(s) represent binary files.
