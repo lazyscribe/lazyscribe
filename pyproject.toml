@@ -47,6 +47,7 @@ optional-dependencies.docs = [
     "sphinx",
     "sphinx-gallery",
     "sphinx-inline-tabs",
+    "time-machine",
 ]
 optional-dependencies.qa = [
     "edgetest",

@@ -10,6 +10,8 @@ attrs==25.4.0
     # via lazyscribe (pyproject.toml)
 babel==2.17.0
     # via sphinx
+backports-datetime-fromisoformat==2.0.3
+    # via marshmallow
 beautifulsoup4==4.14.2
     # via furo
 build==1.3.0
@@ -28,6 +30,15 @@ click==8.2.1
     # via
     #   edgetest
     #   pip-tools
+<<<<<<< HEAD
+=======
+    #   prefect
+cloudpickle==3.1.2
+    # via
+    #   dask
+    #   distributed
+    #   prefect
+>>>>>>> ad6e57b (build: adding time-machine to the docs extra)
 colorama==0.4.6
     # via commitizen
 commitizen==4.9.1
@@ -68,6 +79,13 @@ idna==3.11
     # via requests
 imagesize==1.4.1
     # via sphinx
+<<<<<<< HEAD
+=======
+importlib-metadata==8.7.0
+    # via dask
+importlib-resources==6.5.2
+    # via prefect
+>>>>>>> ad6e57b (build: adding time-machine to the docs extra)
 iniconfig==2.3.0
     # via pytest
 jinja2==3.1.6
@@ -80,6 +98,15 @@ kiwisolver==1.4.9
     # via matplotlib
 markupsafe==3.0.3
     # via jinja2
+<<<<<<< HEAD
+=======
+marshmallow==4.1.0
+    # via
+    #   marshmallow-oneofschema
+    #   prefect
+marshmallow-oneofschema==3.2.0
+    # via prefect
+>>>>>>> ad6e57b (build: adding time-machine to the docs extra)
 matplotlib==3.10.7
     # via lazyscribe (pyproject.toml)
 mypy==1.18.2
@@ -129,6 +156,11 @@ prompt-toolkit==3.0.51
     # via
     #   commitizen
     #   questionary
+<<<<<<< HEAD
+=======
+psutil==7.1.3
+    # via distributed
+>>>>>>> ad6e57b (build: adding time-machine to the docs extra)
 pygments==2.19.2
     # via
     #   accessible-pygments
@@ -167,7 +199,14 @@ pyyaml==6.0.3
 questionary==2.1.1
     # via commitizen
 requests==2.32.5
+<<<<<<< HEAD
     # via sphinx
+=======
+    # via
+    #   docker
+    #   prefect
+    #   sphinx
+>>>>>>> ad6e57b (build: adding time-machine to the docs extra)
 ruff==0.14.3
     # via lazyscribe (pyproject.toml)
 scikit-learn==1.7.2
@@ -208,7 +247,15 @@ sphinxcontrib-qthelp==2.0.0
 sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
 tabulate==0.9.0
+<<<<<<< HEAD
     # via edgetest
+=======
+    # via
+    #   edgetest
+    #   prefect
+tblib==3.2.1
+    # via distributed
+>>>>>>> ad6e57b (build: adding time-machine to the docs extra)
 termcolor==3.2.0
     # via commitizen
 text-unidecode==1.3
@@ -239,6 +286,10 @@ typing-extensions==4.15.0
     #   beautifulsoup4
     #   commitizen
     #   exceptiongroup
+<<<<<<< HEAD
+=======
+    #   marshmallow
+>>>>>>> ad6e57b (build: adding time-machine to the docs extra)
     #   mypy
     #   virtualenv
 tzdata==2025.2
@@ -257,3 +308,10 @@ wheel==0.45.1
     # via pip-tools
 wrapt==2.0.0
     # via deprecated
+<<<<<<< HEAD
+=======
+zict==3.0.0
+    # via distributed
+zipp==3.23.0
+    # via importlib-metadata
+>>>>>>> ad6e57b (build: adding time-machine to the docs extra)
