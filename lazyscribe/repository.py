@@ -322,6 +322,11 @@ class Repository:
                 key=lambda x: x.created_at,
             )
 
+        if versions[0] == versions[1]:
+            LOG.warning(
+                f"Only version '{versions[0].version!s}' was supplied for comparison"
+            )
+
         raw_version_data = []
         for art in versions:
             if art.dirty:

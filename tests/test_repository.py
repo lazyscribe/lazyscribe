@@ -2,6 +2,7 @@
 
 import difflib
 import json
+import logging
 import sys
 import warnings
 import zoneinfo
@@ -612,6 +613,40 @@ def test_version_diff_specified(tmp_path):
     )
 
     assert out == expected
+
+
+def test_version_diff_identical(tmp_path, caplog):
+    """Test raising a warning when a single version is accidentally specified."""
+    caplog.set_level = logging.WARNING
+    location = tmp_path / "my-repository"
+    location.mkdir()
+    repository_location = location / "repository.json"
+
+    repository = Repository(repository_location)
+    with time_machine.travel(
+        datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC"))
+    ):
+        repository.log_artifact("my-data", [{"a": 1}], handler="json", indent=4)
+
+    with time_machine.travel(
+        datetime(2025, 1, 21, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC"))
+    ):
+        repository.log_artifact("my-data", [{"a": 2}], handler="json", indent=4)
+
+    with time_machine.travel(
+        datetime(2025, 1, 22, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC"))
+    ):
+        repository.log_artifact(
+            "my-data", [{"a": 2}, {"a": 1}], handler="json", indent=4
+        )
+        repository.save()
+
+    out = repository.get_version_diff("my-data", 2)
+
+    assert out == ""
+    assert len(caplog.records) == 1
+    assert caplog.records[0].levelname == "WARNING"
+    assert caplog.records[0].message == "Only version '2' was supplied for comparison"
 
 
 def test_repository_append_mode_deprecation(tmp_path):
