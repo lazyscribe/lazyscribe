@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import difflib
 import json
 import logging
 import warnings
@@ -16,7 +17,7 @@ import fsspec
 from lazyscribe._utils import serialize_artifacts, utcnow, validate_artifact_environment
 from lazyscribe.artifacts import _get_handler
 from lazyscribe.artifacts.base import Artifact
-from lazyscribe.exception import ReadOnlyError, SaveError
+from lazyscribe.exception import ArtifactLoadError, ReadOnlyError, SaveError
 
 LOG = logging.getLogger(__name__)
 
@@ -272,6 +273,80 @@ class Repository:
 
         return next(serialize_artifacts([artifact]))
 
+    def get_version_diff(
+        self,
+        name: str,
+        version: datetime
+        | str
+        | int
+        | tuple[datetime | str | int, datetime | str | int],
+        match: Literal["asof", "exact"] = "exact",
+    ) -> str:
+        """Generate the unified diff between versions of the same artifact.
+
+        Parameters
+        ----------
+        name : str
+            The name of the artifact to compare.
+        versions : datetime | str | int | tuple[datetime | str | int, datetime | str | int]
+            The versions to compare. If a single version is provided, the artifact will
+            be compared to the latest available artifact. A tuple specifies the two versions
+            to compare.
+        match : {"asof", "exact"}, optional (default "exact")
+            Matching logic. Only relevant for ``str`` and ``datetime.datetime`` values.
+            ``exact`` will provide an artifact with the exact ``created_at``
+            value provided. ``asof`` will provide the most recent version as of the
+            ``version`` value.
+
+        Raises
+        ------
+        lazyscribe.exception.ArtifactLoadError
+            Raised if the artifact does not exist on the filesystem yet.
+        ValueError
+            Raised if the provided artifact(s) represent binary files.
+
+        Returns
+        -------
+        str
+            Concatenated output from :py:meth:`difflib.unified_diff`.
+        """
+        if not isinstance(version, tuple):
+            # Retrieve the specified and the latest version
+            versions = [
+                self._search_artifact_versions(name, version, match),
+                self._search_artifact_versions(name, None, match),
+            ]
+        else:
+            versions = sorted(
+                [self._search_artifact_versions(name, ver, match) for ver in version],
+                key=lambda x: x.created_at,
+            )
+
+        if versions[0] == versions[1]:
+            LOG.warning(
+                f"Only version '{versions[0].version!s}' was supplied for comparison"
+            )
+
+        raw_version_data = []
+        for art in versions:
+            if art.dirty:
+                msg = (
+                    "Artifact version not found on the filesystem. Please call"
+                    " `Repository.save` before calling this method."
+                )
+                raise ArtifactLoadError(msg)
+            if art.binary:
+                msg = (
+                    f"Version {version} of '{name}' is written to the filesystem "
+                    f"using binary handler '{art.alias}'. Binary file formats cannot"
+                    "be compared using diffs."
+                )
+                raise ValueError(msg)
+            with self.fs.open(str(self.dir / art.name / art.fname), "r") as buf:
+                raw_version_data.append(buf.read().splitlines())
+
+        return "\n".join(list(difflib.unified_diff(*raw_version_data)))
+
     def save(self) -> None:
         """Save the repository data.
 
@@ -385,6 +460,9 @@ class Repository:
                     ) from None
             elif match == "asof":
                 try:
+                    LOG.info(
+                        f"Searching for the latest version of '{name}' as of {version!s}..."
+                    )
                     if version < artifacts_matching_name[0].created_at:
                         msg = (
                             f"Version {version!s} predates the earliest version "
@@ -398,6 +476,9 @@ class Repository:
                             version >= art.created_at
                             and version < artifacts_matching_name[idx + 1].created_at
                         )
+                    )
+                    LOG.info(
+                        f"Found version {artifact.version} (created {artifact.created_at!s})"
                     )
                 except IndexError:
                     # Get latest

@@ -913,6 +913,7 @@ docs = [
     { name = "sphinx", version = "8.2.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "sphinx-gallery" },
     { name = "sphinx-inline-tabs" },
+    { name = "time-machine" },
 ]
 qa = [
     { name = "edgetest" },
@@ -959,6 +960,7 @@ requires-dist = [
     { name = "sphinx", marker = "extra == 'docs'" },
     { name = "sphinx-gallery", marker = "extra == 'docs'" },
     { name = "sphinx-inline-tabs", marker = "extra == 'docs'" },
+    { name = "time-machine", marker = "extra == 'docs'" },
     { name = "time-machine", marker = "extra == 'tests'" },
     { name = "types-python-slugify", marker = "extra == 'qa'" },
     { name = "uv", marker = "extra == 'build'" },
