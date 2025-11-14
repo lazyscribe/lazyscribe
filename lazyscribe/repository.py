@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import difflib
 import json
 import logging
@@ -402,6 +403,55 @@ class Repository:
                         UserWarning,
                         stacklevel=2,
                     )
+
+    def filter(
+        self, version: datetime | str | list[tuple[str, datetime | str | int]]
+    ) -> Repository:
+        """Filter a repository.
+
+        This method returns a new, read-only object with a subset of the input artifacts.
+        Use this method to truncate a repository to a collection of artifacts relevant to
+        a given use case.
+
+        Parameters
+        ----------
+        version : datetime.datetime | str | list[tuple[str, datetime.datetime | str | int]]
+            The version corresponding to the output version of each artifact. If a datetime
+            or string is provided, this method will do an ``asof`` search for each artifact.
+
+            If a list is provided, it will be treated as a list of exact versions to load.
+
+        Returns
+        -------
+        Repository
+            A read-only copy of the existing repository with one version per artifact.
+        """
+        new_ = copy.copy(self)
+        new_.mode = "r"
+        all_artifacts_ = {art.name for art in new_.artifacts}
+
+        new_.artifacts = []
+        match version:
+            case datetime() | str():
+                for art in all_artifacts_:
+                    try:
+                        latest = self._search_artifact_versions(
+                            name=art, version=version, match="asof"
+                        )
+                        new_.artifacts.append(latest)
+                    except ValueError:
+                        LOG.warning(
+                            f"Artifact '{art}' does not have a version that predates {version!s}"
+                        )
+            case list():
+                for art, ver in version:
+                    new_.artifacts.append(
+                        self._search_artifact_versions(
+                            name=art, version=ver, match="exact"
+                        )
+                    )
+
+        return new_
 
     def _search_artifact_versions(
         self,

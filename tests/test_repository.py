@@ -649,6 +649,62 @@ def test_version_diff_identical(tmp_path, caplog):
     assert caplog.records[0].message == "Only version '2' was supplied for comparison"
 
 
+def test_repository_filter(tmp_path, caplog):
+    """Test filtering a repository."""
+    caplog.set_level = logging.WARNING
+    location = tmp_path / "my-repository"
+    location.mkdir()
+    repository_location = location / "repository.json"
+
+    repository = Repository(repository_location)
+    # Log first version of our first two artifacts
+    with time_machine.travel(
+        datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC"))
+    ):
+        repository.log_artifact("my-data", [{"a": 1}], handler="json")
+        repository.log_artifact("my-features", [0], handler="json")
+
+    with time_machine.travel(
+        datetime(2025, 1, 21, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC"))
+    ):
+        repository.log_artifact("my-data", [{"a": 2}], handler="json")
+        repository.log_artifact("my-features", [0, 1], handler="json")
+
+    with time_machine.travel(
+        datetime(2025, 1, 22, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC"))
+    ):
+        repository.log_artifact("my-metadata", {"process_ver": 1.0}, handler="json")
+
+    repository.save()
+
+    # Filter the repository
+    new_ = repository.filter(datetime(2025, 1, 21, 0, 0, 0))
+
+    assert len(new_.artifacts) == 2
+    assert "my-metadata" not in new_
+    assert len(caplog.records) == 1
+    assert caplog.records[0].levelname == "WARNING"
+    assert (
+        caplog.records[0].message
+        == "Artifact 'my-metadata' does not have a version that predates 2025-01-21 00:00:00"
+    )
+    assert new_["my-data"] == repository._search_artifact_versions("my-data", 0)
+    assert new_["my-features"] == repository._search_artifact_versions("my-features", 0)
+
+    # Now, filter the original repository with an explicit list of artifacts and versions
+    artifacts_ = [("my-features", 1), ("my-metadata", 0)]
+    new_spec_ = repository.filter(artifacts_)
+
+    assert len(new_spec_.artifacts) == 2
+    assert "my-data" not in new_spec_
+    assert new_spec_["my-features"] == repository._search_artifact_versions(
+        "my-features", 1
+    )
+    assert new_spec_["my-metadata"] == repository._search_artifact_versions(
+        "my-metadata", 0
+    )
+
+
 def test_repository_append_mode_deprecation(tmp_path):
     """Test reading a repository in append mode."""
     with warnings.catch_warnings(record=True) as w:
