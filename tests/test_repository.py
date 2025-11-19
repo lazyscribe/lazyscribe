@@ -711,6 +711,36 @@ def test_repository_filter(tmp_path, caplog):
     )
 
 
+def test_repository_release():
+    """Test creating a release from a repository."""
+    repository = Repository()
+    with time_machine.travel(
+        datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC"))
+    ):
+        repository.log_artifact("my-data", [{"a": 1}], handler="json")
+        repository.log_artifact("my-features", [0], handler="json")
+
+    with time_machine.travel(
+        datetime(2025, 1, 21, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC"))
+    ):
+        repository.log_artifact("my-data", [{"a": 2}], handler="json")
+
+    # Generate the release
+    with time_machine.travel(
+        datetime(2025, 6, 1, 0, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+    ):
+        release = repository.create_release("v0.1.0")
+
+    assert release == {
+        "tag": "v0.1.0",
+        "created_at": datetime(2025, 6, 1, 0, 0, 0),
+        "artifacts": [
+            ("my-data", 1),
+            ("my-features", 0),
+        ],
+    }
+
+
 def test_repository_append_mode_deprecation(tmp_path):
     """Test reading a repository in append mode."""
     with warnings.catch_warnings(record=True) as w:
