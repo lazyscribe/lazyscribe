@@ -472,37 +472,6 @@ class Repository:
 
         return new_
 
-    def create_release(self, tag: str) -> dict:
-        """Create a release.
-
-        A release is a collection of specific artifact versions. It is generated
-        by taking the latest available version of each artifact.
-
-        Parameters
-        ----------
-        tag : str
-            A string descriptor of the tag. Commonly coincides with semantic or calendar
-            versioning.
-
-        Returns
-        -------
-        dict
-            A dictionary with the following information:
-
-            * ``tag``: the user-provided tag for the release,
-            * ``created_at``: the creation timestamp for the release.
-            * ``artifacts``: a list of lists. The first entry in each element is the name of
-              the artifact and the second entry is the integer version.
-        """
-        all_artifacts_ = sorted({art.name for art in self.artifacts})
-
-        latest: list[tuple[str, int]] = []
-        for name in all_artifacts_:
-            art = self._search_artifact_versions(name)
-            latest.append((name, art.version))
-
-        return {"tag": tag, "created_at": utcnow(), "artifacts": latest}
-
     def _search_artifact_versions(
         self,
         name: str,
