@@ -115,3 +115,62 @@ If you log the artifact to an experiment and call :py:meth:`lazyscribe.experimen
 calling :py:meth:`lazyscribe.project.Project.save`, it will behave exactly as if you called
 :py:meth:`lazyscribe.repository.Repository.log_artifact` -- *you* will be responsible for calling
 :py:meth:`lazyscribe.repository.Repository.save`.
+
+Create associated groups of artifact-versions
+---------------------------------------------
+
+.. important::
+
+    New in 2.0.0.
+
+While versioning individual artifacts is useful, oftentimes we want to create groups of related assets. These assets
+have implicit compatibility, allowing users to time-travel through an entire deployment. We have implemented this
+type of functionality through *releases*.
+
+All we need is a repository:
+
+.. code-block:: python
+
+    from lazyscribe import Repository
+    from lazyscribe import release as lzr
+
+    repository = Repository(..., mode="r")
+    release = lzr.create_release(repository, "v0.1.0")
+
+The output :py:class:`lazyscribe.release.Release` object contains 3 attributes:
+
+* ``tag``: a string identifier for the release. Commonly coincides with semantic versioning.
+* ``artifacts``: a list of the latest available artifacts and their version in the repository.
+* ``created_at``: a creation timestamp for the release.
+
+Then, we can dump this release to a file:
+
+.. code-block:: python
+
+    with open("releases.json", "w") as outfile:
+        lzr.dump([release], outfile)
+
+Now, if someone wants to reference the collective group of individual artifact-versions associated with this
+release, they can
+
+#. open the repository,
+#. load the release, and
+#. filter the repository.
+
+In action:
+
+.. code-block:: python
+
+    complete_repository = Repository(..., mode="r")
+    with open("releases.json") as infile:
+        releases = lzr.load(infile)
+
+    my_release = lzr.find_release(releases, "v0.1.0")
+
+    filtered_repo_ = repository.filter(my_release.artifacts)
+
+``filtered_repo_`` is a read-only version of the original repository object. It will have, at maximum, one
+version for each artifact present in the original repository.
+
+Just like artifacts themselves, :py:meth:`lazyscribe.release.find_release` supports ``asof`` matches based
+on the release creation timestamp.
