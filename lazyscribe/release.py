@@ -1,5 +1,7 @@
 """Repository releases."""
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from typing import Literal
@@ -44,6 +46,26 @@ class Release:
             "artifacts": self.artifacts,
             "created_at": self.created_at.isoformat(timespec="seconds"),
         }
+
+    @classmethod
+    def from_dict(cls, info: dict) -> Release:
+        """Convert a serialized representation of the release back to a python object.
+
+        Parameters
+        ----------
+        info : dict
+            The dictionary representation of the release.
+
+        Returns
+        -------
+        lazyscribe.release.Release
+            The new release object.
+        """
+        return cls(
+            tag=info["tag"],
+            artifacts=info["artifacts"],
+            created_at=datetime.fromisoformat(info["created_at"]),
+        )
 
 
 def create_release(repository: Repository, tag: str) -> Release:

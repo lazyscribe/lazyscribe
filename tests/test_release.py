@@ -44,6 +44,18 @@ def test_repository_release():
         }
 
 
+def test_load_release():
+    """Test creating a release from a dictionary."""
+    release = Release(
+        tag="v0.1.0", artifacts=[], created_at=datetime(2025, 1, 1, 0, 0, 0)
+    )
+    new_ = Release.from_dict(
+        {"tag": "v0.1.0", "artifacts": [], "created_at": "2025-01-01T00:00:00"}
+    )
+
+    assert new_ == release
+
+
 def test_repository_release_filter():
     """Test creating a repository release and using it to filter the repository."""
     repository = Repository()
