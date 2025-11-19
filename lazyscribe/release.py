@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import json
 import logging
 from datetime import datetime
-from typing import Literal
+from io import IOBase
+from typing import Any, Literal
 
 from attrs import Factory, define, field
 
@@ -178,3 +180,114 @@ def find_release(
     LOG.info(f"Found release '{out.tag}' ({out.created_at!s})")
 
     return out
+
+
+def dump(obj: list[Release], fp: IOBase, **kwargs: Any) -> None:
+    """Write the releases data.
+
+    .. code-block:: python
+
+        from lazyscribe import release as lzr
+
+        releases: list[lazyscribe.release.Release]
+        with open("releases.json", "w") as outfile:
+            lzr.dump(releases, outfile)
+
+    Parameters
+    ----------
+    obj : list[lazyscribe.release.Release]
+        The list of release objects.
+    fp : IOBase
+        A buffer we can write to.
+    **kwargs
+        Keyword arguments for ``json.dump``.
+    """
+    json.dump([ver.to_dict() for ver in obj], fp, **kwargs)
+
+
+def dumps(obj: list[Release], **kwargs: Any) -> str:
+    """Convert a list of releases to a JSON-serialized string.
+
+    To prevent namespace confusion, we recommend importing this function
+    through an alias:
+
+    .. code-block:: python
+
+        from lazyscribe import release as lzr
+
+        releases: list[lzr.Release]
+        out = lzr.dumps(releases)
+
+    Parameters
+    ----------
+    obj : list[lazyscribe.release.Release]
+        The list of release objects.
+    **kwargs
+        Keyword arguments for ``json.dumps``.
+
+    Returns
+    -------
+    str
+        The JSON-serialized string.
+    """
+    return json.dumps([ver.to_dict() for ver in obj], **kwargs)
+
+
+def load(fp: IOBase, **kwargs: Any) -> list[Release]:
+    """Generate a list of releases from a file buffer.
+
+    To prevent namespace confusion, we recommend importing this function
+    through an alias:
+
+    .. code-block:: python
+
+        from lazyscribe import release as lzr
+
+        with open("releases.json") as infile:
+            releases = lzr.load(infile)
+
+    Parameters
+    ----------
+    fp : file-like object
+        A buffer that we can read using JSON.
+    **kwargs
+        Keyword arguments for ``json.load``
+
+    Returns
+    -------
+    list[lazyscribe.release.Release]
+        A list of releases.
+    """
+    json_data_ = json.load(fp, **kwargs)
+
+    return [Release.from_dict(ver) for ver in json_data_]
+
+
+def loads(s: str, **kwargs: Any) -> list[Release]:
+    """Generate a list of releases from a string.
+
+    To prevent namespace confusion, we recommend importing this module
+    through an alias:
+
+    .. code-block:: python
+
+        from lazyscribe import release as lzr
+
+        mydata = '[{"tag": "v0.1.0", "artifacts": [], "created_at": "2025-01-01T00:00:00"}]'
+        releases = lzr.loads(mydata)
+
+    Parameters
+    ----------
+    s : str
+        The string representation of a JSON file.
+    **kwargs
+        Keyword arguments for ``json.loads``
+
+    Returns
+    -------
+    list[lazyscribe.release.Release]
+        A list of releases.
+    """
+    json_data_ = json.loads(s, **kwargs)
+
+    return [Release.from_dict(ver) for ver in json_data_]
