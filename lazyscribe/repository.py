@@ -423,7 +423,7 @@ class Repository:
 
         Returns
         -------
-        Repository
+        lazyscribe.repository.Repository
             A read-only copy of the existing repository with one version per artifact.
         """
         new_ = copy.copy(self)
