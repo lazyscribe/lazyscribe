@@ -140,8 +140,8 @@ All we need is a repository:
 The output :py:class:`lazyscribe.release.Release` object contains 3 attributes:
 
 * ``tag``: a string identifier for the release. Commonly coincides with semantic versioning.
-* ``artifacts``: a list of the latest available artifacts and their version in the repository.
-* ``created_at``: a creation timestamp for the release.
+* ``artifacts``: a list of the latest available artifact names and versions in the repository.
+* ``created_at``: a creation timestamp for the release (in UTC).
 
 Then, we can dump this release to a file:
 
@@ -162,7 +162,7 @@ In action:
 .. code-block:: python
 
     complete_repository = Repository(..., mode="r")
-    with open("releases.json") as infile:
+    with open("releases.json", "r") as infile:
         releases = lzr.load(infile)
 
     my_release = lzr.find_release(releases, "v0.1.0")

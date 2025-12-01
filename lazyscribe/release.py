@@ -27,8 +27,8 @@ class Release:
         or calendar versioning.
     artifacts : list[tuple[str, int]]
         A list of the latest available artifacts and versions in the source repository.
-    created_at : datetime.datetime
-        The creation timestamp for the release.
+    created_at : datetime.datetime, optional (default ``lazyscribe._utils.utcnow()``)
+        The creation timestamp for the release (in UTC).
     """
 
     tag: str = field()
@@ -50,7 +50,7 @@ class Release:
         }
 
     @classmethod
-    def from_dict(cls, info: dict) -> Release:
+    def from_dict(cls, info: dict[str, Any]) -> Release:
         """Convert a serialized representation of the release back to a python object.
 
         Parameters
@@ -204,7 +204,7 @@ def dump(obj: list[Release], fp: IOBase, **kwargs: Any) -> None:
     ----------
     obj : list[lazyscribe.release.Release]
         The list of release objects.
-    fp : IOBase
+    fp : io.IOBase
         A buffer we can write to.
     **kwargs
         Keyword arguments for ``json.dump``.
