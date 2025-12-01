@@ -14,7 +14,12 @@ import pytest
 import time_machine
 
 from lazyscribe.artifacts.base import Artifact
-from lazyscribe.exception import ArtifactLoadError, ReadOnlyError, SaveError
+from lazyscribe.exception import (
+    ArtifactLoadError,
+    ReadOnlyError,
+    SaveError,
+    VersionNotFoundError,
+)
 from lazyscribe.repository import Repository
 from tests.conftest import TestArtifact
 
@@ -310,21 +315,21 @@ def test_save_repository_multiple_artifact(tmp_path):
 
     # Test getting nonexisting version raises error
 
-    with pytest.raises(ValueError):
+    with pytest.raises(VersionNotFoundError):
         repository_read.load_artifact("my-dict", version=2)
-    with pytest.raises(ValueError):
+    with pytest.raises(VersionNotFoundError):
         repository_read.load_artifact("my-dict", version="2025-01-22T12:23:32")
-    with pytest.raises(ValueError):
+    with pytest.raises(VersionNotFoundError):
         repository_read.load_artifact(
             "my-dict", version=datetime(2025, 1, 22, 13, 23, 30)
         )
-    with pytest.raises(ValueError):
+    with pytest.raises(VersionNotFoundError):
         repository_read.load_artifact(
             "my-dict2", version=datetime(2025, 1, 22, 13, 23, 30)
         )
-    with pytest.raises(ValueError):
+    with pytest.raises(VersionNotFoundError):
         repository_read.load_artifact("my-dict2", version=1)
-    with pytest.raises(ValueError):
+    with pytest.raises(VersionNotFoundError):
         repository_read.load_artifact("my-dict2", version="2025-01-22T12:23:32")
 
     assert "my-dict" in repository_read
@@ -467,7 +472,7 @@ def test_repository_asof_search(tmp_path):
     repository.save()
 
     # Try loading with date before first artifact
-    with pytest.raises(ValueError) as exc_info:
+    with pytest.raises(VersionNotFoundError) as exc_info:
         repository.load_artifact(
             name="my-dict", version=datetime(2024, 12, 31), match="asof"
         )
@@ -678,6 +683,7 @@ def test_repository_filter(tmp_path, caplog):
     repository.save()
 
     # Filter the repository
+    repository = Repository(repository_location, mode="r")
     new_ = repository.filter(datetime(2025, 1, 21, 0, 0, 0))
 
     assert len(new_.artifacts) == 2
