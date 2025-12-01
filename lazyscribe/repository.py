@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import copy
+import difflib
 import json
 import logging
 import warnings
@@ -16,7 +18,13 @@ import fsspec
 from lazyscribe._utils import serialize_artifacts, utcnow, validate_artifact_environment
 from lazyscribe.artifacts import _get_handler
 from lazyscribe.artifacts.base import Artifact
-from lazyscribe.exception import ReadOnlyError, SaveError
+from lazyscribe.exception import (
+    ArtifactLoadError,
+    InvalidVersionError,
+    ReadOnlyError,
+    SaveError,
+    VersionNotFoundError,
+)
 
 LOG = logging.getLogger(__name__)
 
@@ -272,6 +280,80 @@ class Repository:
 
         return next(serialize_artifacts([artifact]))
 
+    def get_version_diff(
+        self,
+        name: str,
+        version: datetime
+        | str
+        | int
+        | tuple[datetime | str | int, datetime | str | int],
+        match: Literal["asof", "exact"] = "exact",
+    ) -> str:
+        """Generate the unified diff between versions of the same artifact.
+
+        Parameters
+        ----------
+        name : str
+            The name of the artifact to compare.
+        versions : datetime | str | int | tuple[datetime | str | int, datetime | str | int]
+            The versions to compare. If a single version is provided, the artifact will
+            be compared to the latest available artifact. A tuple specifies the two versions
+            to compare.
+        match : {"asof", "exact"}, optional (default "exact")
+            Matching logic. Only relevant for ``str`` and ``datetime.datetime`` values.
+            ``exact`` will provide an artifact with the exact ``created_at``
+            value provided. ``asof`` will provide the most recent version as of the
+            ``version`` value.
+
+        Raises
+        ------
+        lazyscribe.exception.ArtifactLoadError
+            Raised if the artifact does not exist on the filesystem yet.
+        ValueError
+            Raised if the provided artifact(s) represent binary files.
+
+        Returns
+        -------
+        str
+            Concatenated output from :py:meth:`difflib.unified_diff`.
+        """
+        if not isinstance(version, tuple):
+            # Retrieve the specified and the latest version
+            versions = [
+                self._search_artifact_versions(name, version, match),
+                self._search_artifact_versions(name, None, match),
+            ]
+        else:
+            versions = sorted(
+                [self._search_artifact_versions(name, ver, match) for ver in version],
+                key=lambda x: x.created_at,
+            )
+
+        if versions[0] == versions[1]:
+            LOG.warning(
+                f"Only version '{versions[0].version!s}' was supplied for comparison"
+            )
+
+        raw_version_data = []
+        for art in versions:
+            if art.dirty:
+                msg = (
+                    "Artifact version not found on the filesystem. Please call"
+                    " `Repository.save` before calling this method."
+                )
+                raise ArtifactLoadError(msg)
+            if art.binary:
+                msg = (
+                    f"Version {version} of '{name}' is written to the filesystem "
+                    f"using binary handler '{art.alias}'. Binary file formats cannot"
+                    "be compared using diffs."
+                )
+                raise ValueError(msg)
+            with self.fs.open(str(self.dir / art.name / art.fname), "r") as buf:
+                raw_version_data.append(buf.read().splitlines())
+
+        return "\n".join(list(difflib.unified_diff(*raw_version_data)))
+
     def save(self) -> None:
         """Save the repository data.
 
@@ -328,6 +410,68 @@ class Repository:
                         stacklevel=2,
                     )
 
+    def filter(
+        self, version: datetime | str | list[tuple[str, datetime | str | int]]
+    ) -> Repository:
+        """Filter a repository.
+
+        This method returns a new, read-only object with a subset of the input artifacts.
+        Use this method to truncate a repository to a collection of artifacts relevant to
+        a given use case.
+
+        Parameters
+        ----------
+        version : datetime.datetime | str | list[tuple[str, datetime.datetime | str | int]]
+            The version corresponding to the output version of each artifact. If a datetime
+            or string is provided, this method will do an ``asof`` search for each artifact.
+
+            If a list is provided, it will be treated as a list of exact versions to load.
+
+        Returns
+        -------
+        lazyscribe.repository.Repository
+            A read-only copy of the existing repository with one version per artifact.
+
+        Raises
+        ------
+        RuntimeError
+            Raised if the current repository object has artifacts that have not been saved
+            to the filesystem.
+        """
+        if self.mode != "r":
+            raise RuntimeError("Repository must be in read-only mode for filtering.")
+        if any(art.dirty for art in self.artifacts):
+            raise RuntimeError(
+                "At least one artifact has changed since it was last saved. Please save your "
+                "repository and re-open it in read-only mode before filtering."
+            )
+
+        new_ = copy.copy(self)
+        all_artifacts_ = {art.name for art in new_.artifacts}
+
+        new_.artifacts = []
+        match version:
+            case datetime() | str():
+                for art in all_artifacts_:
+                    try:
+                        latest = self._search_artifact_versions(
+                            name=art, version=version, match="asof"
+                        )
+                        new_.artifacts.append(latest)
+                    except VersionNotFoundError:
+                        LOG.warning(
+                            f"Artifact '{art}' does not have a version that predates {version!s}"
+                        )
+            case list():
+                for art, ver in version:
+                    new_.artifacts.append(
+                        self._search_artifact_versions(
+                            name=art, version=ver, match="exact"
+                        )
+                    )
+
+        return new_
+
     def _search_artifact_versions(
         self,
         name: str,
@@ -355,8 +499,12 @@ class Repository:
         Raises
         ------
         ValueError
-            Raised on invalid ``match`` value.
-            Raised if no valid artifact was found.
+            Raised if there are no artifacts with the provided name.
+            Raised if ``match`` is an invalid value.
+        VersionNotFoundError
+            Raised if the version cannot be found.
+        InvalidVersionError
+            Raised if the version cannot be coerced. Only relevant for string values.
         """
         artifacts_matching_name = sorted(
             [art for art in self.artifacts if art.name == name],
@@ -364,11 +512,15 @@ class Repository:
         )
         if not artifacts_matching_name:
             raise ValueError(f"No artifact with name {name}")
-        version = (
-            datetime.strptime(version, "%Y-%m-%dT%H:%M:%S")
-            if isinstance(version, str)
-            else version
-        )
+        try:
+            version = (
+                datetime.strptime(version, "%Y-%m-%dT%H:%M:%S")
+                if isinstance(version, str)
+                else version
+            )
+        except ValueError as exc:
+            msg = f"Invalid version identifier provided. {version} is not in the format YYYY-MM-DDTHH:MM:SS"
+            raise InvalidVersionError(msg) from exc
         if version is None:
             artifact = artifacts_matching_name[-1]
         elif isinstance(version, datetime):
@@ -380,17 +532,20 @@ class Repository:
                         if art.created_at == version
                     )
                 except StopIteration:
-                    raise ValueError(
+                    raise VersionNotFoundError(
                         f"No artifact named {name} with version {version}"
                     ) from None
             elif match == "asof":
                 try:
+                    LOG.info(
+                        f"Searching for the latest version of '{name}' as of {version!s}..."
+                    )
                     if version < artifacts_matching_name[0].created_at:
                         msg = (
                             f"Version {version!s} predates the earliest version "
                             f"{artifacts_matching_name[0].created_at!s}."
                         )
-                        raise ValueError(msg) from None
+                        raise VersionNotFoundError(msg) from None
                     artifact = next(
                         art
                         for idx, art in enumerate(artifacts_matching_name)
@@ -398,6 +553,9 @@ class Repository:
                             version >= art.created_at
                             and version < artifacts_matching_name[idx + 1].created_at
                         )
+                    )
+                    LOG.info(
+                        f"Found version {artifact.version} (created {artifact.created_at!s})"
                     )
                 except IndexError:
                     # Get latest
@@ -411,7 +569,7 @@ class Repository:
                 # Integer version is 0-indexed
                 artifact = artifacts_matching_name[version]
             except IndexError:
-                raise ValueError(
+                raise VersionNotFoundError(
                     f"No artifact named {name} with version {version}"
                 ) from None
 

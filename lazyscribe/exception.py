@@ -23,3 +23,11 @@ class ArtifactLogError(ArtifactError):
 
 class ArtifactLoadError(ArtifactError):
     """Raised when an artifact cannot be loaded."""
+
+
+class VersionNotFoundError(LazyscribeError):
+    """Raised when the version cannot be found."""
+
+
+class InvalidVersionError(LazyscribeError):
+    """Raised when an invalid version is provided."""

@@ -40,11 +40,11 @@ Contents
     how-to/artifact
     how-to/custom-artifact
     how-to/version-artifacts
+    how-to/filter-artifacts
     how-to/dependencies
     how-to/external-fs
     how-to/readonly
     how-to/merge
-    how-to/prefect
 
 .. toctree::
     :maxdepth: 2
