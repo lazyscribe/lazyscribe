@@ -27,7 +27,7 @@ classifiers = [
 ]
 dependencies = [
     "attrs>=21.2.0,<=25.4.0",
-    "fsspec>=0.4.0,<=2025.9.0",
+    "fsspec>=0.4.0,<=2025.10.0",
     "python-slugify>=5.0.0,<=8.0.4",
 ]
 
@@ -62,6 +62,7 @@ optional-dependencies.qa = [
 optional-dependencies.tests = [
     "pytest",
     "pytest-cov",
+    "requests",
     "scikit-learn",
     "time-machine",
 ]

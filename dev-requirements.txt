@@ -58,7 +58,7 @@ filelock==3.20.0
     # via virtualenv
 fonttools==4.61.0
     # via matplotlib
-fsspec==2025.9.0
+fsspec==2025.10.0
     # via lazyscribe (pyproject.toml)
 furo==2025.9.25
     # via lazyscribe (pyproject.toml)
@@ -168,7 +168,9 @@ pyyaml==6.0.3
 questionary==2.1.1
     # via commitizen
 requests==2.32.5
-    # via sphinx
+    # via
+    #   lazyscribe (pyproject.toml)
+    #   sphinx
 ruff==0.14.7
     # via lazyscribe (pyproject.toml)
 scikit-learn==1.7.2
