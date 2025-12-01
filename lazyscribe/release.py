@@ -89,8 +89,15 @@ def create_release(repository: Repository, tag: str) -> Release:
     lazyscribe.release.Release
         The release object.
     """
-    all_artifacts_ = sorted({art.name for art in repository.artifacts})
+    if repository.mode != "r":
+        raise RuntimeError("Repository must be in read-only mode for filtering.")
+    if any(art.dirty for art in repository.artifacts):
+        raise RuntimeError(
+            "At least one artifact has changed since it was last saved. Please save your "
+            "repository and re-open it in read-only mode before filtering."
+        )
 
+    all_artifacts_ = sorted({art.name for art in repository.artifacts})
     latest: list[tuple[str, int]] = []
     for name in all_artifacts_:
         art = repository._search_artifact_versions(name)
