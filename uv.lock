@@ -866,7 +866,7 @@ wheels = [
 
 [[package]]
 name = "lazyscribe"
-version = "2.0.0a0"
+version = "2.0.0a1"
 source = { editable = "." }
 dependencies = [
     { name = "attrs" },
@@ -893,6 +893,7 @@ dev = [
     { name = "pyproject-fmt" },
     { name = "pytest" },
     { name = "pytest-cov" },
+    { name = "requests" },
     { name = "ruff" },
     { name = "scikit-learn" },
     { name = "sphinx", version = "8.1.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
@@ -928,6 +929,7 @@ qa = [
 tests = [
     { name = "pytest" },
     { name = "pytest-cov" },
+    { name = "requests" },
     { name = "scikit-learn" },
     { name = "time-machine" },
 ]
@@ -938,7 +940,7 @@ requires-dist = [
     { name = "commitizen", marker = "extra == 'build'" },
     { name = "edgetest", marker = "extra == 'qa'" },
     { name = "edgetest-pip-tools", marker = "extra == 'qa'" },
-    { name = "fsspec", specifier = ">=0.4.0,<=2025.9.0" },
+    { name = "fsspec", specifier = ">=0.4.0,<=2025.10.0" },
     { name = "furo", marker = "extra == 'docs'" },
     { name = "lazyscribe", extras = ["build"], marker = "extra == 'dev'" },
     { name = "lazyscribe", extras = ["docs"], marker = "extra == 'dev'" },
@@ -954,6 +956,7 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'tests'" },
     { name = "pytest-cov", marker = "extra == 'tests'" },
     { name = "python-slugify", specifier = ">=5.0.0,<=8.0.4" },
+    { name = "requests", marker = "extra == 'tests'" },
     { name = "ruff", marker = "extra == 'qa'" },
     { name = "scikit-learn", marker = "extra == 'docs'" },
     { name = "scikit-learn", marker = "extra == 'tests'" },

@@ -1,3 +1,12 @@
+## v2.0.0a1 (2025-12-01)
+
+### Feat
+
+- repository release functionality (#172)
+- adding a method to filter an entire repository (#170)
+- adding a method for finding the diff between two non-binary artifacts (#166)
+- removing the prefect integration from the library (#167)
+
 ## v2.0.0a0 (2025-09-24)
 
 ### Feat
