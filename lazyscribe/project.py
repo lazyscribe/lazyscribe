@@ -33,7 +33,7 @@ class Project:
     fpath : str | pathlib.Path, optional (default "project.json")
         The location of the project file. If no project file exists, this will be the location
         of the output JSON file when ``save`` is called.
-    mode : {"r", "a", "w", "w+"}, optional (default "w")
+    mode : {"r", "a", "w", "w+"}, optional (default "a")
         The mode for opening the project.
 
         * ``r``: All existing experiments will be loaded as
@@ -70,7 +70,7 @@ class Project:
     def __init__(
         self,
         fpath: str | Path = "project.json",
-        mode: Literal["r", "a", "w", "w+"] = "w",
+        mode: Literal["r", "a", "w", "w+"] = "a",
         author: str | None = None,
         **storage_options: Any,
     ) -> None:

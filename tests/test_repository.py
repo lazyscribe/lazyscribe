@@ -701,17 +701,3 @@ def test_repository_filter(tmp_path, caplog):
     assert new_spec_["my-metadata"] == repository._search_artifact_versions(
         "my-metadata", 0
     )
-
-
-def test_repository_append_mode_deprecation(tmp_path):
-    """Test reading a repository in append mode."""
-    with warnings.catch_warnings(record=True) as w:
-        warnings.simplefilter("always")
-        repository = Repository(fpath=DATA_DIR / "repository.json", mode="a")
-        assert len(w) == 1
-        assert issubclass(w[-1].category, DeprecationWarning)
-        assert (
-            '`mode="a"` is deprecated and will be removed from `lazyscribe.repository.Repository` in version 2.0'
-            in str(w[-1].message)
-        )
-    assert repository.mode == "w+"

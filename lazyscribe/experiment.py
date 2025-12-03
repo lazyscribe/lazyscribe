@@ -69,7 +69,7 @@ class Experiment:
     short_slug : str, optional (default None)
         Slugified ``name``. Defaults to calling :py:meth:`slugify.slugify` on the ``name`` attribute.
     slug : str, optional (default None)
-        Unique identifier for the experiment. Deafults to the slugified ``name`` with the creation date
+        Unique identifier for the experiment. Defaults to the slugified ``name`` with the creation date
         appended in the format ``YYYYMMDDHHMMSS``.
     tags : list[str], optional (default [])
         Tags for filtering and identifying experiments across a project.
