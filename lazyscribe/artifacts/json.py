@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-import sys
 from datetime import datetime
 from io import IOBase
 from json import dump, load
 from typing import Any, ClassVar
 
-from attrs import define, field
+from attrs import define
 from slugify import slugify
 
 from lazyscribe._utils import utcnow
@@ -43,7 +42,6 @@ class JSONArtifact(Artifact):
     suffix: ClassVar[str] = "json"
     binary: ClassVar[bool] = False
     output_only: ClassVar[bool] = False
-    python_version: str = field()
 
     @classmethod
     def construct(
@@ -80,17 +78,12 @@ class JSONArtifact(Artifact):
             Whether or not this artifact should be saved when :py:meth:`lazyscribe.project.Project.save`
             or :py:meth:`lazyscribe.repository.Repository.save` is called. This decision is based
             on whether the artifact is new or has been updated.
-        python_version : str, optional
-            Minor Python version (e.g. ``"3.10"``).
 
         Returns
         -------
         JSONArtifact
             The artifact.
         """
-        python_version = kwargs.get("python_version") or ".".join(
-            str(i) for i in sys.version_info[:2]
-        )
         created_at = created_at or utcnow()
         return cls(
             name=name,
@@ -101,7 +94,6 @@ class JSONArtifact(Artifact):
             writer_kwargs=writer_kwargs or {},
             version=version,
             dirty=dirty,
-            python_version=python_version,
         )
 
     @classmethod
