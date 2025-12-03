@@ -391,3 +391,50 @@ def test_release_from_toml_existing(tmp_path):
             datetime(2025, 6, 1, 0, 0, 0),
         ),
     ]
+
+
+def test_release_from_toml_custom(tmp_path):
+    """Test creating a release from TOML using a custom version/format."""
+    location = tmp_path / "my-repository"
+    location.mkdir()
+    repository_location = location / "repository.json"
+
+    repository = Repository(repository_location)
+    # Log first version of our first two artifacts
+    with time_machine.travel(
+        datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC"))
+    ):
+        repository.log_artifact("my-data", [{"a": 1}], handler="json")
+        repository.log_artifact("my-features", [0], handler="json")
+
+    with time_machine.travel(
+        datetime(2025, 1, 21, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC"))
+    ):
+        repository.log_artifact("my-data", [{"a": 2}], handler="json")
+
+    repository.save()
+
+    toml_data = f"""
+    [tool.lazyscribe]
+    version = "1.0.0"
+    repositories = ["{repository_location!s}"]
+    """
+    toml_data += 'format = "v{year}.{month}.{day}"'
+
+    # create the release
+    with time_machine.travel(
+        datetime(2025, 6, 1, 0, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+    ):
+        lzr.release_from_toml(toml_data)
+
+    assert (location / "releases.json").is_file()
+    with open(location / "releases.json") as infile:
+        releases = lzr.load(infile)
+
+    assert releases == [
+        lzr.Release(
+            "v2025.6.1",
+            [["my-data", 1], ["my-features", 0]],
+            datetime(2025, 6, 1, 0, 0, 0),
+        )
+    ]
