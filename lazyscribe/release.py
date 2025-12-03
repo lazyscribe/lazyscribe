@@ -13,6 +13,7 @@ from typing import Any, Literal
 from attrs import Factory, define, field
 
 from lazyscribe._utils import utcnow
+from lazyscribe.exception import VersionNotFoundError
 from lazyscribe.repository import Repository
 
 # Conditional import of the tomli library
@@ -143,9 +144,10 @@ def find_release(
 
     Raises
     ------
+    lazyscribe.exception.VersionNotFoundError
+        Raised if a release cannot be found.
     ValueError
-        Raised if the ``tag`` or ``created_at`` cannot be found with the given
-        matching logic.
+        Raised if the specified matching logic does not match the version type specified.
     """
     out: Release
 
@@ -158,13 +160,13 @@ def find_release(
                 out = next(ver for ver in releases_ if ver.tag == tag)
             except StopIteration:
                 msg = f"Cannot find release with tag '{tag}'"
-                raise ValueError(msg) from None
+                raise VersionNotFoundError(msg) from None
         case ("exact", datetime() as created_at):
             try:
                 out = next(ver for ver in releases_ if ver.created_at == created_at)
             except StopIteration:
                 msg = f"Cannot find release with creation date of {created_at!s}"
-                raise ValueError(msg) from None
+                raise VersionNotFoundError(msg) from None
         case ("asof", str()):
             raise ValueError(
                 "Cannot perform an ``asof`` match using a tag. Please provide a "
@@ -176,7 +178,7 @@ def find_release(
                     f"Creation date {created_at!s} predates the earliest release: "
                     f"'{releases_[0].tag}' ({releases_[0].created_at!s})"
                 )
-                raise ValueError(msg)
+                raise VersionNotFoundError(msg)
             try:
                 out = next(
                     ver

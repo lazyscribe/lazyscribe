@@ -9,6 +9,7 @@ import time_machine
 
 from lazyscribe import Repository
 from lazyscribe import release as lzr
+from lazyscribe.exception import VersionNotFoundError
 
 
 def test_repository_release(tmp_path):
@@ -132,7 +133,7 @@ def test_find_release_exact_tag():
 
     assert out == releases[1]
 
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(VersionNotFoundError) as excinfo:
         lzr.find_release(releases, "v1.0.0")
 
     assert str(excinfo.value) == "Cannot find release with tag 'v1.0.0'"
@@ -149,7 +150,7 @@ def test_find_release_exact_date():
 
     assert out == releases[0]
 
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(VersionNotFoundError) as excinfo:
         lzr.find_release(releases, datetime(2025, 6, 1, 0, 0, 0))
 
     assert (
@@ -178,7 +179,7 @@ def test_find_release_asof_date():
     ]
 
     # First, try retrieving a release that predates the earliest
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(VersionNotFoundError) as excinfo:
         lzr.find_release(releases, datetime(2024, 12, 15, 0, 0, 0), match="asof")
 
     assert str(excinfo.value) == (
