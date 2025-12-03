@@ -5,7 +5,6 @@ projects and repositories.
 """
 
 import json
-import sys
 import zoneinfo
 from datetime import datetime
 
@@ -115,7 +114,6 @@ def test_promote_artifact_dirty(tmp_path):
         "fname": "features-20250120132330.json",
         "created_at": "2025-01-20T13:23:30",
         "handler": "json",
-        "python_version": ".".join(str(i) for i in sys.version_info[:2]),
         "version": 0,
     }
     assert repository.artifacts[0].value == project["my-experiment"].artifacts[0].value
@@ -154,7 +152,6 @@ def test_promote_artifact_clean(tmp_path):
         "fname": "features-20250120132330.json",
         "created_at": "2025-01-20T13:23:30",
         "handler": "json",
-        "python_version": ".".join(str(i) for i in sys.version_info[:2]),
         "version": 0,
     }
 
@@ -167,7 +164,6 @@ def test_promote_artifact_clean(tmp_path):
             "fname": "features-20250120132330.json",
             "created_at": "2025-01-20T13:23:30",
             "handler": "json",
-            "python_version": ".".join(str(i) for i in sys.version_info[:2]),
             "version": 0,
         }
     ]
@@ -214,7 +210,6 @@ def test_promote_artifact_new_version(tmp_path):
         "fname": "features-20250120132330.json",
         "created_at": "2025-01-20T13:23:30",
         "handler": "json",
-        "python_version": ".".join(str(i) for i in sys.version_info[:2]),
         "version": 1,
     }
 
@@ -227,7 +222,6 @@ def test_promote_artifact_new_version(tmp_path):
             "fname": "features-20250101000000.json",
             "created_at": "2025-01-01T00:00:00",
             "handler": "json",
-            "python_version": ".".join(str(i) for i in sys.version_info[:2]),
             "version": 0,
         },
         {
@@ -235,7 +229,6 @@ def test_promote_artifact_new_version(tmp_path):
             "fname": "features-20250120132330.json",
             "created_at": "2025-01-20T13:23:30",
             "handler": "json",
-            "python_version": ".".join(str(i) for i in sys.version_info[:2]),
             "version": 1,
         },
     ]

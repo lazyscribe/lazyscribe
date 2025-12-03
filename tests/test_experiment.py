@@ -1,6 +1,5 @@
 """Test the experiment dataclass."""
 
-import sys
 import warnings
 import zoneinfo
 from datetime import datetime
@@ -162,7 +161,6 @@ def test_experiment_artifact_logging_basic():
                 "fname": f"features-{today.strftime('%Y%m%d%H%M%S')}.json",
                 "handler": "json",
                 "created_at": today.strftime("%Y-%m-%dT%H:%M:%S"),
-                "python_version": ".".join(str(i) for i in sys.version_info[:2]),
                 "version": 0,
             }
         ],

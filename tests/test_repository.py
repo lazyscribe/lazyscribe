@@ -3,7 +3,6 @@
 import difflib
 import json
 import logging
-import sys
 import warnings
 import zoneinfo
 from datetime import datetime
@@ -82,7 +81,6 @@ def test_save_repository(tmp_path):
             "fname": expected_fname,
             "handler": "json",
             "name": "my-dict",
-            "python_version": ".".join(str(i) for i in sys.version_info[:2]),
             "version": 0,
         },
     ]
@@ -171,7 +169,6 @@ def test_save_repository_multi(tmp_path):
             "fname": "my-dict-20250120132330.json",
             "handler": "json",
             "name": "my-dict",
-            "python_version": ".".join(str(i) for i in sys.version_info[:2]),
             "version": 0,
         },
         {
@@ -179,7 +176,6 @@ def test_save_repository_multi(tmp_path):
             "fname": "my-dict-2-20250120132330.json",
             "handler": "json",
             "name": "my-dict-2",
-            "python_version": ".".join(str(i) for i in sys.version_info[:2]),
             "version": 0,
         },
     ]
@@ -230,7 +226,6 @@ def test_save_repository_multiple_artifact(tmp_path):
             "fname": expected_my_dict_fname0,
             "handler": "json",
             "name": "my-dict",
-            "python_version": ".".join(str(i) for i in sys.version_info[:2]),
             "version": 0,
         },
         {
@@ -238,7 +233,6 @@ def test_save_repository_multiple_artifact(tmp_path):
             "fname": expected_my_dict2_fname,
             "handler": "json",
             "name": "my-dict2",
-            "python_version": ".".join(str(i) for i in sys.version_info[:2]),
             "version": 0,
         },
         {
@@ -246,7 +240,6 @@ def test_save_repository_multiple_artifact(tmp_path):
             "fname": expected_my_dict_fname1,
             "handler": "json",
             "name": "my-dict",
-            "python_version": ".".join(str(i) for i in sys.version_info[:2]),
             "version": 1,
         },
     ]
@@ -518,7 +511,6 @@ def test_retrieve_artifact_meta():
         "fname": "my-dict-20250120132330.json",
         "handler": "json",
         "name": "my-dict",
-        "python_version": ".".join(str(i) for i in sys.version_info[:2]),
         "version": 0,
     }
 
