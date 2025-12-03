@@ -389,9 +389,22 @@ def release_from_toml(cfg: str) -> None:
         if release_fpath.exists():
             with open(release_fpath) as infile:
                 curr_releases_ = load(infile)
-            curr_releases_.append(new_release_)
-            with open(release_fpath, "w") as outfile:
-                dump(curr_releases_, outfile, indent=4)
+
+            # Check if the release already exists
+            try:
+                _ = find_release(
+                    curr_releases_, version=new_release_.tag, match="exact"
+                )
+            except VersionNotFoundError:
+                curr_releases_.append(new_release_)
+                with open(release_fpath, "w") as outfile:
+                    dump(curr_releases_, outfile, indent=4)
+                continue
+            LOG.warning(
+                "Release '%s' already exists for the repository at '%s'. Skipping...",
+                new_release_.tag,
+                fpath,
+            )
         else:
             with open(release_fpath, "w") as outfile:
                 dump([new_release_], outfile, indent=4)

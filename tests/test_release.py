@@ -1,6 +1,7 @@
 """Repository release tests."""
 
 import json
+import logging
 import zoneinfo
 from datetime import datetime
 
@@ -322,8 +323,9 @@ def test_release_from_toml(tmp_path):
     ]
 
 
-def test_release_from_toml_existing(tmp_path):
+def test_release_from_toml_existing(tmp_path, caplog):
     """Test adding a new release to an existing release JSON."""
+    caplog.set_level(logging.WARNING)
     location = tmp_path / "my-repository"
     location.mkdir()
     repository_location = location / "repository.json"
@@ -376,6 +378,31 @@ def test_release_from_toml_existing(tmp_path):
     ):
         lzr.release_from_toml(toml_data)
 
+    assert (location / "releases.json").is_file()
+    with open(location / "releases.json") as infile:
+        releases = lzr.load(infile)
+
+    assert releases == [
+        lzr.Release(
+            "v1.0.0",
+            [["my-data", 1], ["my-features", 0]],
+            datetime(2025, 1, 22, 0, 0, 0),
+        ),
+        lzr.Release(
+            "v2.0.0",
+            [["my-data", 1], ["my-features", 1], ["my-metadata", 0]],
+            datetime(2025, 6, 1, 0, 0, 0),
+        ),
+    ]
+
+    # Try creating the same release again
+    lzr.release_from_toml(toml_data)
+
+    assert len(caplog.records) == 1
+    assert caplog.records[0].levelname == "WARNING"
+    assert caplog.records[0].message == (
+        f"Release 'v2.0.0' already exists for the repository at '{repository_location!s}'. Skipping..."
+    )
     assert (location / "releases.json").is_file()
     with open(location / "releases.json") as infile:
         releases = lzr.load(infile)
