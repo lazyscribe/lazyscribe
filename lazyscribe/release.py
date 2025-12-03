@@ -197,59 +197,6 @@ def find_release(
     return out
 
 
-def release_from_toml(cfg: str | Path = "pyproject.toml") -> None:
-    """Generate a release for supplied repositories from a configuration.
-
-    This function will read in a TOML-compatible configuration file and look for
-    the ``[tool.lazyscribe]`` table. This table must contain 1 field:
-
-    * ``repositories`` (string or list): path to repository JSON files for which we
-      want releases.
-
-    The configuration has optional fields, including
-
-    * ``version``: the current version of the overall project. If not supplied,
-      this function will look for the ``version`` attribute of the ``[project]`` table.
-    * ``format``: format for the repository release versions. This string will be
-      formatted with the ``project_version`` string. By default, this format is ``v{version}``.
-
-    This function will read in each repository, create a new release, and write it to a ``releases.json``
-    file in the same directory as the source repository JSON file.
-
-    Parameters
-    ----------
-    cfg : str | Path, optional (default "pyproject.toml")
-        Path to the configuration file.
-    """
-    with open(cfg, "rb") as infile:
-        cfg_data_ = tomli.load(infile)
-
-    try:
-        curr_version_ = cfg_data_["project"]["version"]
-    except KeyError:
-        curr_version_ = cfg_data_["tool"]["lazyscribe"]["version"]
-
-    version_format_ = cfg_data_["tool"]["lazyscribe"].get("format", "v{version}")
-
-    repositories = cfg_data_["tool"]["lazyscribe"]["repositories"]
-    for fpath in repositories:
-        repo = Repository(fpath, mode="r")
-        new_release_ = create_release(
-            repo, tag=version_format_.format(version=curr_version_)
-        )
-        # Read in current releases
-        release_fpath = Path(fpath).parent / "releases.json"
-        if release_fpath.exists():
-            with open(release_fpath) as infile:
-                curr_releases_ = load(infile)
-            curr_releases_.append(new_release_)
-            with open(release_fpath, "w") as outfile:
-                dump(curr_releases_, outfile, indent=4)
-        else:
-            with open(release_fpath, "w") as outfile:
-                dump([new_release_], outfile, indent=4)
-
-
 def dump(obj: list[Release], fp: IOBase, **kwargs: Any) -> None:
     """Write the releases data.
 
@@ -359,3 +306,85 @@ def loads(s: str, **kwargs: Any) -> list[Release]:
     json_data_ = json.loads(s, **kwargs)
 
     return [Release.from_dict(ver) for ver in json_data_]
+
+
+def release_from_toml(cfg: str) -> None:
+    """Generate a release for supplied repositories from a configuration.
+
+    This function will read in a TOML-compatible configuration file and look for
+    the ``[tool.lazyscribe]`` table. This table must contain 1 field:
+
+    * ``repositories`` (list): path to repository JSON files for which we want releases.
+
+    The configuration has optional fields, including
+
+    * ``version``: the current version of the overall project. If not supplied,
+      this function will look for the ``version`` attribute of the ``[project]`` table.
+    * ``format``: format for the repository release versions. This string will be
+      formatted with the ``project_version`` string. By default, this format is ``v{version}``.
+
+    This function will read in each repository, create a new release, and write it to a ``releases.json``
+    file in the same directory as the source repository JSON file.
+
+    Suppose you have the following entry in ``pyproject.toml``:
+
+    .. code-block:: toml
+
+        [project]
+        version = "1.0.0"
+
+        ...
+
+        [tool.lazyscribe]
+        repositories = [
+            "src/models/model-1/repository.json",
+            "src/models/model-2/repository.json"
+        ]
+
+    calling
+
+    .. code-block:: python
+
+        import lazyscribe.release as lzr
+
+        with open("pyproject.toml") as infile:
+            release_from_toml(infile.read())
+
+    will create two new files:
+
+    * ``src/models/model-1/releases.json``, and
+    * ``src/models/model-2/release.json``.
+
+    Each of these files will contain a ``v1.0.0`` release.
+
+    Parameters
+    ----------
+    cfg : str
+        String contents of the configuration file
+    """
+    cfg_data_ = tomli.loads(cfg)
+
+    try:
+        curr_version_ = cfg_data_["project"]["version"]
+    except KeyError:
+        curr_version_ = cfg_data_["tool"]["lazyscribe"]["version"]
+
+    version_format_ = cfg_data_["tool"]["lazyscribe"].get("format", "v{version}")
+
+    repositories = cfg_data_["tool"]["lazyscribe"]["repositories"]
+    for fpath in repositories:
+        repo = Repository(fpath, mode="r")
+        new_release_ = create_release(
+            repo, tag=version_format_.format(version=curr_version_)
+        )
+        # Read in current releases
+        release_fpath = Path(fpath).parent / "releases.json"
+        if release_fpath.exists():
+            with open(release_fpath) as infile:
+                curr_releases_ = load(infile)
+            curr_releases_.append(new_release_)
+            with open(release_fpath, "w") as outfile:
+                dump(curr_releases_, outfile, indent=4)
+        else:
+            with open(release_fpath, "w") as outfile:
+                dump([new_release_], outfile, indent=4)
