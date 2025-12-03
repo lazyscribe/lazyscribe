@@ -273,7 +273,7 @@ def test_load_release_from_str():
     ]
 
 
-def test_generate_release_from_toml(tmp_path):
+def test_release_from_toml(tmp_path):
     """Test creating a release from a set of repositories."""
     location = tmp_path / "my-repository"
     location.mkdir()
@@ -318,4 +318,76 @@ def test_generate_release_from_toml(tmp_path):
             [["my-data", 1], ["my-features", 0]],
             datetime(2025, 6, 1, 0, 0, 0),
         )
+    ]
+
+
+def test_release_from_toml_existing(tmp_path):
+    """Test adding a new release to an existing release JSON."""
+    location = tmp_path / "my-repository"
+    location.mkdir()
+    repository_location = location / "repository.json"
+
+    repository = Repository(repository_location)
+    with time_machine.travel(
+        datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC"))
+    ):
+        repository.log_artifact("my-data", [{"a": 1}], handler="json")
+        repository.log_artifact("my-features", [0], handler="json")
+
+    with time_machine.travel(
+        datetime(2025, 1, 21, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC"))
+    ):
+        repository.log_artifact("my-data", [{"a": 2}], handler="json")
+
+    with time_machine.travel(
+        datetime(2025, 1, 22, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC"))
+    ):
+        repository.log_artifact("my-features", [0, 1], handler="json")
+        repository.log_artifact("my-metadata", {"process_ver": 1.0}, handler="json")
+
+    repository.save()
+
+    # Create an existing release
+    with open(location / "releases.json", "w") as outfile:
+        lzr.dump(
+            [
+                lzr.Release(
+                    "v1.0.0",
+                    [["my-data", 1], ["my-features", 0]],
+                    datetime(2025, 1, 22, 0, 0, 0),
+                )
+            ],
+            outfile,
+        )
+
+    # Create a new release
+    toml_data = f"""
+    [project]
+    version = "2.0.0"
+
+    [tool.lazyscribe]
+    repositories = ["{repository_location!s}"]
+    """
+
+    # create the release
+    with time_machine.travel(
+        datetime(2025, 6, 1, 0, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+    ):
+        lzr.release_from_toml(toml_data)
+
+    assert (location / "releases.json").is_file()
+    with open(location / "releases.json") as infile:
+        releases = lzr.load(infile)
+
+    assert releases == [
+        lzr.Release(
+            "v1.0.0",
+            [["my-data", 1], ["my-features", 0]],
+            datetime(2025, 1, 22, 0, 0, 0),
+        ),
+        lzr.Release(
+            "v2.0.0",
+            [["my-data", 1], ["my-features", 1], ["my-metadata", 0]],
+            datetime(2025, 6, 1, 0, 0, 0),
+        ),
     ]
