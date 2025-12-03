@@ -4,14 +4,22 @@ from __future__ import annotations
 
 import json
 import logging
+import sys
 from datetime import datetime
 from io import IOBase
+from pathlib import Path
 from typing import Any, Literal
 
 from attrs import Factory, define, field
 
 from lazyscribe._utils import utcnow
 from lazyscribe.repository import Repository
+
+# Conditional import of the tomli library
+if sys.version_info < (3, 11):
+    import tomli
+else:
+    import tomllib as tomli
 
 LOG = logging.getLogger(__name__)
 
@@ -187,6 +195,59 @@ def find_release(
     LOG.info(f"Found release '{out.tag}' ({out.created_at!s})")
 
     return out
+
+
+def release_from_toml(cfg: str | Path = "pyproject.toml") -> None:
+    """Generate a release for supplied repositories from a configuration.
+
+    This function will read in a TOML-compatible configuration file and look for
+    the ``[tool.lazyscribe]`` table. This table must contain 1 field:
+
+    * ``repositories`` (string or list): path to repository JSON files for which we
+      want releases.
+
+    The configuration has optional fields, including
+
+    * ``version``: the current version of the overall project. If not supplied,
+      this function will look for the ``version`` attribute of the ``[project]`` table.
+    * ``format``: format for the repository release versions. This string will be
+      formatted with the ``project_version`` string. By default, this format is ``v{version}``.
+
+    This function will read in each repository, create a new release, and write it to a ``releases.json``
+    file in the same directory as the source repository JSON file.
+
+    Parameters
+    ----------
+    cfg : str | Path, optional (default "pyproject.toml")
+        Path to the configuration file.
+    """
+    with open(cfg, "rb") as infile:
+        cfg_data_ = tomli.load(infile)
+
+    try:
+        curr_version_ = cfg_data_["project"]["version"]
+    except KeyError:
+        curr_version_ = cfg_data_["tool"]["lazyscribe"]["version"]
+
+    version_format_ = cfg_data_["tool"]["lazyscribe"].get("format", "v{version}")
+
+    repositories = cfg_data_["tool"]["lazyscribe"]["repositories"]
+    for fpath in repositories:
+        repo = Repository(fpath, mode="r")
+        new_release_ = create_release(
+            repo, tag=version_format_.format(version=curr_version_)
+        )
+        # Read in current releases
+        release_fpath = Path(fpath).parent / "releases.json"
+        if release_fpath.exists():
+            with open(release_fpath) as infile:
+                curr_releases_ = load(infile)
+            curr_releases_.append(new_release_)
+            with open(release_fpath, "w") as outfile:
+                dump(curr_releases_, outfile, indent=4)
+        else:
+            with open(release_fpath, "w") as outfile:
+                dump([new_release_], outfile, indent=4)
 
 
 def dump(obj: list[Release], fp: IOBase, **kwargs: Any) -> None:
