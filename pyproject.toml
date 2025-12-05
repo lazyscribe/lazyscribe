@@ -27,7 +27,7 @@ classifiers = [
 ]
 dependencies = [
     "attrs>=21.2.0,<=25.4.0",
-    "fsspec>=0.4.0,<=2025.10.0",
+    "fsspec>=0.4.0,<=2025.12.0",
     "python-slugify>=5.0.0,<=8.0.4",
 ]
 
@@ -72,10 +72,6 @@ urls.repository = "https://github.com/lazyscribe/lazyscribe"
 entry-points."lazyscribe.artifact_type".base = "lazyscribe.artifacts.base:Artifact"
 entry-points."lazyscribe.artifact_type".json = "lazyscribe.artifacts.json:JSONArtifact"
 entry-points."lazyscribe.artifact_type".pickle = "lazyscribe.artifacts.pickle:PickleArtifact"
-
-[tool.uv.build-backend]
-module-name = "lazyscribe"
-module-root = ""
 
 [tool.ruff]
 target-version = "py310"
@@ -129,6 +125,10 @@ strict = true
 warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
+
+[tool.uv.build-backend]
+module-name = "lazyscribe"
+module-root = ""
 
 [tool.commitizen]
 version_provider = "uv"
