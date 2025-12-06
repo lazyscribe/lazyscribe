@@ -101,7 +101,7 @@ Now, let's reload that project and promote the artifact to the repository:
     from lazyscribe import Project, Repository
 
     project = Project("project.json", mode="r")
-    repository = Repository("repository.json")
+    repository = Repository("repository.json", mode="w+")
 
     project["my-experiment"].promote_artifact(repository, "features")
 

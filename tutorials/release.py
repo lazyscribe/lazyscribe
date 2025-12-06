@@ -34,7 +34,7 @@ import lazyscribe.release as lzr
 from lazyscribe import Repository
 
 tmpdir = Path(tempfile.mkdtemp())
-repository = Repository(tmpdir / "repository.json", mode="w+")
+repository = Repository(tmpdir / "repository.json", mode="w")
 
 # %%
 # Let's fit and log our model to the repository.

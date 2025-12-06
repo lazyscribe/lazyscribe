@@ -21,7 +21,7 @@ from lazyscribe.repository import Repository
 def test_promote_artifact_nonexistent():
     """Test raising an error when a user promotes a non-existent artifact."""
     project = Project()
-    repository = Repository()
+    repository = Repository("repository.json", mode="w")
 
     with pytest.raises(ArtifactLoadError), project.log("My experiment") as exp:
         exp.promote_artifact(repository, "fake-artifact")
@@ -31,7 +31,7 @@ def test_promoting_old_artifact(tmp_path):
     """Test raising an error when promoting an artifact that is older than the most recent version."""
     location = tmp_path / "my-project"
     repository_location = location / "repository.json"
-    repository = Repository(repository_location)
+    repository = Repository(repository_location, mode="w")
 
     # Log version 0 of the artifact
     with time_machine.travel(
@@ -67,7 +67,7 @@ def test_promote_equal_artifact(tmp_path):
     """Test promoting an artifact that has the exact same creation date."""
     location = tmp_path / "my-project"
     repository_location = location / "repository.json"
-    repository = Repository(repository_location)
+    repository = Repository(repository_location, mode="w")
 
     # Log version 0 of the artifact
     repository.log_artifact("features", [0, 1], handler="json")
@@ -94,8 +94,7 @@ def test_promote_artifact_dirty(tmp_path):
     location = tmp_path / "my-project"
     project_location = location / "project.json"
     repository_location = location / "repository.json"
-
-    repository = Repository(repository_location)
+    repository = Repository(repository_location, mode="w")
     project = Project(project_location)
 
     with project.log(name="My experiment") as exp:
@@ -139,7 +138,7 @@ def test_promote_artifact_clean(tmp_path):
     project.save()
 
     repository_location = location / "repository.json"
-    repository = Repository(repository_location)
+    repository = Repository(repository_location, mode="w")
 
     with time_machine.travel(
         datetime(2025, 3, 1, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
@@ -176,7 +175,7 @@ def test_promote_artifact_new_version(tmp_path):
     """Test promoting a new version of an existing artifact."""
     location = tmp_path / "my-project"
     repository_location = location / "repository.json"
-    repository = Repository(repository_location)
+    repository = Repository(repository_location, mode="w")
 
     # Log version 0 of the artifact
     with time_machine.travel(
@@ -318,7 +317,7 @@ def test_raised_save_error(tmp_path):
 
     # Open the project and repository using the fake protocol
     repository_location = location / "repository.json"
-    repository = Repository("fake://" + str(repository_location))
+    repository = Repository("fake://" + str(repository_location), mode="w")
 
     with time_machine.travel(
         datetime(2025, 3, 1, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False

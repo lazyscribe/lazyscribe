@@ -30,6 +30,7 @@ def test_logging_repository():
     """Test logging an artifact to a repository."""
     repository = Repository(
         "file://" + (DATA_DIR / "external_fs_repository.json").as_posix(),
+        mode="w"
     )
     repository.log_artifact("my-dict", {"a": 1}, handler="json")
     assert len(repository.artifacts) == 1
@@ -63,7 +64,7 @@ def test_save_repository(tmp_path):
     location.mkdir()
     repository_location = location / "repository.json"
 
-    repository = Repository(repository_location)
+    repository = Repository(repository_location, mode="w")
     repository.log_artifact("my-dict", {"a": 1}, handler="json")
 
     repository.save()
@@ -86,7 +87,7 @@ def test_save_repository(tmp_path):
         },
     ]
 
-    repository_read = Repository(repository_location, "r")
+    repository_read = Repository(repository_location, mode="r")
     artifact_loaded = repository_read.load_artifact("my-dict")
     with open(location / "my-dict" / expected_fname) as infile:
         artifact_read = json.load(infile)
@@ -99,7 +100,7 @@ def test_save_repository_transaction(tmp_path):
     location.mkdir()
     repository_location = location / "repository.json"
 
-    repository = Repository(repository_location)
+    repository = Repository(repository_location, mode="w")
     repository.log_artifact(name="should-not-work", value=int, handler="json")
 
     with pytest.raises(SaveError):
@@ -117,7 +118,7 @@ def test_update_repository_transaction(tmp_path):
     location.mkdir()
     repository_location = location / "repository.json"
 
-    repository = Repository(repository_location)
+    repository = Repository(repository_location, mode="w")
     repository.log_artifact("my-dict", {"a": 1}, handler="json")
 
     repository.save()
@@ -143,7 +144,7 @@ def test_save_repository_multi(tmp_path):
     location.mkdir()
     repository_location = location / "repository.json"
 
-    repository = Repository(repository_location)
+    repository = Repository(repository_location, mode="w")
     repository.log_artifact("my-dict", {"a": 1}, handler="json")
 
     repository.save()
@@ -202,7 +203,7 @@ def test_save_repository_multiple_artifact(tmp_path):
     location.mkdir()
     repository_location = location / "repository.json"
 
-    repository = Repository(repository_location)
+    repository = Repository(repository_location, mode="w")
     with time_machine.travel(
         datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC"))
     ):
@@ -258,7 +259,7 @@ def test_save_repository_multiple_artifact(tmp_path):
     with open(my_dict2_dir / expected_my_dict2_fname) as infile:
         my_dict2_read = json.load(infile)
 
-    repository_read = Repository(repository_location, "r")
+    repository_read = Repository(repository_location, mode="r")
     my_dict_v0_load_int = repository_read.load_artifact("my-dict", version=0)
     my_dict_v0_load_dt = repository_read.load_artifact(
         "my-dict",
@@ -352,7 +353,7 @@ def test_save_repository_artifact_failed_validation(tmp_path):
     datasets = pytest.importorskip("sklearn.datasets")
     svm = pytest.importorskip("sklearn.svm")
 
-    repository = Repository(fpath=repository_location)
+    repository = Repository(fpath=repository_location, mode="w")
     # Fit a basic estimator
     X, y = datasets.make_classification(n_samples=100, n_features=10)
     estimator = svm.SVC(kernel="linear")
@@ -496,7 +497,7 @@ def test_repository_artifact_output_only(tmp_path):
     location.mkdir()
     repository_location = location / "repository.testartifact"
 
-    repository = Repository(fpath=repository_location)
+    repository = Repository(fpath=repository_location, mode="w")
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("always")
         repository.log_artifact(
@@ -552,7 +553,7 @@ def test_repository_artifact_output_only(tmp_path):
 
 def test_invalid_match_strategy():
     """Test raising an error with an invalid value for ``match``."""
-    repository = Repository()
+    repository = Repository("repository.json", mode="w")
     repository.log_artifact("my-dict", {"a": 1}, handler="json")
 
     with pytest.raises(ValueError):
@@ -567,7 +568,7 @@ def test_repository_asof_search(tmp_path):
     location.mkdir()
     repository_location = location / "repository.json"
 
-    repository = Repository(repository_location)
+    repository = Repository(repository_location, mode="w")
 
     # Log artifacts using time-travel to get different creation dates
     with time_machine.travel(
@@ -622,7 +623,7 @@ def test_repository_asof_search(tmp_path):
 )
 def test_retrieve_artifact_meta():
     """Test retrieving artifact metadata."""
-    repository = Repository()
+    repository = Repository("repository.json", mode="w")
     repository.log_artifact("my-dict", {"a": 1}, handler="json")
 
     data = repository.get_artifact_metadata("my-dict")
@@ -642,7 +643,7 @@ def test_retrieve_artifact_meta():
 )
 def test_version_diff_dirty():
     """Test raising an error when trying to compare artifacts that aren't on disk."""
-    repository = Repository()
+    repository = Repository("repository.json", mode="w")
     repository.log_artifact("my-data", {"a": 1}, handler="json")
     repository.log_artifact("my-data", {"a": 2}, handler="json")
 
@@ -659,7 +660,7 @@ def test_version_diff_binary(tmp_path):
     location.mkdir()
     repository_location = location / "repository.json"
 
-    repository = Repository(repository_location)
+    repository = Repository(repository_location, mode="w")
     repository.log_artifact("my-data", {"a": 1}, handler="pickle")
     repository.save()
     repository.log_artifact("my-data", {"a": 2}, handler="pickle")
@@ -675,7 +676,7 @@ def test_version_diff_latest(tmp_path):
     location.mkdir()
     repository_location = location / "repository.json"
 
-    repository = Repository(repository_location)
+    repository = Repository(repository_location, mode="w")
     with time_machine.travel(
         datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC"))
     ):
@@ -704,7 +705,7 @@ def test_version_diff_specified(tmp_path):
     location.mkdir()
     repository_location = location / "repository.json"
 
-    repository = Repository(repository_location)
+    repository = Repository(repository_location, mode="w")
     with time_machine.travel(
         datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC"))
     ):
@@ -741,7 +742,7 @@ def test_version_diff_identical(tmp_path, caplog):
     location.mkdir()
     repository_location = location / "repository.json"
 
-    repository = Repository(repository_location)
+    repository = Repository(repository_location, mode="w")
     with time_machine.travel(
         datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC"))
     ):
@@ -775,7 +776,7 @@ def test_repository_filter(tmp_path, caplog):
     location.mkdir()
     repository_location = location / "repository.json"
 
-    repository = Repository(repository_location)
+    repository = Repository(repository_location, mode="w")
     # Log first version of our first two artifacts
     with time_machine.travel(
         datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC"))

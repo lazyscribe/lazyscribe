@@ -19,7 +19,7 @@ def test_repository_release(tmp_path):
     location.mkdir()
     repository_location = location / "repository.json"
 
-    repository = Repository(repository_location)
+    repository = Repository(repository_location, mode="w")
     with time_machine.travel(
         datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC"))
     ):
@@ -72,7 +72,7 @@ def test_repository_release_filter(tmp_path):
     location.mkdir()
     repository_location = location / "repository.json"
 
-    repository = Repository(repository_location)
+    repository = Repository(repository_location, mode="w")
     # Log first version of our first two artifacts
     with time_machine.travel(
         datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC"))
@@ -281,7 +281,7 @@ def test_release_from_toml(tmp_path):
     location.mkdir()
     repository_location = location / "repository.json"
 
-    repository = Repository(repository_location)
+    repository = Repository(repository_location, mode="w")
     # Log first version of our first two artifacts
     with time_machine.travel(
         datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC"))
@@ -330,7 +330,7 @@ def test_release_from_toml_existing(tmp_path, caplog):
     location.mkdir()
     repository_location = location / "repository.json"
 
-    repository = Repository(repository_location)
+    repository = Repository(repository_location, mode="w")
     with time_machine.travel(
         datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC"))
     ):
@@ -427,7 +427,7 @@ def test_release_from_toml_custom(tmp_path):
     location.mkdir()
     repository_location = location / "repository.json"
 
-    repository = Repository(repository_location)
+    repository = Repository(repository_location, mode="w")
     # Log first version of our first two artifacts
     with time_machine.travel(
         datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC"))
