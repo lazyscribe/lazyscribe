@@ -21,7 +21,7 @@ X, y = make_classification(n_samples=1000, n_features=10)
 # %%
 # Next, create the project and run the model fit
 
-project = Project(fpath="project.json", author="The Best")
+project = Project("project.json", mode="w", author="The Best")
 with project.log(name="Base performance") as exp:
     model = SVC(kernel="linear")
     model.fit(X, y)

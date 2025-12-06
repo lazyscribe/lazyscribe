@@ -11,13 +11,13 @@ for example usage and available protocols.
     from lazyscribe import Project
     from typing import Any
 
-    fpath = "s3://path/to/my/project.json"
+    project_path = "s3://path/to/my/project.json"
     storage_options: dict[str, Any] = {
         "username": "user",
         "password": "pswrd"
     }
 
-    project = Project(fpath=fpath, **storage_options)
+    project = Project(project_path, mode="w", **storage_options)
 
 From there, you can use your project as normal.
 

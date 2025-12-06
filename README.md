@@ -27,7 +27,7 @@ import json
 
 from lazyscribe import Project
 
-project = Project(fpath="project.json")
+project = Project("project.json", mode="w")
 with project.log(name="My experiment") as exp:
     exp.log_metric("auroc", 0.5)
     exp.log_parameter("algorithm", "lightgbm")

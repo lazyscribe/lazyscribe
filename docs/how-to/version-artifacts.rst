@@ -88,7 +88,7 @@ First, let's create a project and log an experiment:
 
     from lazyscribe import Project
 
-    project = Project("project.json")
+    project = Project("project.json", mode="w")
     with project.log("my-experiment") as exp:
         exp.log_artifact(name="features", value=[0, 1, 2], handler="json", indent=4)
 
