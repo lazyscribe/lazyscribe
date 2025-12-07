@@ -147,7 +147,7 @@ Then, we can dump this release to a file:
 
 .. code-block:: python
 
-    with open("releases.json", "w") as outfile:
+    with open("releases.json", "wt") as outfile:
         lzr.dump([release], outfile)
 
 Now, if someone wants to reference the collective group of individual artifact-versions associated with this
@@ -162,7 +162,7 @@ In action:
 .. code-block:: python
 
     complete_repository = Repository(..., mode="r")
-    with open("releases.json", "r") as infile:
+    with open("releases.json", "rt") as infile:
         releases = lzr.load(infile)
 
     my_release = lzr.find_release(releases, "v0.1.0")

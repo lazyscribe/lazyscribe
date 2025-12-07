@@ -28,12 +28,12 @@ def test_json_handler(tmp_path):
         == f"my-output-file-{datetime.now().strftime('%Y%m%d%H%M%S')}.json"
     )
 
-    with open(location / handler.fname, "w") as buf:
+    with open(location / handler.fname, "wt") as buf:
         handler.write(data, buf)
 
     assert (location / handler.fname).is_file()
 
-    with open(location / handler.fname) as buf:
+    with open(location / handler.fname, "rt") as buf:
         out = handler.read(buf)
 
     assert data == out

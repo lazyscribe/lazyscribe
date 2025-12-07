@@ -156,7 +156,7 @@ def test_promote_artifact_clean(tmp_path):
         "version": 0,
     }
 
-    with open(repository_location) as infile:
+    with open(repository_location, "rt") as infile:
         repo_data = json.load(infile)
 
     assert repo_data == [
@@ -216,7 +216,7 @@ def test_promote_artifact_new_version(tmp_path):
         "version": 1,
     }
 
-    with open(repository_location) as infile:
+    with open(repository_location, "rt") as infile:
         repo_data = json.load(infile)
 
     assert repo_data == [
@@ -298,15 +298,15 @@ def test_raised_save_error(tmp_path):
         def open(
             self,
             path,
-            mode="rb",
+            mode="rt",
             block_size=None,
             cache_options=None,
             compression=None,
             **kwargs,
         ):
             """Return a file-like object."""
-            if mode == "w":
-                raise ValueError("Error!")
+            if mode[0] == "w":
+                raise ValueError("Write mode not supported")
             else:
                 return super().open(
                     path, mode, block_size, cache_options, compression, **kwargs

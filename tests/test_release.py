@@ -215,10 +215,10 @@ def test_dump_release_to_file(tmp_path):
         lzr.Release("v0.2.0", [], datetime(2025, 2, 1, 0, 0, 0)),
         lzr.Release("v0.2.1", [], datetime(2025, 3, 1, 0, 0, 0)),
     ]
-    with open(tmp_path / "releases.json", "w") as outfile:
+    with open(tmp_path / "releases.json", "wt") as outfile:
         lzr.dump(releases, outfile)
 
-    with open(tmp_path / "releases.json") as infile:
+    with open(tmp_path / "releases.json", "rt") as infile:
         data = json.load(infile)
 
     assert data == [
@@ -243,7 +243,7 @@ def test_dump_release_to_str():
 
 def test_load_release_from_file(tmp_path):
     """Test loading a release from a JSON file."""
-    with open(tmp_path / "releases.json", "w") as outfile:
+    with open(tmp_path / "releases.json", "wt") as outfile:
         json.dump(
             [
                 {
@@ -256,7 +256,7 @@ def test_load_release_from_file(tmp_path):
             outfile,
         )
 
-    with open(tmp_path / "releases.json") as infile:
+    with open(tmp_path / "releases.json", "rt") as infile:
         new_ = lzr.load(infile)
 
     assert new_ == [
@@ -311,7 +311,7 @@ def test_release_from_toml(tmp_path):
         lzr.release_from_toml(toml_data)
 
     assert (location / "releases.json").is_file()
-    with open(location / "releases.json") as infile:
+    with open(location / "releases.json", "rt") as infile:
         releases = lzr.load(infile)
 
     assert releases == [
@@ -351,7 +351,7 @@ def test_release_from_toml_existing(tmp_path, caplog):
     repository.save()
 
     # Create an existing release
-    with open(location / "releases.json", "w") as outfile:
+    with open(location / "releases.json", "wt") as outfile:
         lzr.dump(
             [
                 lzr.Release(
@@ -379,7 +379,7 @@ def test_release_from_toml_existing(tmp_path, caplog):
         lzr.release_from_toml(toml_data)
 
     assert (location / "releases.json").is_file()
-    with open(location / "releases.json") as infile:
+    with open(location / "releases.json", "rt") as infile:
         releases = lzr.load(infile)
 
     assert releases == [
@@ -404,7 +404,7 @@ def test_release_from_toml_existing(tmp_path, caplog):
         f"Release 'v2.0.0' already exists for the repository at '{repository_location!s}'. Skipping..."
     )
     assert (location / "releases.json").is_file()
-    with open(location / "releases.json") as infile:
+    with open(location / "releases.json", "rt") as infile:
         releases = lzr.load(infile)
 
     assert releases == [
@@ -456,7 +456,7 @@ def test_release_from_toml_custom(tmp_path):
         lzr.release_from_toml(toml_data)
 
     assert (location / "releases.json").is_file()
-    with open(location / "releases.json") as infile:
+    with open(location / "releases.json", "rt") as infile:
         releases = lzr.load(infile)
 
     assert releases == [

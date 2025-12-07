@@ -104,6 +104,7 @@ lint.ignore = [
     "ANN401", # `Any` usage
     "C901",   # Function/method is too complex. (Add back in later.)
     "E501",   # Line too long. Using formatter instead.
+    "UP015",  # Unnecessary mode argument
 ]
 lint.per-file-ignores."__init__.py" = [ "E402" ]
 lint.per-file-ignores."tests/**/*" = [ "ANN" ]

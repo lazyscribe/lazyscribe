@@ -104,7 +104,7 @@ class Project:
         be loaded in read-only mode. If opened in editable mode, existing experiments
         will be loaded in editable mode.
         """
-        with self.fs.open(str(self.fpath), "r") as infile:
+        with self.fs.open(str(self.fpath), "rt") as infile:
             data = json.load(infile)
         for idx, entry in enumerate(data):
             data[idx]["created_at"] = datetime.fromisoformat(entry["created_at"])
@@ -207,7 +207,7 @@ class Project:
         with self.fs.transaction:
             try:
                 self.fs.makedirs(str(self.fpath.parent), exist_ok=True)
-                with self.fs.open(str(self.fpath), "w") as outfile:
+                with self.fs.open(str(self.fpath), "wt") as outfile:
                     json.dump(data, outfile, sort_keys=True, indent=4)
             except Exception as exc:
                 raise SaveError(
@@ -226,7 +226,7 @@ class Project:
                 # Write the artifact data
                 LOG.info(f"Saving artifacts for {exp.slug}")
                 for artifact in exp.artifacts:
-                    fmode = "wb" if artifact.binary else "w"
+                    fmode = "wb" if artifact.binary else "wt"
                     fpath = exp.path / artifact.fname
                     if not artifact.dirty:
                         LOG.debug(f"Artifact '{artifact.name}' has not been updated")

@@ -203,7 +203,7 @@ def dump(obj: list[Release], fp: IOBase, **kwargs: Any) -> None:
         from lazyscribe import release as lzr
 
         releases: list[lazyscribe.release.Release]
-        with open("releases.json", "w") as outfile:
+        with open("releases.json", "wt") as outfile:
             lzr.dump(releases, outfile)
 
     Parameters
@@ -256,7 +256,7 @@ def load(fp: IOBase, **kwargs: Any) -> list[Release]:
 
         from lazyscribe import release as lzr
 
-        with open("releases.json") as infile:
+        with open("releases.json", "rt") as infile:
             releases = lzr.load(infile)
 
     Parameters
@@ -346,7 +346,7 @@ def release_from_toml(cfg: str) -> None:
 
         import lazyscribe.release as lzr
 
-        with open("pyproject.toml") as infile:
+        with open("pyproject.toml", "rt") as infile:
             release_from_toml(infile.read())
 
     will create two new files:
@@ -383,7 +383,7 @@ def release_from_toml(cfg: str) -> None:
         # Read in current releases
         release_fpath = Path(fpath).parent / "releases.json"
         if release_fpath.exists():
-            with open(release_fpath) as infile:
+            with open(release_fpath, "rt") as infile:
                 curr_releases_ = load(infile)
 
             # Check if the release already exists
@@ -393,7 +393,7 @@ def release_from_toml(cfg: str) -> None:
                 )
             except VersionNotFoundError:
                 curr_releases_.append(new_release_)
-                with open(release_fpath, "w") as outfile:
+                with open(release_fpath, "wt") as outfile:
                     dump(curr_releases_, outfile, indent=4)
                 continue
             LOG.warning(
@@ -402,5 +402,5 @@ def release_from_toml(cfg: str) -> None:
                 fpath,
             )
         else:
-            with open(release_fpath, "w") as outfile:
+            with open(release_fpath, "wt") as outfile:
                 dump([new_release_], outfile, indent=4)

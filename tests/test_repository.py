@@ -72,7 +72,7 @@ def test_save_repository(tmp_path):
     assert repository["my-dict"].dirty is False
     assert repository_location.is_file()
 
-    with open(repository_location) as infile:
+    with open(repository_location, "rt") as infile:
         serialized = json.load(infile)
 
     expected_fname = "my-dict-20250120132330.json"
@@ -89,7 +89,7 @@ def test_save_repository(tmp_path):
 
     repository_read = Repository(repository_location, mode="r")
     artifact_loaded = repository_read.load_artifact("my-dict")
-    with open(location / "my-dict" / expected_fname) as infile:
+    with open(location / "my-dict" / expected_fname, "rt") as infile:
         artifact_read = json.load(infile)
     assert artifact_loaded == artifact_read == {"a": 1}
 
@@ -162,7 +162,7 @@ def test_save_repository_multi(tmp_path):
     repository_read.save()
 
     assert repository_read["my-dict"].dirty is False
-    with open(repository_location) as infile:
+    with open(repository_location, "rt") as infile:
         serialized = json.load(infile)
 
     assert serialized == [
@@ -185,13 +185,13 @@ def test_save_repository_multi(tmp_path):
     ]
 
     artifact_loaded = repository_read.load_artifact("my-dict")
-    with open(location / "my-dict" / "my-dict-20250120132330.json") as infile:
+    with open(location / "my-dict" / "my-dict-20250120132330.json", "rt") as infile:
         artifact_read = json.load(infile)
 
     assert artifact_loaded == artifact_read == {"a": 1}
 
     artifact_loaded = repository_read.load_artifact("my-dict-2")
-    with open(location / "my-dict-2" / "my-dict-2-20250120132330.json") as infile:
+    with open(location / "my-dict-2" / "my-dict-2-20250120132330.json", "rt") as infile:
         artifact_read = json.load(infile)
 
     assert artifact_read == artifact_loaded == {"b": 2}
@@ -218,7 +218,7 @@ def test_save_repository_multiple_artifact(tmp_path):
 
     assert repository_location.is_file()
 
-    with open(repository_location) as infile:
+    with open(repository_location, "rt") as infile:
         serialized = json.load(infile)
 
     expected_my_dict_fname0 = "my-dict-20250120132330.json"
@@ -252,11 +252,11 @@ def test_save_repository_multiple_artifact(tmp_path):
     ]
     my_dict_dir = location / "my-dict"
     my_dict2_dir = location / "my-dict2"
-    with open(my_dict_dir / expected_my_dict_fname0) as infile:
+    with open(my_dict_dir / expected_my_dict_fname0, "rt") as infile:
         my_dict_v0_read = json.load(infile)
-    with open(my_dict_dir / expected_my_dict_fname1) as infile:
+    with open(my_dict_dir / expected_my_dict_fname1, "rt") as infile:
         my_dict_v1_read = json.load(infile)
-    with open(my_dict2_dir / expected_my_dict2_fname) as infile:
+    with open(my_dict2_dir / expected_my_dict2_fname, "rt") as infile:
         my_dict2_read = json.load(infile)
 
     repository_read = Repository(repository_location, mode="r")
