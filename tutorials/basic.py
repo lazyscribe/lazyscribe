@@ -8,7 +8,6 @@ experiment.
 
 import json
 
-import pandas as pd
 from sklearn.datasets import make_classification
 from sklearn.svm import SVC
 
@@ -33,15 +32,6 @@ with project.log(name="Base performance") as exp:
 # Finally, let's print and view the experiment data.
 
 print(json.dumps(list(project), indent=4, sort_keys=True))
-
-# %%
-# You can also represent the project in a table:
-
-experiments, tests = project.to_tabular()
-
-df = pd.DataFrame(experiments)
-df.columns = pd.MultiIndex.from_tuples(df.columns)
-df.head()
 
 # %%
 # Then, you can call :py:meth:`lazyscribe.Project.save` to save the output JSON.

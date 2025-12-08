@@ -389,55 +389,6 @@ class Experiment:
             ),
         )
 
-    def to_tabular(self) -> dict[tuple[str] | tuple[str, str], Any]:
-        """Create a dictionary that can be fed into ``pandas``.
-
-        Returns
-        -------
-        dict
-            Represent the experiment, with the following keys:
-
-            +--------------------------+-------------------------------+
-            | Field                    | Description                   |
-            |                          |                               |
-            +==========================+===============================+
-            | ``("name",)``            | Name of the experiment        |
-            +--------------------------+-------------------------------+
-            | ``("short_slug",)``      | Short slug for the experiment |
-            +--------------------------+-------------------------------+
-            | ``("slug",)``            | Full slug for the experiment  |
-            +--------------------------+-------------------------------+
-            | ``("author",)``          | Experiment author             |
-            +--------------------------+-------------------------------+
-            | ``("last_updated_by",)`` | Last author                   |
-            +--------------------------+-------------------------------+
-            | ``("created_at",)``      | Created timestamp             |
-            +--------------------------+-------------------------------+
-            | ``("last_updated",)``    | Last update timestammp        |
-            +--------------------------+-------------------------------+
-
-            as well as one key per parameter in the ``parameters`` dictionary
-            (with the format ``("parameters", <parameter_name>)``) and one key
-            per metric in the ``metrics`` dictionary (with the format
-            ``("metrics", <metric_name>)``) for each experiment.
-        """
-        d = self.to_dict()
-        return {
-            ("name", ""): d["name"],
-            ("slug", ""): d["slug"],
-            ("short_slug", ""): d["short_slug"],
-            ("author", ""): d["author"],
-            ("created_at", ""): d["created_at"],
-            ("last_updated", ""): d["last_updated"],
-            ("last_updated_by", ""): d["last_updated_by"],
-            **{
-                ("parameters", key): value
-                for key, value in d["parameters"].items()
-                if not isinstance(value, tuple | list | dict)
-            },
-            **{("metrics", key): value for key, value in d["metrics"].items()},
-        }
-
     def promote_artifact(self, repository: Repository, name: str) -> None:
         """Associate an artifact with a :py:class:`lazyscribe.repository.Repository`.
 
