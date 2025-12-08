@@ -174,3 +174,65 @@ version for each artifact present in the original repository.
 
 Just like artifacts themselves, :py:meth:`lazyscribe.release.find_release` supports ``asof`` matches based
 on the release creation timestamp.
+
+Automated release creation via ``pyproject.toml``
++++++++++++++++++++++++++++++++++++++++++++++++++
+
+If you have multiple repositories under a single project header, managing groups of artifact-versions along
+side the project can be a challenge. We have additional functionality to synchronize your project version
+and repositories. Suppose you have the following set up:
+
+.. code-block::
+
+    ├── src
+    │   ├── model-1
+    │   │   ├── ...
+    │   │   ├── repository.json
+    │   ├── model-2
+    │   │   ├── ...
+    │   │   ├── repository.json
+    ├── pyproject.toml
+
+we can integrate project metadata with the release files. All we have to do is add a section to our ``pyproject.toml``
+that tells Lazyscribe where to look:
+
+.. code-block:: toml
+
+    [project]
+    version = "1.0.0"
+
+    ...
+
+    [tool.lazyscribe]
+    repositories = [
+        "src/model-1/repository.json",
+        "src/model-2/repository.json"
+    ]
+
+with this configuration, we can create releases for both repositories at once using
+:py:meth:`lazyscribe.release.release_from_toml`:
+
+.. code-block:: python
+
+    import lazyscribe.release as lzr
+
+    with open("pyproject.toml") as infile:
+        lzr.release_from_toml(infile.read())
+
+we will have two new files in our tree.
+
+.. code-block::
+    :emphasize-lines: 5, 9
+
+    ├── src
+    │   ├── model-1
+    │   │   ├── ...
+    │   │   ├── repository.json
+    │   │   ├── releases.json
+    │   ├── model-2
+    │   │   ├── ...
+    │   │   ├── repository.json
+    │   │   ├── releases.json
+    ├── pyproject.toml
+
+These releases will have tag ``v1.0.0``.
