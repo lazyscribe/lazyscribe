@@ -6,7 +6,10 @@ In this tutorial we will demonstrate how you can create a release of related art
 combinations from your :py:class:`lazyscribe.repository.Repository` instances.
 
 The goal of a release is to allow users to easily "time-travel" safely to points in time that
-have semantic meaning to the project/deployment as a whole. First, let's create our deployment.
+have semantic meaning to the project/deployment as a whole. It is an extension of the base
+functionality exposed by our repository interface.
+
+First, let's create our deployment.
 
 .. note::
     In this tutorial, you'll see us use ``time-machine`` to specify datetimes. We are
@@ -48,11 +51,10 @@ with time_machine.travel(
 
     repository.save()
 
-# %%
-# Now, let's read in our saved repository and create a release based on our artifacts:
+    # Now, let's read in our saved repository and create a release based on our artifacts:
+    saved_ = Repository(tmpdir / "repository.json", mode="r")
+    release = lzr.create_release(saved_, "v0.1.0")
 
-saved_ = Repository(tmpdir / "repository.json", mode="r")
-release = lzr.create_release(saved_, "v0.1.0")
 print(release)
 
 # %%
@@ -78,20 +80,19 @@ with time_machine.travel(
 repository.save()
 
 # %%
-# Now, let's read in the release and filter our repository to ensure that the end user
-# gets the version of the model they intend.
+# Then we can read in the release and filter our repository to the artifact/version combinations in the release.
 
 saved_ = Repository(tmpdir / "repository.json", mode="r")
 with open(tmpdir / "releases.json") as infile:
     releases = lzr.load(infile)
 
 my_release = lzr.find_release(releases, "v0.1.0")
-filtered_ = repository.filter(my_release.artifacts)
+filtered_ = saved_.filter(my_release.artifacts)
 
 # %%
-# ``filtered_`` is a repository that only contains the artifact/version combinations that appear
-# in the release. What does this mean? We can time travel without having to know the exact version
-# of the artifact we want to load. All we need to know is the release:
+# Finally, we can load our model object without additional parameterization. As a result, the end user is not
+# required to remember the name and version of each individual artifact they want; they only need to know the
+# release.
 
 first_model_ = filtered_.load_artifact(name="model")
 print(first_model_)
@@ -102,18 +103,21 @@ print(first_model_)
 # Now, one common usage pattern we see is using a project (through ``pyproject.toml``) to manage
 # a group of lazyscribe repository objects. Let's synchronize our project version with our repositories:
 
-pyproject_data_ = f"""
-[project]
-name = "my-complex-deployment"
-version = "0.2.0"
+with time_machine.travel(
+    datetime(2025, 12, 31, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+):
+    pyproject_data_ = f"""
+    [project]
+    name = "my-complex-deployment"
+    version = "0.2.0"
 
-[tool.lazyscribe]
-repositories = [
-    "{tmpdir / "repository.json"}
-]
-"""
+    [tool.lazyscribe]
+    repositories = [
+        "{tmpdir / "repository.json"}"
+    ]
+    """
 
-lzr.release_from_toml(pyproject_data_)
+    lzr.release_from_toml(pyproject_data_)
 
 # %%
 # This function will create a release for our listed repository with version 0.2.0:

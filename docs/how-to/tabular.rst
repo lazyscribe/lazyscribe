@@ -3,7 +3,7 @@ Represent the project as a table
 
 .. important::
 
-    The functionality described in this guide was deprecated in version 2.0. To obtain a tabular
+    The functionality described in this guide was removed in version 2.0. To obtain a tabular
     representation of your project and/or repository, install ``lazyscribe-arrow>=0.3`` and use
     code similar to the following:
 
