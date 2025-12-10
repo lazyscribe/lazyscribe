@@ -1,3 +1,15 @@
+## v2.0.0rc0 (2025-12-10)
+
+### Feat
+
+- **release**: adding the ability to create automated releases via pyproject.toml (#175)
+- removing the python version check from the JSON handler (#176)
+
+### Refactor
+
+- deprecating the to_tabular method (#181)
+- **repository**: removing the append mode and changing default open behaviour (#177)
+
 ## v2.0.0a1 (2025-12-01)
 
 ### Feat

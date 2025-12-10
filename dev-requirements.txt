@@ -34,7 +34,7 @@ commitizen==4.10.0
     # via lazyscribe (pyproject.toml)
 contourpy==1.3.2
     # via matplotlib
-coverage==7.12.0
+coverage==7.13.0
     # via pytest-cov
 cycler==0.12.1
     # via matplotlib
@@ -58,7 +58,7 @@ filelock==3.20.0
     # via virtualenv
 fonttools==4.61.0
     # via matplotlib
-fsspec==2025.10.0
+fsspec==2025.12.0
     # via lazyscribe (pyproject.toml)
 furo==2025.9.25
     # via lazyscribe (pyproject.toml)
@@ -78,7 +78,7 @@ joblib==1.5.2
     # via scikit-learn
 kiwisolver==1.4.9
     # via matplotlib
-librt==0.6.3
+librt==0.7.3
     # via mypy
 markupsafe==3.0.3
     # via jinja2
@@ -118,7 +118,7 @@ pip==25.3
     # via pip-tools
 pip-tools==7.5.2
     # via lazyscribe (pyproject.toml)
-platformdirs==4.5.0
+platformdirs==4.5.1
     # via virtualenv
 pluggy==1.6.0
     # via
@@ -147,7 +147,7 @@ pyproject-hooks==1.2.0
     # via
     #   build
     #   pip-tools
-pytest==9.0.1
+pytest==9.0.2
     # via
     #   lazyscribe (pyproject.toml)
     #   pytest-cov
@@ -171,7 +171,7 @@ requests==2.32.5
     # via
     #   lazyscribe (pyproject.toml)
     #   sphinx
-ruff==0.14.7
+ruff==0.14.8
     # via lazyscribe (pyproject.toml)
 scikit-learn==1.7.2
     # via lazyscribe (pyproject.toml)
@@ -194,7 +194,7 @@ sphinx==8.1.3
     #   sphinx-inline-tabs
 sphinx-basic-ng==1.0.0b2
     # via furo
-sphinx-gallery==0.19.0
+sphinx-gallery==0.20.0
     # via lazyscribe (pyproject.toml)
 sphinx-inline-tabs==2023.4.21
     # via lazyscribe (pyproject.toml)
@@ -224,6 +224,7 @@ toml-fmt-common==1.0.1
     # via pyproject-fmt
 tomli==2.3.0
     # via
+    #   lazyscribe (pyproject.toml)
     #   build
     #   coverage
     #   mypy
@@ -246,7 +247,7 @@ typing-extensions==4.15.0
     #   virtualenv
 tzdata==2025.2
     # via pandas
-urllib3==2.5.0
+urllib3==2.6.1
     # via requests
 uv==0.8.13
     # via

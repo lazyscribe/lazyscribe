@@ -33,7 +33,7 @@ class Project:
     fpath : str | pathlib.Path, optional (default "project.json")
         The location of the project file. If no project file exists, this will be the location
         of the output JSON file when ``save`` is called.
-    mode : {"r", "a", "w", "w+"}, optional (default "w")
+    mode : {"r", "a", "w", "w+"}, optional (default "a")
         The mode for opening the project.
 
         * ``r``: All existing experiments will be loaded as
@@ -70,7 +70,7 @@ class Project:
     def __init__(
         self,
         fpath: str | Path = "project.json",
-        mode: Literal["r", "a", "w", "w+"] = "w",
+        mode: Literal["r", "a", "w", "w+"] = "a",
         author: str | None = None,
         **storage_options: Any,
     ) -> None:
@@ -346,62 +346,6 @@ class Project:
         for exp in self.experiments:
             if func(exp):
                 yield exp
-
-    def to_tabular(
-        self,
-    ) -> tuple[
-        list[dict[tuple[str] | tuple[str, str], Any]],
-        list[dict[tuple[str] | tuple[str, str], Any]],
-    ]:
-        """Create a dictionary that can be fed into ``pandas``.
-
-        This method depends on the user consistently logging
-        the same metrics and parameters to each experiment in the
-        project.
-
-        Returns
-        -------
-        list[dict]
-            The ``experiments`` list. Each entry is a result of
-            :py:meth:`lazyscribe.experiment.Experiment.to_tabular` per project's experiment.
-        list[dict]
-            The ``tests`` list. Each entry is a result of :py:meth:`lazyscribe.test.Test.to_tabular`
-            per test per project's experiment, with the following additional keys:
-
-            +-------------------------------------+--------------------------------------+
-            | Field                               | Description                          |
-            |                                     |                                      |
-            +=====================================+======================================+
-            | ``("experiment_name",)``            | Name of the test's experiment        |
-            +-------------------------------------+--------------------------------------+
-            | ``("experiment_short_slug",)``      | Short slug for the test's experiment |
-            +-------------------------------------+--------------------------------------+
-            | ``("experiment_slug",)``            | Full slug for the test's experiment  |
-            +-------------------------------------+--------------------------------------+
-            | ``("test",)``                       | Test name                            |
-            +-------------------------------------+--------------------------------------+
-            | ``("description",)``                | Test description                     |
-            +-------------------------------------+--------------------------------------+
-        """
-        exp_output: list[dict[tuple[str] | tuple[str, str], Any]] = []
-        test_output: list[dict[tuple[str] | tuple[str, str], Any]] = []
-
-        for exp in self.experiments:
-            exp_item = exp.to_tabular()
-            exp_output.append(exp_item)
-            d = exp.to_dict()
-            for test in exp.tests:
-                test_item = test.to_tabular()
-                test_item.update(
-                    {
-                        ("experiment_name", ""): d["name"],
-                        ("experiment_short_slug", ""): d["short_slug"],
-                        ("experiment_slug", ""): d["slug"],
-                    }
-                )
-                test_output.append(test_item)
-
-        return exp_output, test_output
 
     def __contains__(self, item: str) -> bool:
         """Check if the project contains an experiment with the given slug or short slug.

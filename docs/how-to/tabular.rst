@@ -1,6 +1,30 @@
 Represent the project as a table
 ================================
 
+.. important::
+
+    The functionality described in this guide was removed in version 2.0. To obtain a tabular
+    representation of your project and/or repository, install ``lazyscribe-arrow>=0.3`` and use
+    code similar to the following:
+
+    .. code-block:: python
+
+        import pyarrow as pa
+        from lazyscribe import Project
+        from lazyscribe_arrow.interchange import to_table
+
+        project: Project = ...
+        table: pyarrow.Table = to_table(project)
+
+    This code returns a ``pyarrow.Table`` object. Using Arrow's "zero-copy" interchange format
+    with popular data structures, you can easily use this object with Pandas, Polars, DuckDB, etc.
+
+    .. code-block:: python
+
+        import polars as pl
+
+        df = pl.DataFrame(table)
+
 To aid in visualization and comparison, ``lazyscribe`` has a built-in method
 :py:meth:`lazyscribe.project.Project.to_tabular` for generating a ``pandas``-ready format:
 

@@ -4,14 +4,23 @@ from __future__ import annotations
 
 import json
 import logging
+import sys
 from datetime import datetime
 from io import IOBase
+from pathlib import Path
 from typing import Any, Literal
 
 from attrs import Factory, define, field
 
 from lazyscribe._utils import utcnow
+from lazyscribe.exception import VersionNotFoundError
 from lazyscribe.repository import Repository
+
+# Conditional import of the tomli library
+if sys.version_info < (3, 11):
+    import tomli
+else:
+    import tomllib as tomli
 
 LOG = logging.getLogger(__name__)
 
@@ -135,9 +144,10 @@ def find_release(
 
     Raises
     ------
+    lazyscribe.exception.VersionNotFoundError
+        Raised if a release cannot be found.
     ValueError
-        Raised if the ``tag`` or ``created_at`` cannot be found with the given
-        matching logic.
+        Raised if the specified matching logic does not match the version type specified.
     """
     out: Release
 
@@ -150,13 +160,13 @@ def find_release(
                 out = next(ver for ver in releases_ if ver.tag == tag)
             except StopIteration:
                 msg = f"Cannot find release with tag '{tag}'"
-                raise ValueError(msg) from None
+                raise VersionNotFoundError(msg) from None
         case ("exact", datetime() as created_at):
             try:
                 out = next(ver for ver in releases_ if ver.created_at == created_at)
             except StopIteration:
                 msg = f"Cannot find release with creation date of {created_at!s}"
-                raise ValueError(msg) from None
+                raise VersionNotFoundError(msg) from None
         case ("asof", str()):
             raise ValueError(
                 "Cannot perform an ``asof`` match using a tag. Please provide a "
@@ -168,7 +178,7 @@ def find_release(
                     f"Creation date {created_at!s} predates the earliest release: "
                     f"'{releases_[0].tag}' ({releases_[0].created_at!s})"
                 )
-                raise ValueError(msg)
+                raise VersionNotFoundError(msg)
             try:
                 out = next(
                     ver
@@ -298,3 +308,103 @@ def loads(s: str, **kwargs: Any) -> list[Release]:
     json_data_ = json.loads(s, **kwargs)
 
     return [Release.from_dict(ver) for ver in json_data_]
+
+
+def release_from_toml(cfg: str) -> None:
+    """Generate a release for supplied repositories from a configuration.
+
+    This function will read in a TOML-compatible configuration file and look for
+    the ``[tool.lazyscribe]`` table. This table must contain 1 field:
+
+    * ``repositories`` (list): path to repository JSON files for which we want releases.
+
+    The configuration has optional fields, including
+
+    * ``version``: the current version of the overall project. If not supplied,
+      this function will look for the ``version`` attribute of the ``[project]`` table.
+    * ``format``: format for the repository release versions. This string will be formatted with the
+      ``version`` string, as well as the ``year``, ``month``, and ``day`` of the release. By default,
+      this format is ``v{version}``.
+
+    This function will read in each repository, create a new release, and write it to a ``releases.json``
+    file in the same directory as the source repository JSON file.
+
+    Suppose you have the following entry in ``pyproject.toml``:
+
+    .. code-block:: toml
+
+        [project]
+        version = "1.0.0"
+
+        ...
+
+        [tool.lazyscribe]
+        repositories = [
+            "src/models/model-1/repository.json",
+            "src/models/model-2/repository.json"
+        ]
+
+    calling
+
+    .. code-block:: python
+
+        import lazyscribe.release as lzr
+
+        with open("pyproject.toml") as infile:
+            release_from_toml(infile.read())
+
+    will create two new files:
+
+    * ``src/models/model-1/releases.json``, and
+    * ``src/models/model-2/release.json``.
+
+    Each of these files will contain a ``v1.0.0`` release.
+
+    Parameters
+    ----------
+    cfg : str
+        String contents of the configuration file
+    """
+    cfg_data_ = tomli.loads(cfg)
+
+    try:
+        curr_version_ = cfg_data_["project"]["version"]
+    except KeyError:
+        curr_version_ = cfg_data_["tool"]["lazyscribe"]["version"]
+
+    version_format_ = cfg_data_["tool"]["lazyscribe"].get("format", "v{version}")
+
+    repositories = cfg_data_["tool"]["lazyscribe"]["repositories"]
+    for fpath in repositories:
+        repo = Repository(fpath, mode="r")
+        new_release_ = create_release(repo, tag="__placeholder")
+        new_release_.tag = version_format_.format(
+            version=curr_version_,
+            year=new_release_.created_at.year,
+            month=new_release_.created_at.month,
+            day=new_release_.created_at.day,
+        )
+        # Read in current releases
+        release_fpath = Path(fpath).parent / "releases.json"
+        if release_fpath.exists():
+            with open(release_fpath) as infile:
+                curr_releases_ = load(infile)
+
+            # Check if the release already exists
+            try:
+                _ = find_release(
+                    curr_releases_, version=new_release_.tag, match="exact"
+                )
+            except VersionNotFoundError:
+                curr_releases_.append(new_release_)
+                with open(release_fpath, "w") as outfile:
+                    dump(curr_releases_, outfile, indent=4)
+                continue
+            LOG.warning(
+                "Release '%s' already exists for the repository at '%s'. Skipping...",
+                new_release_.tag,
+                fpath,
+            )
+        else:
+            with open(release_fpath, "w") as outfile:
+                dump([new_release_], outfile, indent=4)
