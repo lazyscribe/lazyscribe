@@ -60,6 +60,7 @@ class Artifact(metaclass=ABCMeta):
     value: Any = field(eq=False)
     writer_kwargs: dict[str, Any] = field(eq=False)
     created_at: datetime = field(eq=False)
+    expiry: datetime | None = field(eq=False)
     version: int = field(eq=False)
     dirty: bool = field(eq=False)
 
@@ -71,6 +72,7 @@ class Artifact(metaclass=ABCMeta):
         value: Any = None,
         fname: str | None = None,
         created_at: datetime | None = None,
+        expiry: datetime | None = None,
         writer_kwargs: dict[str, Any] | None = None,
         version: int = 0,
         dirty: bool = True,
@@ -92,6 +94,8 @@ class Artifact(metaclass=ABCMeta):
             the name of the artifact and the suffix for the class.
         created_at : datetime.datetime, optional (default ``lazyscribe._utils.utcnow()``)
             When the artifact was created.
+        expiry : datetime.datetime, optional (default None)
+            When the artifact expired.
         writer_kwargs : dict, optional (default {})
             Keyword arguments for writing an artifact to the filesystem. Provided when an artifact
             is logged to an experiment.
