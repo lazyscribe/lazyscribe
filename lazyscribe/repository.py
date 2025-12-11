@@ -229,6 +229,43 @@ class Repository:
 
         return out
 
+    def set_artifact_expiry(
+        self,
+        name: str,
+        version: datetime | str | int | None = None,
+        match: Literal["asof", "exact"] = "exact",
+        expiry: datetime | str | None = None,
+    ) -> None:
+        """Set the expiry date for a given artifact.
+
+        Parameters
+        ----------
+        name : str
+            The name of the artifact.
+        version : datetime.datetime | str | int, optional (default None)
+            The version of the artifact to load.
+            Can be provided as a datetime corresponding to the ``created_at`` field,
+            a string corresponding to the ``created_at`` field in the format ``"%Y-%m-%dT%H:%M:%S"``
+            (e.g. ``"2025-01-25T12:36:22"``), or an integer version.
+            If set to ``None`` or not provided, defaults to the most recent version.
+        match : {"asof", "exact"}, optional (default "exact")
+            Matching logic. Only relevant for ``str`` and ``datetime.datetime`` values for
+            ``version``. ``exact`` will provide an artifact with the exact ``created_at``
+            value provided. ``asof`` will provide the most recent version as of the
+            ``version`` value.
+        expiry : datetime.datetime | str, optional (default None)
+            The expiry datetime for the artifact version.
+        """
+        # Search for the artifact
+        artifact = self._search_artifact_versions(
+            name=name, version=version, match=match
+        )
+        match expiry:
+            case datetime():
+                artifact.expiry = expiry
+            case str():
+                artifact.expiry = datetime.strptime(expiry, "%Y-%m-%dT%H:%M:%S")
+
     def get_artifact_metadata(
         self,
         name: str,
@@ -511,10 +548,11 @@ class Repository:
         except ValueError as exc:
             msg = f"Invalid version identifier provided. {version} is not in the format YYYY-MM-DDTHH:MM:SS"
             raise InvalidVersionError(msg) from exc
-        if version is None:
-            artifact = artifacts_matching_name[-1]
-        elif isinstance(version, datetime):
-            if match == "exact":
+
+        match (match, version):
+            case (_, None):
+                artifact = artifacts_matching_name[-1]
+            case ("exact", datetime()):
                 try:
                     artifact = next(
                         art
@@ -525,43 +563,51 @@ class Repository:
                     raise VersionNotFoundError(
                         f"No artifact named {name} with version {version}"
                     ) from None
-            elif match == "asof":
-                try:
-                    LOG.info(
-                        f"Searching for the latest version of '{name}' as of {version!s}..."
-                    )
-                    if version < artifacts_matching_name[0].created_at:
-                        msg = (
-                            f"Version {version!s} predates the earliest version "
-                            f"{artifacts_matching_name[0].created_at!s}."
-                        )
-                        raise VersionNotFoundError(msg) from None
-                    artifact = next(
-                        art
-                        for idx, art in enumerate(artifacts_matching_name)
-                        if (
-                            version >= art.created_at
-                            and version < artifacts_matching_name[idx + 1].created_at
-                        )
-                    )
-                    LOG.info(
-                        f"Found version {artifact.version} (created {artifact.created_at!s})"
-                    )
-                except IndexError:
-                    # Get latest
-                    artifact = artifacts_matching_name[-1]
-            else:
-                raise ValueError(
-                    "Please provide ``exact`` or ``asof`` as the value for ``match``"
+            case ("asof", datetime()):
+                LOG.info(
+                    f"Searching for the latest version of '{name}' as of {version!s}..."
                 )
-        else:
-            try:
-                # Integer version is 0-indexed
-                artifact = artifacts_matching_name[version]
-            except IndexError:
-                raise VersionNotFoundError(
-                    f"No artifact named {name} with version {version}"
-                ) from None
+                if version < artifacts_matching_name[0].created_at:
+                    msg = (
+                        f"Version {version!s} predates the earliest version "
+                        f"{artifacts_matching_name[0].created_at!s}."
+                    )
+                    raise VersionNotFoundError(msg) from None
+                for idx, art in enumerate(artifacts_matching_name[:-1]):
+                    next_art_dt_ = artifacts_matching_name[idx + 1].created_at
+                    match art.expiry:
+                        case None:
+                            if version >= art.created_at and version < next_art_dt_:
+                                artifact = art
+                                break
+                        case datetime() as expiry:
+                            if (
+                                version >= art.created_at
+                                and version < next_art_dt_
+                                and version < expiry
+                            ):
+                                artifact = art
+                                break
+                else:
+                    artifact = artifacts_matching_name[-1]
+                LOG.info(
+                    f"Found version {artifact.version} (created {artifact.created_at!s})"
+                )
+            case ("exact", int()):
+                try:
+                    # Integer version is 0-indexed
+                    artifact = next(
+                        art for art in artifacts_matching_name if art.version == version
+                    )
+                except StopIteration:
+                    raise VersionNotFoundError(
+                        f"No artifact named {name} with version {version}"
+                    ) from None
+            case _:
+                raise ValueError(
+                    "Please provide ``exact`` or ``asof`` for match. ``asof`` is only "
+                    "valid for str/datetime versions."
+                )
 
         return artifact
 
