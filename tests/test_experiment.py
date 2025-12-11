@@ -138,6 +138,7 @@ def test_experiment_artifact_logging_basic():
                 "fname": f"features-{today.strftime('%Y%m%d%H%M%S')}.json",
                 "handler": "json",
                 "created_at": today.strftime("%Y-%m-%dT%H:%M:%S"),
+                "expiry": None,
                 "version": 0,
             }
         ],

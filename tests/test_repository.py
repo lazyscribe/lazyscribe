@@ -78,6 +78,7 @@ def test_save_repository(tmp_path):
     assert serialized == [
         {
             "created_at": "2025-01-20T13:23:30",
+            "expiry": None,
             "fname": expected_fname,
             "handler": "json",
             "name": "my-dict",
@@ -166,6 +167,7 @@ def test_save_repository_multi(tmp_path):
     assert serialized == [
         {
             "created_at": "2025-01-20T13:23:30",
+            "expiry": None,
             "fname": "my-dict-20250120132330.json",
             "handler": "json",
             "name": "my-dict",
@@ -173,6 +175,7 @@ def test_save_repository_multi(tmp_path):
         },
         {
             "created_at": "2025-01-20T13:23:30",
+            "expiry": None,
             "fname": "my-dict-2-20250120132330.json",
             "handler": "json",
             "name": "my-dict-2",
@@ -223,6 +226,7 @@ def test_save_repository_multiple_artifact(tmp_path):
     assert serialized == [
         {
             "created_at": "2025-01-20T13:23:30",
+            "expiry": None,
             "fname": expected_my_dict_fname0,
             "handler": "json",
             "name": "my-dict",
@@ -230,6 +234,7 @@ def test_save_repository_multiple_artifact(tmp_path):
         },
         {
             "created_at": "2025-01-20T13:23:30",
+            "expiry": None,
             "fname": expected_my_dict2_fname,
             "handler": "json",
             "name": "my-dict2",
@@ -237,6 +242,7 @@ def test_save_repository_multiple_artifact(tmp_path):
         },
         {
             "created_at": "2025-01-21T13:23:30",
+            "expiry": None,
             "fname": expected_my_dict_fname1,
             "handler": "json",
             "name": "my-dict",
@@ -394,6 +400,7 @@ def test_repository_artifact_output_only(tmp_path):
         assert list(repository) == [
             {
                 "created_at": "2025-01-20T13:23:30",
+                "expiry": None,
                 "fname": expected_fname,
                 "handler": "testartifact",
                 "name": "features",
@@ -508,6 +515,7 @@ def test_retrieve_artifact_meta():
 
     assert data == {
         "created_at": "2025-01-20T13:23:30",
+        "expiry": None,
         "fname": "my-dict-20250120132330.json",
         "handler": "json",
         "name": "my-dict",
