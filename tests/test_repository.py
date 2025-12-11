@@ -373,6 +373,57 @@ def test_save_repository_artifact_failed_validation(tmp_path):
         repository2.load_artifact(name="estimator")
 
 
+def test_expiry_artifact(tmp_path):
+    """Test using an asof match with an expired artifact."""
+    location = tmp_path / "my-repository"
+    location.mkdir()
+    repository_location = location / "repository.json"
+
+    repository = Repository(repository_location, mode="w")
+    with time_machine.travel(
+        datetime(2025, 12, 24, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC"))
+    ):
+        repository.log_artifact("my-dict", {"a": 1}, handler="json")
+    with time_machine.travel(
+        datetime(2025, 12, 25, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC"))
+    ):
+        repository.log_artifact("my-dict", {"a": 2}, handler="json")
+    with time_machine.travel(
+        datetime(2025, 12, 26, 0, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC"))
+    ):
+        repository.log_artifact("my-dict", {"a": 3}, handler="json")
+
+    repository.save()
+
+    saved_ = Repository(repository_location, mode="w+")
+    # Set the expiry for version 1
+    saved_.set_artifact_expiry(
+        "my-dict",
+        1,
+        "exact",
+        datetime(2025, 12, 25, 6, 0, 0),
+    )
+    saved_.set_artifact_expiry(
+        "my-dict",
+        2,
+        "exact",
+        "2025-12-31T14:30:00",
+    )
+    # Without an expiry, this call should load version 1
+    art = saved_._search_artifact_versions(
+        "my-dict", version=datetime(2025, 12, 25, 14, 0, 0), match="asof"
+    )
+
+    assert art == saved_.artifacts[0]  # Version 0
+
+    # Try setting the expiry on a read-only repository
+    read_only_ = Repository(repository_location, mode="r")
+    with pytest.raises(ReadOnlyError):
+        read_only_.set_artifact_expiry(
+            "my-dict", 1, "exact", datetime(2025, 12, 25, 6, 0, 0)
+        )
+
+
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )

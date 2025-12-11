@@ -256,6 +256,9 @@ class Repository:
         expiry : datetime.datetime | str, optional (default None)
             The expiry datetime for the artifact version.
         """
+        if self.mode == "r":
+            raise ReadOnlyError("Repository is in read-only mode.")
+
         # Search for the artifact
         artifact = self._search_artifact_versions(
             name=name, version=version, match=match
