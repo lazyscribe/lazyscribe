@@ -413,8 +413,13 @@ def test_expiry_artifact(tmp_path):
     art = saved_._search_artifact_versions(
         "my-dict", version=datetime(2025, 12, 25, 14, 0, 0), match="asof"
     )
-
     assert art == saved_.artifacts[0]  # Version 0
+
+    # Try reading an artifact that has an expiry
+    art = saved_._search_artifact_versions(
+        "my-dict", version=datetime(2025, 12, 25, 3, 0, 0), match="asof"
+    )
+    assert art == saved_.artifacts[1]
 
     # Try setting the expiry on a read-only repository
     read_only_ = Repository(repository_location, mode="r")
