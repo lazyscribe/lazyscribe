@@ -37,7 +37,7 @@ class Registry:
         """
         self.projects[name] = project
 
-    def search(self, fpath: Path) -> str:
+    def search(self, fpath: Path) -> str | None:
         """Find a project from the JSON path.
 
         This method helps identify a project key in the repository based
@@ -50,8 +50,8 @@ class Registry:
 
         Returns
         -------
-        Project
-            The project.
+        str
+            The key reference for the project in the registry.
         """
         out: str | None = None
         for name, project in self.projects.items():
