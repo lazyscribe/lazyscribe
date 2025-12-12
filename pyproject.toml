@@ -74,10 +74,6 @@ entry-points."lazyscribe.artifact_type".base = "lazyscribe.artifacts.base:Artifa
 entry-points."lazyscribe.artifact_type".json = "lazyscribe.artifacts.json:JSONArtifact"
 entry-points."lazyscribe.artifact_type".pickle = "lazyscribe.artifacts.pickle:PickleArtifact"
 
-[tool.uv.build-backend]
-module-name = "lazyscribe"
-module-root = ""
-
 [tool.ruff]
 target-version = "py310"
 exclude = [
@@ -130,6 +126,10 @@ strict = true
 warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
+
+[tool.uv.build-backend]
+module-name = "lazyscribe"
+module-root = ""
 
 [tool.commitizen]
 version_provider = "uv"
