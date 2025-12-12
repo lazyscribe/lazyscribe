@@ -268,6 +268,8 @@ class Repository:
                 artifact.expiry = expiry
             case str():
                 artifact.expiry = datetime.strptime(expiry, "%Y-%m-%dT%H:%M:%S")
+            case None:
+                artifact.expiry = utcnow()
 
     def get_artifact_metadata(
         self,
@@ -554,7 +556,12 @@ class Repository:
 
         match (match, version):
             case (_, None):
-                artifact = artifacts_matching_name[-1]
+                best_before_ = [
+                    art
+                    for art in artifacts_matching_name
+                    if art.expiry is None or utcnow() < art.expiry
+                ]
+                artifact = best_before_[-1]
             case ("exact", datetime()):
                 try:
                     artifact = next(
