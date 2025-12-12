@@ -15,6 +15,7 @@ import time_machine
 from lazyscribe import Project
 from lazyscribe.exception import ArtifactLoadError, ReadOnlyError, SaveError
 from lazyscribe.experiment import Experiment, ReadOnlyExperiment
+from lazyscribe.registry import Registry
 from lazyscribe.test import ReadOnlyTest, Test
 from tests.conftest import TestArtifact
 
@@ -588,6 +589,91 @@ def test_load_project_dependencies():
     )
 
     assert project.experiments == [expected]
+
+
+def test_load_project_dependencies_registry():
+    """Test loading a project with experiment dependencies and a registry."""
+    upstream_project_ = Project(DATA_DIR / "project.json", mode="r")
+    with patch("lazyscribe.project.registry", new_callable=Registry) as mock:
+        mock.add_project("upstream-project", upstream_project_)
+
+        project = Project(fpath=DATA_DIR / "down-project.json", mode="a")
+
+    expected = ReadOnlyExperiment(
+        name="My downstream experiment",
+        project=DATA_DIR / "down-project.json",
+        author="root",
+        created_at=datetime(2022, 1, 15, 9, 30, 0),
+        last_updated=datetime(2022, 1, 15, 9, 30, 0),
+        dependencies={
+            "my-experiment": ReadOnlyExperiment(
+                name="My experiment",
+                project=DATA_DIR / "project.json",
+                author="root",
+                metrics={"name": 0.5},
+                created_at=datetime(2022, 1, 1, 9, 30, 0),
+                last_updated=datetime(2022, 1, 1, 9, 30, 0),
+            )
+        },
+    )
+
+    assert project.experiments == [expected]
+
+
+@time_machine.travel(
+    datetime(2025, 12, 25, 0, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
+def test_project_dep_registry_write(tmp_path):
+    """Test creating an experiment that references a project in the registry."""
+    location = tmp_path / "my-project"
+    location.mkdir()
+
+    # Create the upstream project
+    upstream_project_ = Project(location / "upstream-project.json", mode="w")
+    with upstream_project_.log("Set features") as exp:
+        exp.log_parameter("features", [0, 1, 2])
+
+    with patch("lazyscribe._utils.registry", new_callable=Registry) as mock:
+        mock.add_project("upstream-project", upstream_project_)
+
+        # Create our downstream project
+        downstream_project_ = Project(
+            location / "downstream-project.json", author="root", mode="w"
+        )
+        with downstream_project_.log("Use features") as exp:
+            exp.dependencies["set-features"] = upstream_project_["set-features"]
+
+        downstream_project_.save()
+
+    with patch("lazyscribe.project.registry", new_callable=Registry) as mock:
+        mock.add_project("upstream-project", upstream_project_)
+        # Read in the project
+        downstream_project_read_ = Project(
+            location / "downstream-project.json", mode="w+"
+        )
+
+    # Read in the downstream project JSON
+    with open(location / "downstream-project.json") as infile:
+        downstream_data_ = json.load(infile)
+
+    assert downstream_data_ == [
+        {
+            "name": "Use features",
+            "author": "root",
+            "last_updated_by": "root",
+            "metrics": {},
+            "parameters": {},
+            "created_at": "2025-12-25T00:00:00",
+            "last_updated": "2025-12-25T00:00:00",
+            "dependencies": ["upstream-project|set-features-20251225000000"],
+            "short_slug": "use-features",
+            "slug": "use-features-20251225000000",
+            "artifacts": [],
+            "tests": [],
+            "tags": [],
+        }
+    ]
+    assert downstream_project_read_.experiments == downstream_project_.experiments
 
 
 def test_merge_append():
