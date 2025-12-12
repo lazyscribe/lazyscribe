@@ -10,6 +10,7 @@ from attrs import Attribute, asdict, fields, filters
 
 from lazyscribe.artifacts.base import Artifact
 from lazyscribe.exception import ArtifactLoadError
+from lazyscribe.registry import registry
 
 
 def serializer(inst: type, field: "Attribute[Any]", value: Any) -> Any:
@@ -32,7 +33,12 @@ def serializer(inst: type, field: "Attribute[Any]", value: Any) -> Any:
     if isinstance(value, datetime):
         return value.isoformat(timespec="seconds")
     if field is not None and field.name == "dependencies":
-        deps: list[str] = [f"{exp.project}|{exp.slug}" for exp in value.values()]
+        deps: list[str] = []
+        for exp in value.values():
+            if (project := registry.search(exp.project)) is not None:
+                deps.append(f"{project}|{exp.slug}")
+            else:
+                deps.append(f"{exp.project}|{exp.slug}")
         return deps
     if field is not None and field.name == "tests":
         tests: list[dict[str, Any]] = [asdict(test) for test in value]
