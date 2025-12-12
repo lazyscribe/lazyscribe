@@ -555,6 +555,10 @@ class Repository:
                     "Please provide ``exact`` or ``asof`` as the value for ``match``"
                 )
         else:
+            if match != "exact":
+                raise ValueError(
+                    "Please provide ``exact`` as the value for ``match`` as of ``version`` is an integer"
+                ) from None
             try:
                 # Integer version is 0-indexed
                 artifact = artifacts_matching_name[version]

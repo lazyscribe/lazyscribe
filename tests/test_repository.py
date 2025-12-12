@@ -439,6 +439,12 @@ def test_invalid_match_strategy():
             "my-dict", version=datetime(2025, 1, 1), match="fake"
         )
 
+    with pytest.raises(ValueError):
+        repository._search_artifact_versions("my-dict", version=1, match="fake")
+
+    with pytest.raises(ValueError):
+        repository._search_artifact_versions("my-dict", version=1, match="asof")
+
 
 def test_repository_asof_search(tmp_path):
     """Test retrieving artifacts using ``asof``."""
