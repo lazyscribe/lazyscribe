@@ -255,6 +255,11 @@ class Repository:
             ``version`` value.
         expiry : datetime.datetime | str, optional (default None)
             The expiry datetime for the artifact version.
+
+        Raises
+        ------
+        ValueError
+            Raised if the value for ``expiry`` cannot be coerced to a datetime.
         """
         if self.mode == "r":
             raise ReadOnlyError("Repository is in read-only mode.")
@@ -270,6 +275,8 @@ class Repository:
                 artifact.expiry = datetime.strptime(expiry, "%Y-%m-%dT%H:%M:%S")
             case None:
                 artifact.expiry = utcnow()
+            case _:
+                raise ValueError("Value '%s' cannot be coerced to a datetime", expiry)
 
     def get_artifact_metadata(
         self,

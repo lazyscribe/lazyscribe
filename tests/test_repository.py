@@ -429,6 +429,29 @@ def test_expiry_artifact(tmp_path):
         )
 
 
+def test_expiry_artifact_handling(tmp_path):
+    """Ensure the expiry helper handles various arguments."""
+    location = tmp_path / "my-repository"
+    location.mkdir()
+    repository_location = location / "repository.json"
+
+    repository = Repository(repository_location, mode="w")
+    with time_machine.travel(
+        datetime(2025, 12, 24, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC"))
+    ):
+        repository.log_artifact("my-dict", {"a": 1}, handler="json")
+
+    with pytest.raises(ValueError):
+        repository.set_artifact_expiry("my-dict", 0, expiry=100)
+
+    with time_machine.travel(
+        datetime(2025, 12, 31, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC"))
+    ):
+        repository.set_artifact_expiry("my-dict", 0)
+
+    assert repository.artifacts[0].expiry == datetime(2025, 12, 31, 0, 0)
+
+
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
