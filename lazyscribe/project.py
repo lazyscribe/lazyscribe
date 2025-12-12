@@ -124,7 +124,9 @@ class Project:
                         # The upstream experiment refers to a project path that has been
                         # loaded into the registry
                         project = registry[project_key_]
-                    elif (project := upstream_projects.get(project_name)) is None:
+                    elif project_name in upstream_projects:
+                        project = upstream_projects[project_name]
+                    else:
                         project = Project(
                             fpath=f"{self.protocol}://{project_name}",
                             mode="r",
