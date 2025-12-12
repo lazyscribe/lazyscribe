@@ -116,8 +116,7 @@ class Project:
                 deplist = exp.pop("dependencies")
                 for dep in deplist:
                     project_name, exp_name = dep.split("|")
-                    project = upstream_projects.get(project_name)
-                    if not project:
+                    if (project := upstream_projects.get(project_name)) is None:
                         project = Project(
                             fpath=f"{self.protocol}://{project_name}",
                             mode="r",
