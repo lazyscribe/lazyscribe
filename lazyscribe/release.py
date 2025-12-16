@@ -5,8 +5,10 @@ from __future__ import annotations
 import json
 import logging
 import sys
+from bisect import bisect
 from datetime import datetime
 from io import IOBase
+from operator import attrgetter
 from pathlib import Path
 from typing import Any, Literal
 
@@ -173,23 +175,17 @@ def find_release(
                 "``datetime.datetime`` value to perform an ``asof`` match."
             )
         case ("asof", datetime() as created_at):
-            if created_at < releases_[0].created_at:
+            eligible_idx_ = bisect(releases_, created_at, key=attrgetter("created_at"))
+            eligible_releases_ = releases_[:eligible_idx_]
+
+            if len(eligible_releases_) == 0:
                 msg = (
                     f"Creation date {created_at!s} predates the earliest release: "
                     f"'{releases_[0].tag}' ({releases_[0].created_at!s})"
                 )
                 raise VersionNotFoundError(msg)
-            try:
-                out = next(
-                    ver
-                    for idx, ver in enumerate(releases_)
-                    if (
-                        created_at >= ver.created_at
-                        and created_at < releases_[idx + 1].created_at
-                    )
-                )
-            except IndexError:
-                out = releases_[-1]
+
+            out = eligible_releases_[-1]
         case _:
             msg = "Invalid parameterization. Please provide ``exact`` or ``asof`` for ``match``."
             raise ValueError(msg)
