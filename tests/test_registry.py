@@ -1,5 +1,7 @@
 """Test the registry class functionality."""
 
+import pytest
+
 from lazyscribe import Project
 from lazyscribe.registry import Registry
 
@@ -18,3 +20,6 @@ def test_registry_indexing(tmp_path):
     assert my_registry_.projects == {"my-project": project}
     assert my_registry_.search(project.fpath) == "my-project"
     assert "my-project" in my_registry_
+
+    with pytest.raises(KeyError):
+        my_registry_["project-is-not-there"]

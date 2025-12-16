@@ -47,7 +47,7 @@ class Registry:
 
         Parameters
         ----------
-        fpath : Path
+        fpath : pathlib.Path
             Path to the project JSON.
 
         Returns
@@ -73,14 +73,19 @@ class Registry:
 
         Returns
         -------
-        Project
+        lazyscribe.project.Project
             The project object.
+
+        Raises
+        ------
+        KeyError
+            Raised if the project name does not exists in the registry.
         """
         try:
             return self.projects[arg]
-        except KeyError:
+        except KeyError as exc:
             msg = f"No project with the name '{arg}' in the registry"
-            raise ValueError(msg) from KeyError
+            raise KeyError(msg) from exc
 
     def __contains__(self, key: str) -> bool:
         """Check if a project is in the registry.
