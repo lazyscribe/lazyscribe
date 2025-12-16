@@ -481,6 +481,11 @@ def test_all_expired(tmp_path):
     ):
         _ = repository._search_artifact_versions(name="my-dict")
 
+    with pytest.raises(VersionNotFoundError):
+        _ = repository._search_artifact_versions(
+            name="my-dict", version=datetime(2026, 1, 15, 0, 0, 0), match="asof"
+        )
+
 
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False

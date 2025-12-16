@@ -7,8 +7,10 @@ import difflib
 import json
 import logging
 import warnings
+from bisect import bisect
 from collections.abc import Iterator
 from datetime import datetime
+from operator import attrgetter
 from pathlib import Path
 from typing import Any, Literal
 from urllib.parse import urlparse
@@ -597,31 +599,28 @@ class Repository:
                 LOG.info(
                     f"Searching for the latest version of '{name}' as of {version!s}..."
                 )
-                if version < artifacts_matching_name[0].created_at:
+
+                eligible_idx_ = bisect(
+                    artifacts_matching_name, version, key=attrgetter("created_at")
+                )
+                eligible_artifacts_ = artifacts_matching_name[:eligible_idx_]
+                if len(eligible_artifacts_) == 0:
                     msg = (
                         f"Version {version!s} predates the earliest version "
                         f"{artifacts_matching_name[0].created_at!s}."
                     )
                     raise VersionNotFoundError(msg) from None
-                for idx, art in enumerate(artifacts_matching_name[:-1]):
-                    next_art_dt_ = artifacts_matching_name[idx + 1].created_at
-                    match art.expiry:
-                        case None:
-                            if version >= art.created_at and version < next_art_dt_:
-                                artifact = art
-                                break
-                        case datetime() as expiry:
-                            if (
-                                version >= art.created_at
-                                and version < next_art_dt_
-                                and version < expiry
-                            ):
-                                artifact = art
-                                break
+
+                for art in eligible_artifacts_[::-1]:
+                    if art.expiry is None or version < art.expiry:
+                        artifact = art
+                        break
                 else:
-                    artifact = self._search_artifact_versions(
-                        name=name, version=None, match="exact"
+                    msg = (
+                        f"The only available artifacts with name '{name}' as of "
+                        f"{version!s} are expired."
                     )
+                    raise VersionNotFoundError(msg) from None
                 LOG.info(
                     f"Found version {artifact.version} (created {artifact.created_at!s})"
                 )
