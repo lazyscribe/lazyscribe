@@ -52,8 +52,8 @@ class Registry:
 
         Returns
         -------
-        str
-            The key reference for the project in the registry.
+        str | None
+            If it exists, the key reference for the project in the registry.
         """
         out: str | None = None
         for name, project in self.projects.items():
