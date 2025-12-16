@@ -193,6 +193,11 @@ class Repository:
             ``version``. ``exact`` will provide an artifact with the exact ``created_at``
             value provided. ``asof`` will provide the most recent version as of the
             ``version`` value.
+
+            When using an ``asof`` search, only artifacts with no expiry or an ``expiry``
+            datetime set _after_ the provided ``version`` value will be included. When
+            ``version=None``, any artifacts that are expired as of
+            :py:meth:`lazyscribe._utils.utcnow` will be excluded.
         **kwargs
             Keyword arguments for the handler read function.
 
