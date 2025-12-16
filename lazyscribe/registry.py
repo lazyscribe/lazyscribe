@@ -4,6 +4,8 @@ This module defines a class used to make inter-filesystem work
 easier.
 """
 
+from __future__ import annotations
+
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -23,9 +25,9 @@ class Registry:
         A dictionary with a key for each available project.
     """
 
-    projects: dict[str, "Project"] = Factory(factory=lambda: {})
+    projects: dict[str, Project] = Factory(factory=lambda: {})
 
-    def add_project(self, name: str, project: "Project") -> None:
+    def add_project(self, name: str, project: Project) -> None:
         """Add a project to the registry.
 
         Parameters
@@ -61,7 +63,7 @@ class Registry:
 
         return out
 
-    def __getitem__(self, arg: str) -> "Project":
+    def __getitem__(self, arg: str) -> Project:
         """Retrieve a project.
 
         Parameters
