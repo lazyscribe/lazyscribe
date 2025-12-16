@@ -563,12 +563,20 @@ class Repository:
 
         match (match, version):
             case (_, None):
+                today = utcnow()
                 best_before_ = [
                     art
                     for art in artifacts_matching_name
-                    if art.expiry is None or utcnow() < art.expiry
+                    if art.expiry is None or today < art.expiry
                 ]
-                artifact = best_before_[-1]
+                try:
+                    artifact = best_before_[-1]
+                except IndexError as exc:
+                    msg = (
+                        f"Using {today!s} as a reference, all artifacts with "
+                        f"the name '{name}' are expired."
+                    )
+                    raise VersionNotFoundError(msg) from exc
             case ("exact", datetime()):
                 try:
                     artifact = next(
@@ -606,7 +614,9 @@ class Repository:
                                 artifact = art
                                 break
                 else:
-                    artifact = artifacts_matching_name[-1]
+                    artifact = self._search_artifact_versions(
+                        name=name, version=None, match="exact"
+                    )
                 LOG.info(
                     f"Found version {artifact.version} (created {artifact.created_at!s})"
                 )

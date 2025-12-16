@@ -452,6 +452,36 @@ def test_expiry_artifact_handling(tmp_path):
     assert repository.artifacts[0].expiry == datetime(2025, 12, 31, 0, 0)
 
 
+def test_all_expired(tmp_path):
+    """Ensure that we raise an error when all artifacts are expired."""
+    location = tmp_path / "my-repository"
+    location.mkdir()
+    repository_location = location / "repository.json"
+
+    repository = Repository(repository_location, mode="w")
+    # Save multiple artifacts
+    with time_machine.travel(
+        datetime(2025, 12, 24, 0, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+    ):
+        repository.log_artifact("my-dict", {"a": 1}, handler="json")
+    with time_machine.travel(
+        datetime(2025, 12, 25, 0, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+    ):
+        repository.log_artifact("my-dict", {"a": 2}, handler="json")
+
+    # Set the expiry
+    repository.set_artifact_expiry("my-dict", 0, expiry=datetime(2026, 1, 1, 0, 0, 0))
+    repository.set_artifact_expiry("my-dict", 1, expiry=datetime(2026, 1, 1, 0, 0, 0))
+
+    with (
+        time_machine.travel(
+            datetime(2026, 1, 15, 0, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC"))
+        ),
+        pytest.raises(VersionNotFoundError),
+    ):
+        _ = repository._search_artifact_versions(name="my-dict")
+
+
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
