@@ -94,6 +94,11 @@ class Registry:
         ----------
         key : str
             The name of the project.
+
+        Returns
+        -------
+        bool
+            Whether the project name exists in the registry.
         """
         return key in self.projects
 
