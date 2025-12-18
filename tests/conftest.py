@@ -32,6 +32,7 @@ class TestArtifact(Artifact):
         value: Any = None,
         fname: str | None = None,
         created_at: datetime | None = None,
+        expiry: datetime | None = None,
         writer_kwargs: dict[str, Any] | None = None,
         version: int | None = None,
         dirty: bool = True,
@@ -47,6 +48,7 @@ class TestArtifact(Artifact):
             fname=fname
             or f"{slugify(name)}-{created_at.strftime('%Y%m%d%H%M%S')}.{cls.suffix}",
             created_at=created_at,
+            expiry=expiry,
             version=version,
             dirty=dirty,
             **kwargs,
