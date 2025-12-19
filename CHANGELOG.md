@@ -1,3 +1,10 @@
+## v2.0.0 (2025-12-19)
+
+### Feat
+
+- **project**: project registry for cross-project dependency mapping (#187)
+- **artifacts**: adding a datetime representing the expiry for an artifact version (#185)
+
 ## v2.0.0rc0 (2025-12-10)
 
 ### Feat
