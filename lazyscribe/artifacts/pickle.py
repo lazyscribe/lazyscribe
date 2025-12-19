@@ -29,7 +29,7 @@ class PickleArtifact(Artifact):
 
     .. note::
 
-        For the attributes documentation, please see the "Attributes" section of
+        For the attributes documentation, see also the "Attributes" section of
         :py:class:`lazyscribe.artifacts.base.Artifact`.
 
     Attributes
@@ -92,7 +92,7 @@ class PickleArtifact(Artifact):
 
         Returns
         -------
-        JSONArtifact
+        PickleArtifact
             The artifact.
         """
         python_version = kwargs.get("python_version") or ".".join(
@@ -136,7 +136,7 @@ class PickleArtifact(Artifact):
 
         Parameters
         ----------
-        obj : object
+        obj : Any
             The serializable object.
         buf : file-like object
             The buffer from a ``fsspec`` filesystem.

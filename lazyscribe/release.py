@@ -29,30 +29,35 @@ LOG = logging.getLogger(__name__)
 
 @define
 class Release:
-    """Create a release associated with a Repository instance.
+    """Create a release associated with a repository.
 
     Parameters
     ----------
     tag : str
-        A string descriptor for the release. Commonly coincides with semantic
+        A string identifier of the release. Commonly coincides with semantic
         or calendar versioning.
     artifacts : list[tuple[str, int]]
-        A list of the latest available artifacts and versions in the source repository.
+        A list of the latest available artifacts' names and versions in the source repository.
     created_at : datetime.datetime, optional (default ``lazyscribe._utils.utcnow()``)
-        The creation timestamp for the release (in UTC).
+        When the release was created (in UTC).
     """
 
     tag: str = field()
     artifacts: list[tuple[str, int]] = field()
     created_at: datetime = Factory(utcnow)
 
-    def to_dict(self) -> dict[str, list[tuple[str, int]] | str]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize the release to a dictionary.
 
         Returns
         -------
         dict
-            A dictionary with the release information.
+            Represent the release, with the following keys:
+
+            * ``tag`` (``str``): a string identifier of the release.
+            * ``artifacts`` (``list[lazyscribe.artifacts.base.Artifact]``):
+                a list of the latest available artifacts' names and versions in the source repository.
+            * ``created_at`` (``datetime.datetime``): the creation timestamp for the release.
         """
         return {
             "tag": self.tag,
@@ -62,7 +67,7 @@ class Release:
 
     @classmethod
     def from_dict(cls, info: dict[str, Any]) -> Release:
-        """Convert a serialized representation of the release back to a python object.
+        """Convert a serialized representation back to a release instance.
 
         Parameters
         ----------
@@ -72,7 +77,7 @@ class Release:
         Returns
         -------
         lazyscribe.release.Release
-            The new release object.
+            The new release.
         """
         return cls(
             tag=info["tag"],
@@ -92,13 +97,21 @@ def create_release(repository: Repository, tag: str) -> Release:
     repository : lazyscribe.repository.Repository
         The source repository.
     tag : str
-        A string descriptor of the tag. Commonly coincides with semantic or calendar
+        A string identifier of the release. Commonly coincides with semantic or calendar
         versioning.
 
     Returns
     -------
     lazyscribe.release.Release
-        The release object.
+        The release.
+
+    Raises
+    ------
+    RuntimeError
+        Raised if:
+
+            * The repository is not in read-only mode.
+            * Or, at least one artifact has changed since it was last saved.
     """
     if repository.mode != "r":
         raise RuntimeError("Repository must be in read-only mode for filtering.")
@@ -128,7 +141,7 @@ def find_release(
     ----------
     releases : list[lazyscribe.release.Release]
         The releases associated with the repository.
-    version : str | datetime, optional (default None)
+    version : str | datetime, optional
         The version to find. If a string is provided, the function will assume
         the value corresponds to a ``tag``. If a datetime is provided, the function
         will assume the value corresponds to a creation date. If None is provided,
@@ -142,7 +155,7 @@ def find_release(
     Returns
     -------
     lazyscribe.release.Release
-        The release object.
+        The release.
 
     Raises
     ------
@@ -209,7 +222,7 @@ def dump(obj: list[Release], fp: IOBase, **kwargs: Any) -> None:
     Parameters
     ----------
     obj : list[lazyscribe.release.Release]
-        The list of release objects.
+        The list of releases.
     fp : io.IOBase
         A buffer we can write to.
     **kwargs
@@ -234,7 +247,7 @@ def dumps(obj: list[Release], **kwargs: Any) -> str:
     Parameters
     ----------
     obj : list[lazyscribe.release.Release]
-        The list of release objects.
+        The list of releases.
     **kwargs
         Keyword arguments for ``json.dumps``.
 

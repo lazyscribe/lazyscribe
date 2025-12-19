@@ -137,11 +137,11 @@ All we need is a repository:
     repository = Repository(..., mode="r")
     release = lzr.create_release(repository, "v0.1.0")
 
-The output :py:class:`lazyscribe.release.Release` object contains 3 attributes:
+The output :py:class:`lazyscribe.release.Release` instance contains 3 attributes:
 
-* ``tag``: a string identifier for the release. Commonly coincides with semantic versioning.
-* ``artifacts``: a list of the latest available artifact names and versions in the repository.
-* ``created_at``: a creation timestamp for the release (in UTC).
+* ``tag``: a string identifier of the release. Commonly coincides with semantic or calendar versioning.
+* ``artifacts``: a list of the latest available artifacts' names and versions in the source repository.
+* ``created_at``: when the release was created (in UTC).
 
 Then, we can dump this release to a file:
 
@@ -169,7 +169,7 @@ In action:
 
     filtered_repo_ = repository.filter(my_release.artifacts)
 
-``filtered_repo_`` is a read-only version of the original repository object. It will have, at maximum, one
+``filtered_repo_`` is a read-only version of the original repository. It will have, at maximum, one
 version for each artifact present in the original repository.
 
 Just like artifacts themselves, :py:meth:`lazyscribe.release.find_release` supports ``asof`` matches based

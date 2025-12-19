@@ -124,7 +124,7 @@ class JSONArtifact(Artifact):
 
         Parameters
         ----------
-        obj : object
+        obj : Any
             The JSON-serializable object.
         buf : file-like object
             The buffer from a ``fsspec`` filesystem.
