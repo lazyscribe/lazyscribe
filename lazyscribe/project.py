@@ -20,6 +20,7 @@ from lazyscribe.artifacts.base import Artifact
 from lazyscribe.exception import ReadOnlyError, SaveError
 from lazyscribe.experiment import Experiment, ReadOnlyExperiment
 from lazyscribe.linked import LinkedList, merge
+from lazyscribe.registry import registry
 from lazyscribe.test import ReadOnlyTest, Test
 
 LOG = logging.getLogger(__name__)
@@ -116,8 +117,16 @@ class Project:
                 deplist = exp.pop("dependencies")
                 for dep in deplist:
                     project_name, exp_name = dep.split("|")
-                    project = upstream_projects.get(project_name)
-                    if not project:
+                    if project_name in registry:
+                        # The upstream experiment refers to the project registry by key
+                        project = registry[project_name]
+                    elif (project_key_ := registry.search(project_name)) is not None:
+                        # The upstream experiment refers to a project path that has been
+                        # loaded into the registry
+                        project = registry[project_key_]
+                    elif project_name in upstream_projects:
+                        project = upstream_projects[project_name]
+                    else:
                         project = Project(
                             fpath=f"{self.protocol}://{project_name}",
                             mode="r",
