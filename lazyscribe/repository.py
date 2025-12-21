@@ -94,7 +94,7 @@ class Repository:
 
     def load(self) -> None:
         """Load existing artifacts."""
-        with self.fs.open(str(self.fpath), "r") as infile:
+        with self.fs.open(str(self.fpath), "rt") as infile:
             data = json.load(infile)
 
         artifacts: list[Artifact] = []
@@ -224,8 +224,8 @@ class Repository:
             validate_artifact_environment(artifact)
 
         # Read in the artifact
-        mode = "rb" if artifact.binary else "r"
-        with self.fs.open(str(self.dir / artifact.name / artifact.fname), mode) as buf:
+        fmode = "rb" if artifact.binary else "rt"
+        with self.fs.open(str(self.dir / artifact.name / artifact.fname), fmode) as buf:
             out = artifact.read(buf, **kwargs)
         if artifact.output_only:
             warnings.warn(
@@ -395,7 +395,7 @@ class Repository:
                     "be compared using diffs."
                 )
                 raise ValueError(msg)
-            with self.fs.open(str(self.dir / art.name / art.fname), "r") as buf:
+            with self.fs.open(str(self.dir / art.name / art.fname), "rt") as buf:
                 raw_version_data.append(buf.read().splitlines())
 
         return "\n".join(list(difflib.unified_diff(*raw_version_data)))
@@ -419,7 +419,7 @@ class Repository:
         with self.fs.transaction:
             try:
                 self.fs.makedirs(str(self.fpath.parent), exist_ok=True)
-                with self.fs.open(str(self.fpath), "w") as outfile:
+                with self.fs.open(str(self.fpath), "wt") as outfile:
                     json.dump(data, outfile, sort_keys=True, indent=4)
             except Exception as exc:
                 raise SaveError(
@@ -428,7 +428,7 @@ class Repository:
 
             for artifact in self.artifacts:
                 # Write the artifact data
-                fmode = "wb" if artifact.binary else "w"
+                fmode = "wb" if artifact.binary else "wt"
                 artifact_dir = self.dir / artifact.name
                 fpath = artifact_dir / artifact.fname
                 if not artifact.dirty:

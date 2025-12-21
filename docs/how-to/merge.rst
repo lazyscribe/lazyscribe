@@ -15,8 +15,8 @@ To perform a project merge, run :py:class:`lazyscribe.project.Project.merge`:
 
     from lazyscribe import Project
 
-    myversion = Project(fpath="project.json")
-    otherversion = Project(fpath="other-project.json")
+    myversion = Project("project.json", mode="r")
+    otherversion = Project("other-project.json", mode="r")
 
     new = myversion.merge(otherversion)
 

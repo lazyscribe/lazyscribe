@@ -181,7 +181,7 @@ def test_experiment_artifact_load(tmp_path):
     # Need to write the artifact to disk
     fpath = exp.path / exp.artifacts[0].fname
     exp.fs.makedirs(exp.path, exist_ok=True)
-    with exp.fs.open(fpath, "w") as buf:
+    with exp.fs.open(fpath, "wt") as buf:
         exp.artifacts[0].write(exp.artifacts[0].value, buf)
 
     assert (
@@ -329,7 +329,7 @@ def test_experiment_artifact_log_load_output_only(tmp_path):
     # Need to write the artifact to disk
     fpath = exp.path / exp.artifacts[0].fname
     exp.fs.makedirs(exp.path, exist_ok=True)
-    with exp.fs.open(fpath, "w") as buf:
+    with exp.fs.open(fpath, "wt") as buf:
         exp.artifacts[0].write(exp.artifacts[0].value, buf)
     today = datetime.now()
     assert (

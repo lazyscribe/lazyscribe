@@ -34,7 +34,7 @@ import lazyscribe.release as lzr
 from lazyscribe import Repository
 
 tmpdir = Path(tempfile.mkdtemp())
-repository = Repository(tmpdir / "repository.json", mode="w+")
+repository = Repository(tmpdir / "repository.json", mode="w")
 
 # %%
 # Let's fit and log our model to the repository.
@@ -63,7 +63,7 @@ print(release)
 #
 # Now, we can persist the release information to a JSON file for easy reference later.
 
-with open(tmpdir / "releases.json", "w") as outfile:
+with open(tmpdir / "releases.json", "wt") as outfile:
     lzr.dump([release], outfile, indent=4)
 
 # %%
@@ -83,7 +83,7 @@ repository.save()
 # Then we can read in the release and filter our repository to the artifact/version combinations in the release.
 
 saved_ = Repository(tmpdir / "repository.json", mode="r")
-with open(tmpdir / "releases.json") as infile:
+with open(tmpdir / "releases.json", "rt") as infile:
     releases = lzr.load(infile)
 
 my_release = lzr.find_release(releases, "v0.1.0")
@@ -122,7 +122,7 @@ with time_machine.travel(
 # %%
 # This function will create a release for our listed repository with version 0.2.0:
 
-with open(tmpdir / "releases.json") as infile:
+with open(tmpdir / "releases.json", "rt") as infile:
     releases = lzr.load(infile)
 
 print(releases)

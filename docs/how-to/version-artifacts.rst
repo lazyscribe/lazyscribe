@@ -88,7 +88,7 @@ First, let's create a project and log an experiment:
 
     from lazyscribe import Project
 
-    project = Project("project.json")
+    project = Project("project.json", mode="w")
     with project.log("my-experiment") as exp:
         exp.log_artifact(name="features", value=[0, 1, 2], handler="json", indent=4)
 
@@ -101,7 +101,7 @@ Now, let's reload that project and promote the artifact to the repository:
     from lazyscribe import Project, Repository
 
     project = Project("project.json", mode="r")
-    repository = Repository("repository.json")
+    repository = Repository("repository.json", mode="w+")
 
     project["my-experiment"].promote_artifact(repository, "features")
 
@@ -147,7 +147,7 @@ Then, we can dump this release to a file:
 
 .. code-block:: python
 
-    with open("releases.json", "w") as outfile:
+    with open("releases.json", "wt") as outfile:
         lzr.dump([release], outfile)
 
 Now, if someone wants to reference the collective group of individual artifact-versions associated with this
@@ -162,7 +162,7 @@ In action:
 .. code-block:: python
 
     complete_repository = Repository(..., mode="r")
-    with open("releases.json", "r") as infile:
+    with open("releases.json", "rt") as infile:
         releases = lzr.load(infile)
 
     my_release = lzr.find_release(releases, "v0.1.0")
