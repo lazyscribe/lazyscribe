@@ -78,6 +78,7 @@ def test_save_repository(tmp_path):
     assert serialized == [
         {
             "created_at": "2025-01-20T13:23:30",
+            "expiry": None,
             "fname": expected_fname,
             "handler": "json",
             "name": "my-dict",
@@ -166,6 +167,7 @@ def test_save_repository_multi(tmp_path):
     assert serialized == [
         {
             "created_at": "2025-01-20T13:23:30",
+            "expiry": None,
             "fname": "my-dict-20250120132330.json",
             "handler": "json",
             "name": "my-dict",
@@ -173,6 +175,7 @@ def test_save_repository_multi(tmp_path):
         },
         {
             "created_at": "2025-01-20T13:23:30",
+            "expiry": None,
             "fname": "my-dict-2-20250120132330.json",
             "handler": "json",
             "name": "my-dict-2",
@@ -223,6 +226,7 @@ def test_save_repository_multiple_artifact(tmp_path):
     assert serialized == [
         {
             "created_at": "2025-01-20T13:23:30",
+            "expiry": None,
             "fname": expected_my_dict_fname0,
             "handler": "json",
             "name": "my-dict",
@@ -230,6 +234,7 @@ def test_save_repository_multiple_artifact(tmp_path):
         },
         {
             "created_at": "2025-01-20T13:23:30",
+            "expiry": None,
             "fname": expected_my_dict2_fname,
             "handler": "json",
             "name": "my-dict2",
@@ -237,6 +242,7 @@ def test_save_repository_multiple_artifact(tmp_path):
         },
         {
             "created_at": "2025-01-21T13:23:30",
+            "expiry": None,
             "fname": expected_my_dict_fname1,
             "handler": "json",
             "name": "my-dict",
@@ -367,6 +373,120 @@ def test_save_repository_artifact_failed_validation(tmp_path):
         repository2.load_artifact(name="estimator")
 
 
+def test_expiry_artifact(tmp_path):
+    """Test using an asof match with an expired artifact."""
+    location = tmp_path / "my-repository"
+    location.mkdir()
+    repository_location = location / "repository.json"
+
+    repository = Repository(repository_location, mode="w")
+    with time_machine.travel(
+        datetime(2025, 12, 24, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC"))
+    ):
+        repository.log_artifact("my-dict", {"a": 1}, handler="json")
+    with time_machine.travel(
+        datetime(2025, 12, 25, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC"))
+    ):
+        repository.log_artifact("my-dict", {"a": 2}, handler="json")
+    with time_machine.travel(
+        datetime(2025, 12, 26, 0, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC"))
+    ):
+        repository.log_artifact("my-dict", {"a": 3}, handler="json")
+
+    repository.save()
+
+    saved_ = Repository(repository_location, mode="w+")
+    # Set the expiry for version 1
+    saved_.set_artifact_expiry(
+        "my-dict",
+        1,
+        "exact",
+        datetime(2025, 12, 25, 6, 0, 0),
+    )
+    saved_.set_artifact_expiry(
+        "my-dict",
+        2,
+        "exact",
+        "2025-12-31T14:30:00",
+    )
+    # Without an expiry, this call should load version 1
+    art = saved_._search_artifact_versions(
+        "my-dict", version=datetime(2025, 12, 25, 14, 0, 0), match="asof"
+    )
+    assert art == saved_.artifacts[0]  # Version 0
+
+    # Try reading an artifact that has an expiry
+    art = saved_._search_artifact_versions(
+        "my-dict", version=datetime(2025, 12, 25, 3, 0, 0), match="asof"
+    )
+    assert art == saved_.artifacts[1]
+
+    # Try setting the expiry on a read-only repository
+    read_only_ = Repository(repository_location, mode="r")
+    with pytest.raises(ReadOnlyError):
+        read_only_.set_artifact_expiry(
+            "my-dict", 1, "exact", datetime(2025, 12, 25, 6, 0, 0)
+        )
+
+
+def test_expiry_artifact_handling(tmp_path):
+    """Ensure the expiry helper handles various arguments."""
+    location = tmp_path / "my-repository"
+    location.mkdir()
+    repository_location = location / "repository.json"
+
+    repository = Repository(repository_location, mode="w")
+    with time_machine.travel(
+        datetime(2025, 12, 24, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC"))
+    ):
+        repository.log_artifact("my-dict", {"a": 1}, handler="json")
+
+    with pytest.raises(ValueError):
+        repository.set_artifact_expiry("my-dict", 0, expiry=100)
+
+    with time_machine.travel(
+        datetime(2025, 12, 31, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC"))
+    ):
+        repository.set_artifact_expiry("my-dict", 0)
+
+    assert repository.artifacts[0].expiry == datetime(2025, 12, 31, 0, 0)
+
+
+def test_all_expired(tmp_path):
+    """Ensure that we raise an error when all artifacts are expired."""
+    location = tmp_path / "my-repository"
+    location.mkdir()
+    repository_location = location / "repository.json"
+
+    repository = Repository(repository_location, mode="w")
+    # Save multiple artifacts
+    with time_machine.travel(
+        datetime(2025, 12, 24, 0, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+    ):
+        repository.log_artifact("my-dict", {"a": 1}, handler="json")
+    with time_machine.travel(
+        datetime(2025, 12, 25, 0, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+    ):
+        repository.log_artifact("my-dict", {"a": 2}, handler="json")
+
+    # Set the expiry
+    repository.set_artifact_expiry("my-dict", 0, expiry=datetime(2026, 1, 1, 0, 0, 0))
+    repository.set_artifact_expiry("my-dict", 1, expiry=datetime(2026, 1, 1, 0, 0, 0))
+
+    with (
+        time_machine.travel(
+            datetime(2026, 1, 15, 0, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC"))
+        ),
+        pytest.raises(VersionNotFoundError),
+    ):
+        _ = repository._search_artifact_versions(name="my-dict")
+
+    with pytest.raises(VersionNotFoundError):
+        _ = repository._search_artifact_versions(
+            name="my-dict", version=datetime(2026, 1, 15, 0, 0, 0), match="asof"
+        )
+
+
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
@@ -394,6 +514,7 @@ def test_repository_artifact_output_only(tmp_path):
         assert list(repository) == [
             {
                 "created_at": "2025-01-20T13:23:30",
+                "expiry": None,
                 "fname": expected_fname,
                 "handler": "testartifact",
                 "name": "features",
@@ -508,6 +629,7 @@ def test_retrieve_artifact_meta():
 
     assert data == {
         "created_at": "2025-01-20T13:23:30",
+        "expiry": None,
         "fname": "my-dict-20250120132330.json",
         "handler": "json",
         "name": "my-dict",

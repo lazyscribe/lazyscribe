@@ -236,3 +236,49 @@ we will have two new files in our tree.
     ├── pyproject.toml
 
 These releases will have tag ``v1.0.0``.
+
+Deprecate artifact versions
+---------------------------
+
+.. important::
+
+    New in 2.0.
+
+Sometimes, an existing artifact version is no longer valid. Prior to version 2.0,
+the only way to handle this situation was deleting the artifact and manually editing
+the JSON file.
+
+In 2.0, we've added another option: set an expiry timestamp. Having a temporal value
+associated with artifact version deprecation is useful because an ``asof`` search yields
+a more accurate representation of the available artifacts at a given point in time.
+To set an expiry, use :py:meth:`lazyscribe.repository.Repository.set_artifact_expiry`:
+
+.. code-block:: python
+
+    from lazyscribe import Repository
+
+    repository = Repository("repository.json", mode="w")
+    # Logging this artifact on Dec 15, 2025
+    repository.log_artifact(name="features", value=[0, 1, 2], handler="json", indent=4)
+    repository.set_artifact_expiry("features", 0, "2025-12-25T00:00:00")
+
+    repository.save()
+
+By default, the latest version loaded by :py:meth:`lazyscribe.repository.Repository.load_artifact`
+will ignore any versions that are expired relative to *today* (implemented through
+:py:meth:`lazyscribe._utils.utcnow`). ``asof`` searches include all artifact
+versions that are valid *as of the supplied datetime*:
+
+.. code-block:: python
+
+    # Read in our repository from the previous code block on Jan 1, 2026
+    features = repository.load_artifact(
+        "features", version="2025-12-20T00:00:00", match="asof"
+    )  # This call will load version 0
+
+    # Default loading won't work because the only version expired on Dec 25, 2025
+    repository.load_artifact("features")  # Raises lazyscribe.exception.VersionNotFoundError
+
+.. important::
+
+    Loading an artifact with ``match="exact"`` will ignore any expiry information.

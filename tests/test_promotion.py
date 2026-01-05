@@ -113,6 +113,7 @@ def test_promote_artifact_dirty(tmp_path):
         "name": "features",
         "fname": "features-20250120132330.json",
         "created_at": "2025-01-20T13:23:30",
+        "expiry": None,
         "handler": "json",
         "version": 0,
     }
@@ -151,6 +152,7 @@ def test_promote_artifact_clean(tmp_path):
         "name": "features",
         "fname": "features-20250120132330.json",
         "created_at": "2025-01-20T13:23:30",
+        "expiry": None,
         "handler": "json",
         "version": 0,
     }
@@ -163,6 +165,7 @@ def test_promote_artifact_clean(tmp_path):
             "name": "features",
             "fname": "features-20250120132330.json",
             "created_at": "2025-01-20T13:23:30",
+            "expiry": None,
             "handler": "json",
             "version": 0,
         }
@@ -209,6 +212,7 @@ def test_promote_artifact_new_version(tmp_path):
         "name": "features",
         "fname": "features-20250120132330.json",
         "created_at": "2025-01-20T13:23:30",
+        "expiry": None,
         "handler": "json",
         "version": 1,
     }
@@ -221,6 +225,7 @@ def test_promote_artifact_new_version(tmp_path):
             "name": "features",
             "fname": "features-20250101000000.json",
             "created_at": "2025-01-01T00:00:00",
+            "expiry": None,
             "handler": "json",
             "version": 0,
         },
@@ -228,6 +233,7 @@ def test_promote_artifact_new_version(tmp_path):
             "name": "features",
             "fname": "features-20250120132330.json",
             "created_at": "2025-01-20T13:23:30",
+            "expiry": None,
             "handler": "json",
             "version": 1,
         },
