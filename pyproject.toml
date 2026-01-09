@@ -26,10 +26,10 @@ classifiers = [
     "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-    "attrs>=21.2.0,<=25.4.0",
-    "fsspec>=0.4.0,<=2025.12.0",
-    "python-slugify>=5.0.0,<=8.0.4",
-    "tomli>=2.2.1,<=2.3.0; python_version<='3.10'",
+    "attrs<=25.4.0,>=21.2.0",
+    "fsspec<=2026.1.0,>=0.4.0",
+    "python-slugify<=8.0.4,>=5.0.0",
+    "tomli<=2.3.0,>=2.2.1; python_version<='3.10'",
 ]
 
 optional-dependencies.build = [ "commitizen", "uv" ]
