@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import sys
+import warnings
 from bisect import bisect
 from datetime import datetime
 from io import IOBase
@@ -318,9 +319,6 @@ def release_from_toml(cfg: str) -> None:
 
     * ``version``: the current version of the overall project. If not supplied,
       this function will look for the ``version`` attribute of the ``[project]`` table.
-    * ``format``: format for the repository release versions. This string will be formatted with the
-      ``version`` string, as well as the ``year``, ``month``, and ``day`` of the release. By default,
-      this format is ``v{version}``.
 
     This function will read in each repository, create a new release, and write it to a ``releases.json``
     file in the same directory as the source repository JSON file.
@@ -354,7 +352,7 @@ def release_from_toml(cfg: str) -> None:
     * ``src/models/model-1/releases.json``, and
     * ``src/models/model-2/release.json``.
 
-    Each of these files will contain a ``v1.0.0`` release.
+    Each of these files will contain a ``1.0.0`` release.
 
     Parameters
     ----------
@@ -368,18 +366,27 @@ def release_from_toml(cfg: str) -> None:
     except KeyError:
         curr_version_ = cfg_data_["tool"]["lazyscribe"]["version"]
 
-    version_format_ = cfg_data_["tool"]["lazyscribe"].get("format", "v{version}")
+    if (version_format_ := cfg_data_["tool"]["lazyscribe"].get("format")) is not None:
+        warnings.warn(
+            "Release version formats were deprecated in 2.0.1. In 3.0, the PEP-621 version will be used directly",
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
     repositories = cfg_data_["tool"]["lazyscribe"]["repositories"]
     for fpath in repositories:
         repo = Repository(fpath, mode="r")
-        new_release_ = create_release(repo, tag="__placeholder")
-        new_release_.tag = version_format_.format(
-            version=curr_version_,
-            year=new_release_.created_at.year,
-            month=new_release_.created_at.month,
-            day=new_release_.created_at.day,
-        )
+        match version_format_:
+            case str():
+                new_release_ = create_release(repo, tag="__placeholder")
+                new_release_.tag = version_format_.format(
+                    version=curr_version_,
+                    year=new_release_.created_at.year,
+                    month=new_release_.created_at.month,
+                    day=new_release_.created_at.day,
+                )
+            case None:
+                new_release_ = create_release(repo, tag=curr_version_)
         # Read in current releases
         release_fpath = Path(fpath).parent / "releases.json"
         if release_fpath.exists():

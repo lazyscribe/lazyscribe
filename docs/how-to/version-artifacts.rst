@@ -235,7 +235,7 @@ we will have two new files in our tree.
     │   │   ├── releases.json
     ├── pyproject.toml
 
-These releases will have tag ``v1.0.0``.
+These releases will have tag ``1.0.0``.
 
 Deprecate artifact versions
 ---------------------------

@@ -2,7 +2,7 @@ default_stages: [pre-commit]
 default_install_hook_types: [commit-msg, pre-commit]
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.2
+    rev: v0.15.0
     hooks:
       # Run the linter.
       - id: ruff
@@ -11,7 +11,7 @@ repos:
       - id: ruff-format
         types_or: [ python, jupyter ]
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.18.2
+    rev: v1.19.1
     hooks:
       - id: mypy
         exclude: (^docs\/|^lazyscribe\/^tests\/)
@@ -26,7 +26,7 @@ repos:
           --install-types
         ]
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.9.5
+    rev: 0.10.2
     hooks:
       # Compile requirements
       - id: pip-compile
@@ -39,7 +39,7 @@ repos:
         files: ^pyproject\.toml$
       - id: uv-lock
   - repo: https://github.com/tox-dev/pyproject-fmt
-    rev: v2.11.0
+    rev: v2.15.3
     hooks:
       - id: pyproject-fmt
   - repo: https://github.com/pre-commit/pre-commit-hooks
