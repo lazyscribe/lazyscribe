@@ -7,7 +7,7 @@ from lazyscribe.artifacts.base import Artifact
 __all__: list[str] = ["_get_handler"]
 
 
-def _get_handler(alias: str) -> type[Artifact]:
+def _get_handler(alias: str) -> type[Artifact]:  # noqa: RUF067
     """Retrieve a specific handler based on the alias.
 
     Parameters
