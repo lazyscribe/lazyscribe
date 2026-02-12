@@ -1,3 +1,9 @@
+## v2.0.1 (2026-02-12)
+
+### Refactor
+
+- **release**: deprecating version formats in favour of PEP-621 (#193)
+
 ## v2.0.0 (2025-12-19)
 
 ### Feat
