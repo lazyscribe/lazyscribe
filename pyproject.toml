@@ -1,12 +1,10 @@
 [build-system]
 build-backend = "uv_build"
-
 requires = [ "uv-build>=0.8.0,<=0.9.5" ]
 
 [project]
 name = "lazyscribe"
-version = "2.0.0"
-
+version = "2.0.1"
 description = "Lightweight and lazy experiment logging"
 readme = { file = "README.md", content-type = "text/markdown" }
 license = { text = "MIT license" }
@@ -26,12 +24,11 @@ classifiers = [
     "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-    "attrs>=21.2.0,<=25.4.0",
-    "fsspec>=0.4.0,<=2025.12.0",
-    "python-slugify>=5.0.0,<=8.0.4",
-    "tomli>=2.2.1,<=2.3.0; python_version<='3.10'",
+    "attrs<=25.4.0,>=21.2.0",
+    "fsspec<=2026.2.0,>=0.4.0",
+    "python-slugify<=8.0.4,>=5.0.0",
+    "tomli<=2.3.0,>=2.2.1; python_version<='3.10'",
 ]
-
 optional-dependencies.build = [ "commitizen", "uv" ]
 optional-dependencies.dev = [
     "lazyscribe[build]",
@@ -69,21 +66,19 @@ optional-dependencies.tests = [
 ]
 urls.documentation = "https://lazyscribe.github.io/lazyscribe/"
 urls.repository = "https://github.com/lazyscribe/lazyscribe"
-
 entry-points."lazyscribe.artifact_type".base = "lazyscribe.artifacts.base:Artifact"
 entry-points."lazyscribe.artifact_type".json = "lazyscribe.artifacts.json:JSONArtifact"
 entry-points."lazyscribe.artifact_type".pickle = "lazyscribe.artifacts.pickle:PickleArtifact"
 
-[tool.uv.build-backend]
-module-name = "lazyscribe"
-module-root = ""
+[tool.uv]
+build-backend.module-name = "lazyscribe"
+build-backend.module-root = ""
 
 [tool.ruff]
 target-version = "py310"
 exclude = [
     "docs/",
 ]
-
 lint.select = [
     "ANN",    # flake8-annotations
     "B",      # flake8-bugbear
@@ -123,8 +118,8 @@ max_supported_python = "3.14"
 [tool.mypy]
 python_version = "3.10"
 exclude = [
-    '^docs\/',
-    '^tests\/',
+    "^docs\\/",
+    "^tests\\/",
 ]
 strict = true
 warn_return_any = true
