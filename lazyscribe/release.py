@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import ast
 import json
 import logging
 import sys
@@ -405,76 +404,3 @@ def release_from_toml(cfg: str) -> None:
         else:
             with open(release_fpath, "w") as outfile:
                 dump([new_release_], outfile, indent=4)
-
-
-def _update_node(node: ast.AST, old_version: str, new_version: str, attr: str) -> None:
-    """Update a node in-place.
-
-    Parameters
-    ----------
-    node : ast.AST
-        The node that will be updated in-place.
-    old_version : str
-        The old version to search for.
-    new_version : str
-        The new version to populate.
-    attr : str
-        The attribute within the node to find and update.
-    """
-    match node:
-        case ast.Assign() | ast.AnnAssign():
-            if any(target.id == attr for target in node.targets):
-                # Parse the contents
-                match node.value:
-                    case ast.Constant(old_version):
-                        # Change the constant value
-                        node.value = ast.Constant(new_version)
-                    case ast.Call():
-                        # Search for the constant value in the args and kwargs
-                        for kwarg in node.keywords:
-                            if kwarg == ast.Constant(old_version):
-                                kwarg.value = new_version
-                        for arg in node.args:
-                            match arg:
-                                case ast.Constant(old_version):
-                                    arg = ast.Constant(new_version)
-        case ast.FunctionDef():
-            if node.name == attr:
-                for const in node.args.defaults:
-                    if const == ast.Constant(old_version):
-                        const = ast.Constant(new_version)
-
-
-def update_version_file(
-    old_version: str, new_version: str, contents: str, attr: str
-) -> str:
-    """Update attributes in Python files using ``ast``.
-
-    This function will use ``ast`` to find the old version. If the old version is found, the
-    expression is updated to use the new version and the contents are updated.
-
-    Parameters
-    ----------
-    old_version : str
-        The old version to search for. Used when parsing function calls.
-    new_version : str
-        The new version to populate.
-    contents : str
-        The string contents of the module to parse.
-    attr : str
-        The attribute within the module to find and update.
-
-    Returns
-    -------
-    str
-        The updated contents of the file.
-    """
-    tree = ast.parse(contents)
-    for node in tree.body:
-        match node:
-            case ast.ClassDef():
-                components = attr.split(".")
-                if node.name == components[0]:
-                    _update_node(node, old_version, new_version, components[1])
-            case _:
-                _update_node(node, old_version, new_version, attr)
