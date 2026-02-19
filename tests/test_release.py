@@ -526,7 +526,10 @@ def test_minimal_repository_from_release(tmp_path):
         }
     ]
 
-    assert list(new_loc.glob("*")) == [new_loc / "repository.json", new_loc / "my-data"]
-    assert list(new_loc.glob("my-data/*")) == [
-        new_loc / "my-data" / "my-data-20260201000000.json"
-    ]
+    assert set(new_loc.glob("*")) == {
+        new_loc / "repository.json",
+        new_loc / "my-data",
+    }
+    assert set(new_loc.glob("my-data/*")) == {
+        new_loc / "my-data" / "my-data-20260201000000.json",
+    }
