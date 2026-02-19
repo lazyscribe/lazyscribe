@@ -477,3 +477,56 @@ def test_release_from_toml_custom(tmp_path):
             datetime(2025, 6, 1, 0, 0, 0),
         )
     ]
+
+
+def test_minimal_repository_from_release(tmp_path):
+    """Test generating a minimal output repository from a given release."""
+    location = tmp_path / "my-repository"
+    location.mkdir()
+    repository_location = location / "repository.json"
+
+    repository = Repository(repository_location)
+    # Log multiple versions of our artifact
+    with time_machine.travel(
+        datetime(2026, 1, 1, 0, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+    ):
+        repository.log_artifact(name="my-data", value=[{"a": 1}], handler="json")
+    with time_machine.travel(
+        datetime(2026, 2, 1, 0, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+    ):
+        repository.log_artifact(name="my-data", value=[{"a": 2}], handler="json")
+    with time_machine.travel(
+        datetime(2026, 3, 1, 0, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+    ):
+        repository.log_artifact(name="my-data", value=[{"a": 3}], handler="json")
+
+    repository.save()
+
+    # Create a release and use it to generate a minimal output
+    release = lzr.Release("0.1.0", [["my-data", 1]], datetime(2026, 2, 15, 0, 0, 0))
+
+    new_loc = tmp_path / "my-new-repository"
+    new_loc.mkdir()
+    repository_r = Repository(repository_location, mode="r")
+    lzr.minimal_repository_from_release(new_loc, repository_r, release)
+
+    assert (new_loc / "repository.json").is_file()
+
+    with open(new_loc / "repository.json") as infile:
+        new_data_ = json.load(infile)
+
+    assert new_data_ == [
+        {
+            "created_at": "2026-02-01T00:00:00",
+            "expiry": None,
+            "fname": "my-data-20260201000000.json",
+            "handler": "json",
+            "name": "my-data",
+            "version": 1,
+        }
+    ]
+
+    assert list(new_loc.glob("*")) == [new_loc / "repository.json", new_loc / "my-data"]
+    assert list(new_loc.glob("my-data/*")) == [
+        new_loc / "my-data" / "my-data-20260201000000.json"
+    ]
