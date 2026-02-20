@@ -507,6 +507,9 @@ def test_minimal_repository_from_release(tmp_path):
 
     new_loc = tmp_path / "my-new-repository"
     new_loc.mkdir()
+    with pytest.raises(RuntimeError):
+        lzr.minimal_repository_from_release(new_loc, repository, release)
+
     repository_r = Repository(repository_location, mode="r")
     lzr.minimal_repository_from_release(new_loc, repository_r, release)
 
