@@ -196,6 +196,39 @@ def test_experiment_artifact_load(tmp_path):
     assert out == [0, 1, 2]
 
 
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
+def test_experiment_artifact_load_relative_path(tmp_path, monkeypatch):
+    """Test loading an artifact when the project uses a relative path.
+
+    Regression test for the bug where load_artifact used self.dir / self.path
+    instead of self.path, duplicating the directory in the file path.
+    This only manifests with relative paths (absolute paths mask the bug via
+    Python's pathlib behaviour of discarding the left operand for absolute rights).
+    """
+    location = tmp_path / "my-location"
+    location.mkdir()
+    monkeypatch.chdir(tmp_path)
+
+    exp = Experiment(
+        name="My experiment",
+        project=Path("my-location/project.json"),
+        author="root",
+    )
+    exp.log_artifact(name="features", value=[0, 1, 2], handler="json")
+
+    # Write artifact to the correct (non-duplicated) path
+    fpath = exp.path / exp.artifacts[0].fname
+    exp.fs.makedirs(str(exp.path), exist_ok=True)
+    with exp.fs.open(str(fpath), "w") as buf:
+        exp.artifacts[0].write(exp.artifacts[0].value, buf)
+
+    # load_artifact would fail with the buggy code (looked for my-location/my-location/...)
+    out = exp.load_artifact(name="features")
+    assert out == [0, 1, 2]
+
+
 def test_experiment_artifact_load_keyerror(tmp_path):
     """Test trying to load an artifact that doesn't exist."""
     location = tmp_path / "my-location"
