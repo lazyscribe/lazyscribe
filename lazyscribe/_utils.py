@@ -2,11 +2,14 @@
 
 import inspect
 import json
+import warnings
 from collections.abc import Iterator
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
 from attrs import Attribute, asdict, fields, filters
+from fsspec.spec import AbstractFileSystem
 
 from lazyscribe.artifacts.base import Artifact
 from lazyscribe.exception import ArtifactLoadError
@@ -82,6 +85,60 @@ def utcnow() -> datetime:
         Now in UTC, without timezone info.
     """
     return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
+def load_artifact_from(
+    artifacts: list[Artifact],
+    path: Path,
+    fs: AbstractFileSystem,
+    name: str,
+    validate: bool = True,
+    **kwargs: Any,
+) -> Any:
+    """Load a single artifact by name.
+
+    Parameters
+    ----------
+    artifacts : list[Artifact]
+        The list of artifacts to search.
+    path : Path
+        The base path for artifact files.
+    fs : AbstractFileSystem
+        The filesystem to use for reading.
+    name : str
+        The name of the artifact to load.
+    validate : bool, optional (default True)
+        Whether or not to validate the runtime environment against the artifact
+        metadata.
+    **kwargs
+        Keyword arguments for the handler read function.
+
+    Returns
+    -------
+    Any
+        The artifact object.
+
+    Raises
+    ------
+    lazyscribe.exception.ArtifactLoadError
+        If ``validate`` and runtime environment does not match artifact metadata.
+        Or if there is no artifact found with the name provided.
+    """
+    for artifact in artifacts:
+        if artifact.name == name:
+            if validate:
+                validate_artifact_environment(artifact)
+            mode = "rb" if artifact.binary else "r"
+            with fs.open(str(path / artifact.fname), mode) as buf:
+                out = artifact.read(buf, **kwargs)
+            if artifact.output_only:
+                warnings.warn(
+                    f"Artifact '{name}' is not the original Python Object",
+                    UserWarning,
+                    stacklevel=3,
+                )
+            return out
+    raise ArtifactLoadError(f"No artifact with name {name}")
 
 
 def validate_artifact_environment(artifact: Artifact) -> None:
