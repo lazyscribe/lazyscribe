@@ -14,6 +14,7 @@ from typing import Any, Literal
 from urllib.parse import urlparse
 
 import fsspec
+from slugify import slugify
 
 from lazyscribe.artifacts import _get_handler
 from lazyscribe.artifacts.base import Artifact
@@ -141,11 +142,41 @@ class Project:
             tests: list[Test] = []
             if "tests" in exp:
                 testlist = exp.pop("tests")
-                for test in testlist:
+                for test_data in testlist:
+                    test_artifacts: list[Artifact] = []
+                    if "artifacts" in test_data:
+                        for artifact in test_data.pop("artifacts"):
+                            handler_cls = _get_handler(artifact.pop("handler"))
+                            created_at = datetime.fromisoformat(
+                                artifact.pop("created_at")
+                            )
+                            test_artifacts.append(
+                                handler_cls.construct(
+                                    **artifact, created_at=created_at, dirty=False
+                                )
+                            )
+                    # exp["slug"] is still present (only "tests"/"artifacts"/"dependencies" are popped)
+                    test_path = (
+                        self.fpath.parent / exp["slug"] / slugify(test_data["name"])
+                    )
                     if self.mode in ("r", "a"):
-                        tests.append(ReadOnlyTest(**test))
+                        tests.append(
+                            ReadOnlyTest(
+                                **test_data,
+                                artifacts=test_artifacts,
+                                path=test_path,
+                                fs=self.fs,
+                            )
+                        )
                     else:
-                        tests.append(Test(**test))
+                        tests.append(
+                            Test(
+                                **test_data,
+                                artifacts=test_artifacts,
+                                path=test_path,
+                                fs=self.fs,
+                            )
+                        )
 
             artifacts: list[Artifact] = []
             if "artifacts" in exp:
@@ -220,10 +251,13 @@ class Project:
                 if not isinstance(exp, ReadOnlyExperiment)
             ]
             for exp in mutable_:
-                if not exp.dirty:
+                has_dirty_test_artifacts = any(
+                    artifact.dirty for test in exp.tests for artifact in test.artifacts
+                )
+                if not exp.dirty and not has_dirty_test_artifacts:
                     LOG.debug(f"{exp.slug} has not been updated. Skipping...")
                     continue
-                # Write the artifact data
+                # Write the experiment-level artifact data
                 LOG.info(f"Saving artifacts for {exp.slug}")
                 for artifact in exp.artifacts:
                     fmode = "wb" if artifact.binary else "w"
@@ -253,7 +287,42 @@ class Project:
                             stacklevel=2,
                         )
 
-                exp.dirty = False
+                # Write test-level artifact data
+                for test in exp.tests:
+                    for artifact in test.artifacts:
+                        fmode = "wb" if artifact.binary else "w"
+                        fpath = test.path / artifact.fname
+                        if not artifact.dirty:
+                            LOG.debug(
+                                f"Test artifact '{artifact.name}' has not been updated"
+                            )
+                            continue
+
+                        try:
+                            self.fs.makedirs(str(test.path), exist_ok=True)
+                            LOG.debug(
+                                f"Saving test artifact '{artifact.name}' to {fpath!s}..."
+                            )
+                            with self.fs.open(str(fpath), fmode) as buf:
+                                artifact.write(
+                                    artifact.value, buf, **artifact.writer_kwargs
+                                )
+                        except Exception as exc:
+                            raise SaveError(
+                                f"Unable to write test artifact '{artifact.name}' to '{fpath!s}'"
+                            ) from exc
+
+                        # Reset the `dirty` flag since we have the updated artifact on disk
+                        artifact.dirty = False
+                        if artifact.output_only:
+                            warnings.warn(
+                                f"Artifact '{artifact.name}' is added. It is not meant to be read back as Python Object",
+                                UserWarning,
+                                stacklevel=2,
+                            )
+
+                if exp.dirty:
+                    exp.dirty = False
 
     def merge(self, other: Project) -> Project:
         """Merge two projects.

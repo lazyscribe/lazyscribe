@@ -41,7 +41,7 @@ def serializer(inst: type, field: "Attribute[Any]", value: Any) -> Any:
                 deps.append(f"{exp.project}|{exp.slug}")
         return deps
     if field is not None and field.name == "tests":
-        tests: list[dict[str, Any]] = [asdict(test) for test in value]
+        tests: list[dict[str, Any]] = [test.to_dict() for test in value]
         return tests
     if field is not None and field.name == "artifacts":
         art: list[dict[str, Any]] = list(serialize_artifacts(value))

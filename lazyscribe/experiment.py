@@ -361,7 +361,12 @@ class Experiment:
         lazyscribe.test.Test
             The :py:class:`lazyscribe.test.Test` dataclass.
         """
-        test = Test(name=name, description=description)
+        test = Test(
+            name=name,
+            description=description,
+            path=self.path / slugify(name),
+            fs=self.fs,
+        )
 
         yield test
 

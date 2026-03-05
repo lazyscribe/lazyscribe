@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 import time_machine
 from attrs.exceptions import FrozenInstanceError
+from slugify import slugify
 
 from lazyscribe.artifacts import _get_handler
 from lazyscribe.exception import ArtifactLoadError, ArtifactLogError
@@ -103,6 +104,7 @@ def test_experiment_serialization():
                 "description": None,
                 "metrics": {"name-subpop": 0.3},
                 "parameters": {},
+                "artifacts": [],
             }
         ],
         "tags": [],
@@ -381,3 +383,90 @@ def test_experiment_artifact_log_load_output_only(tmp_path):
         assert "Artifact 'features' is not the original Python Object" in str(
             w[-1].message
         )
+
+
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
+def test_test_artifact_logging(tmp_path):
+    """Test logging an artifact within a test context."""
+    location = tmp_path / "my-location"
+    exp = Experiment(
+        name="My experiment", project=location / "project.json", author="root"
+    )
+
+    with exp.log_test(name="My test") as test:
+        test.log_artifact(name="conf", value={"tp": 10}, handler="json")
+
+    assert len(exp.tests[0].artifacts) == 1
+    assert exp.tests[0].path == exp.path / slugify("My test")
+    assert exp.tests[0].fs is exp.fs
+
+
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
+def test_test_artifact_serialization():
+    """Test that Test.to_dict() includes artifacts and excludes path/fs."""
+    test = Test(name="My test")
+    test.log_artifact(name="conf", value={"a": 1}, handler="json")
+
+    d = test.to_dict()
+    assert "path" not in d
+    assert "fs" not in d
+    assert "artifacts" in d
+    assert d["artifacts"][0]["handler"] == "json"
+    assert d["artifacts"][0]["name"] == "conf"
+    assert "value" not in d["artifacts"][0]
+    assert "writer_kwargs" not in d["artifacts"][0]
+    assert "dirty" not in d["artifacts"][0]
+
+
+def test_test_artifact_overwrite():
+    """Test overwriting a test artifact."""
+    test = Test(name="my test")
+    test.log_artifact(name="conf", value={"a": 1}, handler="json")
+
+    with pytest.raises(ArtifactLogError):
+        test.log_artifact(name="conf", value={"b": 2}, handler="json")
+
+    assert test.artifacts[0].value == {"a": 1}
+
+    test.log_artifact(name="conf", value={"b": 2}, handler="json", overwrite=True)
+    assert test.artifacts[0].value == {"b": 2}
+
+
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
+def test_test_artifact_load(tmp_path):
+    """Test loading a test artifact from disk."""
+    location = tmp_path / "my-location"
+    exp = Experiment(
+        name="My experiment", project=location / "project.json", author="root"
+    )
+
+    with exp.log_test(name="My test") as test:
+        test.log_artifact(name="conf", value={"tp": 10}, handler="json")
+
+    art = test.artifacts[0]
+    test.fs.makedirs(str(test.path), exist_ok=True)
+    with test.fs.open(str(test.path / art.fname), "w") as buf:
+        art.write(art.value, buf)
+
+    out = test.load_artifact(name="conf")
+    assert out == {"tp": 10}
+
+
+def test_test_artifact_load_keyerror():
+    """Test ArtifactLoadError when artifact not found."""
+    test = Test(name="my test")
+    with pytest.raises(ArtifactLoadError):
+        test.load_artifact(name="nonexistent")
+
+
+def test_frozen_test_log_artifact():
+    """Test that ReadOnlyTest.log_artifact raises FrozenInstanceError."""
+    test = ReadOnlyTest(name="my test")
+    with pytest.raises(FrozenInstanceError):
+        test.log_artifact(name="conf", value={"a": 1}, handler="json")
