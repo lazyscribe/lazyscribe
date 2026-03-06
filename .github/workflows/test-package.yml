@@ -1,6 +1,6 @@
 # Install and test
 
-name: Python package
+name: Test package
 
 on:
     push:
@@ -24,7 +24,7 @@ jobs:
                     - '3.13'
                     - '3.14'
         steps:
-            - uses: actions/checkout@v5
+            - uses: actions/checkout@v6
 
             - name: Install uv and set the Python version
               uses: astral-sh/setup-uv@v7
@@ -46,10 +46,17 @@ jobs:
             - name: Run unit testing
               run: uv run pytest tests --cov=./ --cov-report=xml
 
-            - name: Run Codecov
-              uses: codecov/codecov-action@v5
+            - name: Coverage comment
+              id: coverage_comment
+              uses: py-cov-action/python-coverage-comment-action@v3
               with:
-                token: ${{ secrets.CODECOV_TOKEN }}
-                fail_ci_if_error: true
-                files: ./coverage.xml
-                verbose: true
+                GITHUB_TOKEN: ${{ github.token }}
+
+            - name: Store Pull Request comment to be posted
+              uses: actions/upload-artifact@v7
+              if: steps.coverage_comment.outputs.COMMENT_FILE_WRITTEN == 'true'
+              with:
+                # If you use a different name, update COMMENT_ARTIFACT_NAME accordingly
+                name: python-coverage-comment-action
+                # If you use a different name, update COMMENT_FILENAME accordingly
+                path: python-coverage-comment-action.txt
