@@ -8,7 +8,7 @@ import json
 import logging
 import warnings
 from bisect import bisect
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from datetime import datetime
 from operator import attrgetter
 from pathlib import Path
@@ -457,7 +457,7 @@ class Repository:
                     )
 
     def filter(
-        self, version: datetime | str | list[tuple[str, datetime | str | int]]
+        self, version: datetime | str | Sequence[tuple[str, datetime | str | int]]
     ) -> Repository:
         """Filter a repository.
 
