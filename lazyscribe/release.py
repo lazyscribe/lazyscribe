@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import sys
 import warnings
 from bisect import bisect
@@ -411,3 +412,52 @@ def release_from_toml(cfg: str) -> None:
         else:
             with open(release_fpath, "w") as outfile:
                 dump([new_release_], outfile, indent=4)
+
+
+def minimal_repository_from_release(
+    location: Path,
+    repository: Repository,
+    release: Release,
+) -> None:
+    """Create a 'minimal' version of the lazyscribe repository based on a release.
+
+    This function filters a repository based on the input release, copies the artifacts
+    from the original location to the new location, and saves a new repository JSON file.
+
+    The purpose of this feature is to provide users with the ability to minimize the size of
+    a particular deployment package. So, if the larger :py:class:`lazyscribe.repository.Repository`
+    output has the entire history of deployment, a "minimal" version contains release-specific
+    artifacts more suitable for environments with file size limits.
+
+    Parameters
+    ----------
+    location : str | Path
+        Directory location for the new repository. Must use the same base filesystem as the
+        source repository.
+    repository : lazyscribe.repository.Repository
+        The repository object in read-only mode.
+    release : lazyscribe.release.Release
+        The release to use as a filtering mechanism.
+    """
+    if repository.mode != "r":
+        raise RuntimeError("Repository must be in read-only mode.")
+    LOG.info("Creating a new repository in %s", location)
+    with repository.fs.transaction:
+        repo_ = repository.filter(release.artifacts)
+        # Loop through each artifact and copy the values
+        for art in repo_.artifacts:
+            LOG.info(
+                "Copying version %i of '%s' to %s",
+                art.version,
+                art.name,
+                location / art.name,
+            )
+            repository.fs.mkdir(str(location / art.name), create_parents=True)
+            repository.fs.copy(
+                str(repository.dir / art.name / art.fname),
+                f"{(location / art.name)!s}{os.sep}",
+            )
+
+        data = list(repo_)
+        with repository.fs.open(str(location / "repository.json"), "w") as outfile:
+            json.dump(data, outfile, sort_keys=True, indent=4)
