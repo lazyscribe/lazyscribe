@@ -22,7 +22,7 @@
 | tests/\_\_init\_\_.py                |        0 |        0 |    100% |           |
 | tests/conftest.py                    |       24 |        0 |    100% |           |
 | tests/smoke\_test.py                 |       19 |        0 |    100% |           |
-| tests/test\_experiment.py            |      149 |        0 |    100% |           |
+| tests/test\_experiment.py            |      162 |        0 |    100% |           |
 | tests/test\_handlers.py              |       54 |        0 |    100% |           |
 | tests/test\_linked.py                |       39 |        0 |    100% |           |
 | tests/test\_project.py               |      320 |        0 |    100% |           |
@@ -31,7 +31,7 @@
 | tests/test\_release.py               |      206 |        0 |    100% |           |
 | tests/test\_repository.py            |      384 |        1 |     99% |       594 |
 | tests/test\_utils.py                 |       11 |        0 |    100% |           |
-| **TOTAL**                            | **2265** |   **17** | **99%** |           |
+| **TOTAL**                            | **2278** |   **17** | **99%** |           |
 
 
 ## Setup coverage badge
