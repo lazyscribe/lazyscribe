@@ -99,11 +99,11 @@ def load_artifact_from(
 
     Parameters
     ----------
-    artifacts : list[Artifact]
+    artifacts : list[lazyscribe.artifacts.base.Artifact]
         The list of artifacts to search.
-    path : Path
+    path : pathlib.Path
         The base path for artifact files.
-    fs : AbstractFileSystem
+    fs : fsspec.spec.AbstractFileSystem
         The filesystem to use for reading.
     name : str
         The name of the artifact to load.

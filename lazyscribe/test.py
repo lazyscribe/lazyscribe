@@ -41,10 +41,10 @@ class Test:
     artifacts : list[lazyscribe.artifacts.base.Artifact], optional (default [])
         List of :py:class:`lazyscribe.artifact.base.Artifact` objects corresponding to test
         artifacts.
-    path : pathlib.Path, optional (default Path("."))
+    path : pathlib.Path, optional (default pathlib.Path("."))
         The path to the test's artifact directory. Set automatically when the test is created
         via :py:meth:`lazyscribe.experiment.Experiment.log_test`.
-    fs : fsspec.spec.AbstractFileSystem, optional (default LocalFileSystem())
+    fs : fsspec.spec.AbstractFileSystem, optional (default fsspec.implementations.local.LocalFileSystem())
         The filesystem to use for reading and writing artifacts.
     """
 

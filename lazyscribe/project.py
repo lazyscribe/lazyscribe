@@ -38,14 +38,19 @@ def _write_artifact(
 
     Parameters
     ----------
-    artifact : Artifact
+    artifact : lazyscribe.artifacts.base.Artifact
         The artifact to write.
-    path : Path
+    path : pathlib.Path
         The directory path for the artifact file.
-    fs : AbstractFileSystem
+    fs : fsspec.spec.AbstractFileSystem
         The filesystem to use for writing.
     label : str, optional (default "")
         A label prefix for error messages (e.g. "test").
+
+    Raises
+    ------
+    lazyscribe.exception.SaveError
+        If writing the artifact to the filesystem fails.
     """
     fmode = "wb" if artifact.binary else "w"
     fpath = path / artifact.fname
