@@ -16,7 +16,7 @@
 | lazyscribe/linked.py                 |       44 |        0 |    100% |           |
 | lazyscribe/project.py                |      166 |        3 |     98% |126, 128, 308 |
 | lazyscribe/registry.py               |       25 |        0 |    100% |           |
-| lazyscribe/release.py                |      126 |        3 |     98% |25, 106, 108 |
+| lazyscribe/release.py                |      126 |        3 |     98% |27, 106, 108 |
 | lazyscribe/repository.py             |      207 |        6 |     97% |90, 488, 490, 567-569 |
 | lazyscribe/test.py                   |       23 |        1 |     96% |        80 |
 | tests/\_\_init\_\_.py                |        0 |        0 |    100% |           |
