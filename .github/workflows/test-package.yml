@@ -5,11 +5,9 @@ name: Test package
 on:
     push:
         branches:
-            - develop
             - main
     pull_request:
         branches:
-            - develop
             - main
 
 jobs:
@@ -49,12 +47,13 @@ jobs:
             - name: Coverage comment
               id: coverage_comment
               uses: py-cov-action/python-coverage-comment-action@v3
+              if: matrix.python-version == '3.14'
               with:
                 GITHUB_TOKEN: ${{ github.token }}
 
             - name: Store Pull Request comment to be posted
               uses: actions/upload-artifact@v7
-              if: steps.coverage_comment.outputs.COMMENT_FILE_WRITTEN == 'true'
+              if: steps.coverage_comment.outputs.COMMENT_FILE_WRITTEN == 'true' && matrix.python-version == '3.14'
               with:
                 # If you use a different name, update COMMENT_ARTIFACT_NAME accordingly
                 name: python-coverage-comment-action

@@ -1,4 +1,4 @@
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![PyPI](https://img.shields.io/pypi/v/lazyscribe)](https://pypi.org/project/lazyscribe/) [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/lazyscribe)](https://pypi.org/project/lazyscribe/) [![Documentation Status](https://github.com/lazyscribe/lazyscribe/actions/workflows/docs.yml/badge.svg)](https://lazyscribe.github.io/lazyscribe/)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![PyPI](https://img.shields.io/pypi/v/lazyscribe)](https://pypi.org/project/lazyscribe/) [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/lazyscribe)](https://pypi.org/project/lazyscribe/) [![Documentation Status](https://github.com/lazyscribe/lazyscribe/actions/workflows/docs.yml/badge.svg)](https://lazyscribe.github.io/lazyscribe/) [![Coverage badge](https://raw.githubusercontent.com/lazyscribe/lazyscribe/python-coverage-comment-action-data/badge.svg)](https://htmlpreview.github.io/?https://github.com/lazyscribe/lazyscribe/blob/python-coverage-comment-action-data/htmlcov/index.html)
 
 # Lightweight, lazy experiment logging
 

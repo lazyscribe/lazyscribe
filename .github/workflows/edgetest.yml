@@ -5,6 +5,7 @@ name: Run edgetest
 on:
   schedule:
     - cron: '35 17 * * 5'
+  worfklow_dispatch:
 jobs:
   edgetest:
     runs-on: ubuntu-24.04
@@ -12,11 +13,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: develop
+          ref: main
       - id: run-edgetest
         uses: edgetest-dev/run-edgetest-action@v1.6
         with:
           edgetest-flags: '-c pyproject.toml -r requirements.txt --export'
-          base-branch: 'develop'
+          base-branch: 'main'
           skip-pr: 'false'
           add-paths: 'pyproject.toml, requirements.txt'
