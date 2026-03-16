@@ -81,7 +81,8 @@ class Test:
         value : int | float
             Value of the metric.
         """
-        self.metrics[name] = value
+        # Attribute reassignment (not in-place mutation) so @frozen raises FrozenInstanceError on ReadOnlyTest
+        self.metrics = self.metrics | {name: value}
 
     def __str__(self) -> str:
         """Shortened string representation."""
@@ -99,7 +100,8 @@ class Test:
         value : Any
             The parameter itself.
         """
-        self.parameters[name] = value
+        # Attribute reassignment (not in-place mutation) so @frozen raises FrozenInstanceError on ReadOnlyTest
+        self.parameters = self.parameters | {name: value}
 
     def log_artifact(
         self,

@@ -470,3 +470,35 @@ def test_frozen_test_log_artifact():
     test = ReadOnlyTest(name="my test")
     with pytest.raises(FrozenInstanceError):
         test.log_artifact(name="conf", value={"a": 1}, handler="json")
+
+
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
+def test_frozen_test_log_artifact_overwrite():
+    """Test that ReadOnlyTest.log_artifact with overwrite=True raises FrozenInstanceError."""
+    handler_cls = _get_handler("json")
+    artifact = handler_cls.construct(
+        name="conf",
+        value={"a": 1},
+        fname=None,
+        created_at=datetime.now(),
+        writer_kwargs={},
+    )
+    test = ReadOnlyTest(name="my test", artifacts=[artifact])
+    with pytest.raises(FrozenInstanceError):
+        test.log_artifact(name="conf", value={"b": 2}, handler="json", overwrite=True)
+
+
+def test_frozen_test_log_metric():
+    """Test that ReadOnlyTest.log_metric raises FrozenInstanceError."""
+    test = ReadOnlyTest(name="my test")
+    with pytest.raises(FrozenInstanceError):
+        test.log_metric("accuracy", 0.95)
+
+
+def test_frozen_test_log_parameter():
+    """Test that ReadOnlyTest.log_parameter raises FrozenInstanceError."""
+    test = ReadOnlyTest(name="my test")
+    with pytest.raises(FrozenInstanceError):
+        test.log_parameter("n_estimators", 100)
