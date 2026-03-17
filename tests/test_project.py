@@ -11,6 +11,7 @@ from unittest.mock import patch
 import fsspec
 import pytest
 import time_machine
+from slugify import slugify
 
 from lazyscribe import Project
 from lazyscribe.exception import ArtifactLoadError, ReadOnlyError, SaveError
@@ -198,6 +199,7 @@ def test_save_project(tmp_path):
                     "description": None,
                     "metrics": {"name-subpop": 0.3},
                     "parameters": {"features": ["col3", "col4"]},
+                    "artifacts": [],
                 }
             ],
             "tags": [],
@@ -873,3 +875,84 @@ def test_save_project_artifact_output_only(tmp_path):
         / f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}"
         / f"features-{today.strftime('%Y%m%d%H%M%S')}.testartifact"
     ).is_file()
+
+
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
+def test_save_project_with_test_artifact(tmp_path):
+    """Test saving a project where a test has an artifact."""
+    location = tmp_path / "my-project"
+    project_location = location / "project.json"
+    today = datetime.now()
+
+    project = Project(fpath=project_location, author="root")
+    with project.log(name="My experiment") as exp, exp.log_test("My test") as test:
+        test.log_artifact(name="conf", value={"tp": 10, "fp": 2}, handler="json")
+
+    exp_slug = f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}"
+    conf_fname = f"conf-{today.strftime('%Y%m%d%H%M%S')}.json"
+    project.save()
+
+    assert project_location.is_file()
+    artifact_path = location / exp_slug / slugify("My test") / conf_fname
+    assert artifact_path.is_file()
+
+    with open(artifact_path) as f:
+        assert json.load(f) == {"tp": 10, "fp": 2}
+
+    with open(project_location) as f:
+        data = json.load(f)
+    test_entry = data[0]["tests"][0]
+    assert "artifacts" in test_entry
+    assert test_entry["artifacts"][0]["name"] == "conf"
+    assert test_entry["artifacts"][0]["handler"] == "json"
+
+
+def test_load_project_with_test_artifact():
+    """Test loading a project that has test artifacts in the JSON."""
+    project = Project(fpath=DATA_DIR / "project_with_test_artifacts.json", mode="w+")
+
+    exp = project["my-experiment"]
+    test = exp.tests[0]
+
+    assert len(test.artifacts) == 1
+    assert test.artifacts[0].name == "confusion-matrix"
+    assert test.artifacts[0].dirty is False
+    assert test.path == DATA_DIR / "my-experiment-20220101093000" / slugify("My test")
+
+
+def test_backward_compat_no_test_artifacts():
+    """Test loading an old project.json without artifacts in test entries."""
+    project = Project(fpath=DATA_DIR / "project.json", mode="w+")
+    exp = project["my-experiment"]
+    test = exp.tests[0]
+
+    assert test.artifacts == []
+
+
+def test_save_project_test_artifact_when_exp_not_dirty(tmp_path):
+    """Test that a test artifact is saved even when the parent experiment is not dirty."""
+    location = tmp_path / "my-project"
+    project_location = location / "project.json"
+
+    # Create and save a project with a test (no artifacts in the test yet)
+    project = Project(fpath=project_location, author="root")
+    with project.log(name="My experiment") as exp, exp.log_test("My test") as test:
+        test.log_metric("auroc", 0.8)
+    project.save()
+
+    # Reload in w+ mode — exp.dirty is False after loading
+    project2 = Project(fpath=project_location, mode="w+", author="root")
+    exp2 = project2["my-experiment"]
+    assert exp2.dirty is False
+
+    # Add a test artifact directly to the already-loaded test (exp2 stays not dirty)
+    existing_test = exp2.tests[0]
+    existing_test.log_artifact(name="conf", value={"tp": 5}, handler="json")
+
+    project2.save()
+
+    conf_fname = existing_test.artifacts[0].fname
+    artifact_path = location / exp2.slug / slugify("My test") / conf_fname
+    assert artifact_path.is_file()

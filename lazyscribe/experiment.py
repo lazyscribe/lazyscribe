@@ -27,7 +27,11 @@ from fsspec.implementations.local import LocalFileSystem
 from fsspec.spec import AbstractFileSystem
 from slugify import slugify
 
-from lazyscribe._utils import serializer, utcnow, validate_artifact_environment
+from lazyscribe._utils import (
+    load_artifact_from,
+    serializer,
+    utcnow,
+)
 from lazyscribe.artifacts import _get_handler
 from lazyscribe.artifacts.base import Artifact
 from lazyscribe.exception import ArtifactLoadError, ArtifactLogError, SaveError
@@ -322,26 +326,9 @@ class Experiment:
             If ``validate`` and runtime environment does not match artifact metadata.
             Or if there is no artifact found with the name provided.
         """
-        for artifact in self.artifacts:
-            if artifact.name == name:
-                # Validate the handler
-                if validate:
-                    validate_artifact_environment(artifact)
-                # Read in the artifact
-                mode = "rb" if artifact.binary else "r"
-                with self.fs.open(str(self.path / artifact.fname), mode) as buf:
-                    out = artifact.read(buf, **kwargs)
-                if artifact.output_only:
-                    warnings.warn(
-                        f"Artifact '{name}' is not the original Python Object",
-                        UserWarning,
-                        stacklevel=2,
-                    )
-                break
-        else:
-            raise ArtifactLoadError(f"No artifact with name {name}")
-
-        return out
+        return load_artifact_from(
+            self.artifacts, self.path, self.fs, name, validate, **kwargs
+        )
 
     @contextmanager
     def log_test(self, name: str, description: str | None = None) -> Iterator[Test]:
@@ -361,7 +348,12 @@ class Experiment:
         lazyscribe.test.Test
             The :py:class:`lazyscribe.test.Test` dataclass.
         """
-        test = Test(name=name, description=description)
+        test = Test(
+            name=name,
+            description=description,
+            path=self.path / slugify(name),
+            fs=self.fs,
+        )
 
         yield test
 

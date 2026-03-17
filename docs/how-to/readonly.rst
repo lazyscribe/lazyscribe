@@ -14,6 +14,13 @@ loaded into a :py:class:`lazyscribe.experiment.ReadOnlyExperiment` class. You **
 #. save the project file, or
 #. add any experiments to the project.
 
+Tests within a :py:class:`~lazyscribe.experiment.ReadOnlyExperiment` are likewise loaded as
+:py:class:`lazyscribe.test.ReadOnlyTest` instances. Attempting to call
+:py:meth:`~lazyscribe.test.Test.log_metric`, :py:meth:`~lazyscribe.test.Test.log_parameter`,
+or :py:meth:`~lazyscribe.test.Test.log_artifact` on a
+:py:class:`~lazyscribe.test.ReadOnlyTest` will raise
+:py:exc:`attrs.exceptions.FrozenInstanceError`.
+
 Append mode
 -----------
 
