@@ -1050,7 +1050,7 @@ requires-dist = [
     { name = "pytest-cov", marker = "extra == 'tests'" },
     { name = "python-slugify", specifier = ">=5.0.0,<=8.0.4" },
     { name = "requests", marker = "extra == 'tests'" },
-    { name = "ruff", marker = "extra == 'qa'" },
+    { name = "ruff", marker = "extra == 'qa'", specifier = "==0.15.7" },
     { name = "scikit-learn", marker = "extra == 'docs'" },
     { name = "scikit-learn", marker = "extra == 'tests'" },
     { name = "sphinx", marker = "extra == 'docs'" },
