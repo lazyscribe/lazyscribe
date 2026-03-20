@@ -8,8 +8,11 @@ on:
   workflow_dispatch:
 jobs:
   edgetest:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     name: running edgetest
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v6
         with:
@@ -17,7 +20,7 @@ jobs:
       - id: run-edgetest
         uses: edgetest-dev/run-edgetest-action@v1.6
         with:
-          edgetest-flags: '-c pyproject.toml -r requirements.txt --export'
+          edgetest-flags: '-c pyproject.toml -r dev-requirements.txt --export'
           base-branch: 'main'
           skip-pr: 'true'
       - name: Install uv
@@ -27,16 +30,18 @@ jobs:
       - name: Compile dev-requirements.txt
         run: uv pip compile pyproject.toml -o dev-requirements.txt --extra dev --upgrade
       - name: Update uv lock
-        run: uv lock
+        run: uv lock --upgrade
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
         with:
           branch: edgetest-patch
           base: main
           delete-branch: true
-          title: 'upgrade(deps): update dependency version bounds'
-          commit-message: 'upgrade(deps): update dependency version bounds'
-          body: Automated changes by [run-edgetest-action](https://github.com/edgetest-dev/run-edgetest-action) GitHub action
+          title: 'upgrade(deps): update dependencies with edgetest'
+          commit-message: 'upgrade(deps): update dependencies with edgetest'
+          body: >
+            Automated changes by [edgetest](https://github.com/edgetest-dev/run-edgetest-action) GitHub action
+            and uv compiling `dev-requirements.txt` and updating `uv.lock`.
           add-paths: |
             pyproject.toml
             requirements.txt
