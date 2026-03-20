@@ -997,7 +997,7 @@ tests = [
 
 [package.metadata]
 requires-dist = [
-    { name = "attrs", specifier = ">=21.2.0,<=25.4.0" },
+    { name = "attrs", specifier = ">=21.2.0,<=26.1.0" },
     { name = "commitizen", marker = "extra == 'build'" },
     { name = "edgetest", marker = "extra == 'qa'" },
     { name = "edgetest-pip-tools", marker = "extra == 'qa'" },

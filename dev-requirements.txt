@@ -6,7 +6,7 @@ alabaster==1.0.0
     # via sphinx
 argcomplete==3.6.3
     # via commitizen
-attrs==25.4.0
+attrs==26.1.0
     # via lazyscribe (pyproject.toml)
 babel==2.18.0
     # via sphinx
@@ -20,7 +20,7 @@ certifi==2026.2.25
     # via requests
 cfgv==3.5.0
     # via pre-commit
-charset-normalizer==3.4.4
+charset-normalizer==3.4.6
     # via
     #   commitizen
     #   requests
@@ -32,9 +32,9 @@ colorama==0.4.6
     # via commitizen
 commitizen==4.13.9
     # via lazyscribe (pyproject.toml)
-contourpy==1.3.3
+contourpy==1.3.2
     # via matplotlib
-coverage==7.13.4
+coverage==7.13.5
     # via pytest-cov
 cycler==0.12.1
     # via matplotlib
@@ -44,7 +44,7 @@ deprecated==1.3.1
     # via commitizen
 distlib==0.4.0
     # via virtualenv
-docutils==0.22.4
+docutils==0.21.2
     # via sphinx
 edgetest==2026.1.1
     # via
@@ -52,22 +52,26 @@ edgetest==2026.1.1
     #   edgetest-pip-tools
 edgetest-pip-tools==2026.1.0
     # via lazyscribe (pyproject.toml)
-filelock==3.25.0
+exceptiongroup==1.3.1
+    # via pytest
+filelock==3.25.2
     # via
     #   python-discovery
     #   virtualenv
-fonttools==4.61.1
+fonttools==4.62.1
     # via matplotlib
 fsspec==2026.2.0
     # via lazyscribe (pyproject.toml)
 furo==2025.12.19
     # via lazyscribe (pyproject.toml)
-identify==2.6.17
+identify==2.6.18
     # via pre-commit
 idna==3.11
     # via requests
 imagesize==2.0.0
     # via sphinx
+importlib-metadata==9.0.0
+    # via build
 iniconfig==2.3.0
     # via pytest
 jinja2==3.1.6
@@ -76,7 +80,7 @@ jinja2==3.1.6
     #   sphinx
 joblib==1.5.3
     # via scikit-learn
-kiwisolver==1.4.9
+kiwisolver==1.5.0
     # via matplotlib
 librt==0.8.1
     # via mypy
@@ -90,7 +94,7 @@ mypy-extensions==1.1.0
     # via mypy
 nodeenv==1.10.0
     # via pre-commit
-numpy==2.4.2
+numpy==2.2.6
     # via
     #   contourpy
     #   matplotlib
@@ -106,7 +110,7 @@ packaging==26.0
     #   pytest
     #   sphinx
     #   wheel
-pandas==3.0.1
+pandas==2.3.3
     # via lazyscribe (pyproject.toml)
 pathspec==1.0.4
     # via mypy
@@ -160,10 +164,12 @@ python-dateutil==2.9.0.post0
     # via
     #   matplotlib
     #   pandas
-python-discovery==1.1.0
+python-discovery==1.2.0
     # via virtualenv
 python-slugify==8.0.4
     # via lazyscribe (pyproject.toml)
+pytz==2026.1.post1
+    # via pandas
 pyyaml==6.0.3
     # via
     #   commitizen
@@ -174,15 +180,13 @@ requests==2.32.5
     # via
     #   lazyscribe (pyproject.toml)
     #   sphinx
-roman-numerals==4.1.0
-    # via sphinx
-ruff==0.15.5
+ruff==0.15.7
     # via lazyscribe (pyproject.toml)
-scikit-learn==1.8.0
+scikit-learn==1.7.2
     # via lazyscribe (pyproject.toml)
-scipy==1.17.1
+scipy==1.15.3
     # via scikit-learn
-setuptools==82.0.0
+setuptools==82.0.1
     # via pip-tools
 six==1.17.0
     # via python-dateutil
@@ -190,7 +194,7 @@ snowballstemmer==3.0.1
     # via sphinx
 soupsieve==2.8.3
     # via beautifulsoup4
-sphinx==9.0.4
+sphinx==8.1.3
     # via
     #   lazyscribe (pyproject.toml)
     #   furo
@@ -227,6 +231,16 @@ time-machine==3.2.0
     # via lazyscribe (pyproject.toml)
 toml-fmt-common==1.1.0
     # via pyproject-fmt
+tomli==2.3.0
+    # via
+    #   lazyscribe (pyproject.toml)
+    #   build
+    #   coverage
+    #   mypy
+    #   pip-tools
+    #   pytest
+    #   sphinx
+    #   toml-fmt-common
 tomlkit==0.14.0
     # via
     #   commitizen
@@ -236,18 +250,25 @@ types-python-slugify==8.0.2.20240310
 typing-extensions==4.15.0
     # via
     #   beautifulsoup4
+    #   commitizen
+    #   exceptiongroup
     #   mypy
+    #   virtualenv
+tzdata==2025.3
+    # via pandas
 urllib3==2.6.3
     # via requests
 uv==0.9.26
     # via
     #   lazyscribe (pyproject.toml)
     #   edgetest
-virtualenv==21.1.0
+virtualenv==21.2.0
     # via pre-commit
 wcwidth==0.6.0
     # via prompt-toolkit
 wheel==0.46.3
     # via pip-tools
-wrapt==2.1.1
+wrapt==2.1.2
     # via deprecated
+zipp==3.23.0
+    # via importlib-metadata
