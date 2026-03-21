@@ -59,11 +59,11 @@ We have a selection of builtin artifact handlers, specified below:
     * - :py:class:`lazyscribe.artifacts.json.JSONArtifact`
       - json
       - Artifacts written using :py:meth:`json.dump` and read using :py:meth:`json.load`
-      - N/A
-    * - :py:class:`lazyscribe.artifacts.pickle:PickleArtifact`
+      - None
+    * - :py:class:`lazyscribe.artifacts.pickle.PickleArtifact`
       - pickle
       - Artifacts written using :py:meth:`pickle.dump` and read using :py:meth:`pickle.load`
-      - N/A
+      - None
 
 We also provide first-party supported artifact handlers (install via `pip`):
 
