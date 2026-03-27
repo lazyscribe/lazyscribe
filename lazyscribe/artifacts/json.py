@@ -14,7 +14,7 @@ from lazyscribe._utils import utcnow
 from lazyscribe.artifacts.base import Artifact
 
 
-@define(auto_attribs=True)
+@define(auto_attribs=True, getstate_setstate=False)
 class JSONArtifact(Artifact):
     """Handler for JSON-serializable objects.
 

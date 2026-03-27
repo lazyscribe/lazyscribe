@@ -351,17 +351,17 @@ class Repository:
             value provided. ``asof`` will provide the most recent version as of the
             ``version`` value.
 
+        Returns
+        -------
+        str
+            Concatenated output from :py:meth:`difflib.unified_diff`.
+
         Raises
         ------
         lazyscribe.exception.ArtifactLoadError
             Raised if the artifact does not exist on the filesystem yet.
         ValueError
             Raised if the provided artifact(s) represent binary files.
-
-        Returns
-        -------
-        str
-            Concatenated output from :py:meth:`difflib.unified_diff`.
         """
         if not isinstance(version, tuple):
             # Retrieve the specified and the latest version
