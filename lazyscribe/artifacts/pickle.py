@@ -18,7 +18,7 @@ from lazyscribe.artifacts.base import Artifact
 LOG = logging.getLogger(__name__)
 
 
-@define(auto_attribs=True)
+@define(auto_attribs=True, getstate_setstate=False)
 class PickleArtifact(Artifact):
     """Pickle-based serialization for python objects.
 
