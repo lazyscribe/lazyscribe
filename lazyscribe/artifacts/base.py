@@ -147,7 +147,7 @@ class Artifact(metaclass=ABCMeta):
             Keyword arguments for the write method.
         """
 
-    def __getstate__(self) -> dict:  # type: ignore
+    def __getstate__(self) -> dict:
         """Serialize the artifact handler.
 
         Since the handler defines basic serialization, we can use that information
@@ -163,7 +163,7 @@ class Artifact(metaclass=ABCMeta):
 
         return state
 
-    def __setstate__(self, state: dict) -> None:  # type: ignore
+    def __setstate__(self, state: dict) -> None:
         """Deserialize the artifact handler.
 
         Since the handler defines basic serialization, we can use that information
@@ -175,7 +175,6 @@ class Artifact(metaclass=ABCMeta):
                     if value is not None:
                         buf = BytesIO(value) if self.binary else StringIO(value)
                         self.value = self.read(buf)
-                    else:
-                        self.value = None
+                    self.value = None
                 case _:
                     setattr(self, key, value)
