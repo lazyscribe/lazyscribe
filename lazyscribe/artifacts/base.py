@@ -175,6 +175,7 @@ class Artifact(metaclass=ABCMeta):
                     if value is not None:
                         buf = BytesIO(value) if self.binary else StringIO(value)
                         self.value = self.read(buf)
-                    self.value = None
+                    else:
+                        self.value = None
                 case _:
                     setattr(self, key, value)
