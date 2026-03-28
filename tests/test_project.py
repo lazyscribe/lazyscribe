@@ -1,7 +1,6 @@
 """Test the project class."""
 
 import json
-import logging
 import warnings
 import zoneinfo
 from datetime import datetime, timedelta
@@ -86,46 +85,31 @@ def test_logging_experiment(project_kwargs):
         },
     ],
 )
-def test_logging(caplog, project_kwargs):
+def test_logging(project_kwargs):
     """Test logging to a project."""
     project = Project(**project_kwargs)
     today = datetime.now()
-    caplog.set_level(logging.WARNING)
     with project.log(name="My experiment") as exp:
         exp.log_metric("name", 0.5)
 
-    with project.log(name="My experiment") as exp:
-        exp.last_updated = datetime.min
-        exp.created_at = today - timedelta(days=1)
-        exp.log_metric("name", 1.0)
+    with project.log(name="My experiment") as newest_exp_:
+        newest_exp_.last_updated = datetime.min
+        newest_exp_.created_at = today - timedelta(days=1)
+        newest_exp_.log_metric("name", 1.0)
 
-    assert project["my-experiment"] == project.experiments[-1]
-    assert (
-        project[f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}"]
-        == project.experiments[-1]
-    )
+    # Select the most recently updated experiment
+    assert project["my-experiment"] == newest_exp_
+    assert project[f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}"] == newest_exp_
     assert project["my-experiment"].dirty is True
+    assert project["my-experiment"].last_updated == today
 
-    assert (
-        caplog.text == ""
-    )  # If log_metric, then last_updated is overwritten to timestamp at logging hence no warning
+    # Create an old experiment
+    with project.log(name="My experiment") as oldest_exp_:
+        oldest_exp_.last_updated = datetime.min
+        oldest_exp_.created_at = today - timedelta(days=1)
 
-    with project.log(name="My experiment") as exp:
-        exp.last_updated = datetime.min
-        exp.created_at = today - timedelta(days=1)
-
-    assert project["my-experiment"] == project.experiments[-1]
-    assert (
-        project[f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}"]
-        == project.experiments[-1]
-    )
-    assert project["my-experiment"].dirty is True
-
-    assert (
-        f"Returning experiment last saved, with ``last_updated`` manually set as {project.experiments[-1].last_updated}. \
-                            The latest ``last_updated`` timestamp is {today}."
-        in caplog.text
-    )
+    assert project["my-experiment"] == newest_exp_
+    assert project[f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}"] == newest_exp_
 
 
 def test_invalid_project_mode():
