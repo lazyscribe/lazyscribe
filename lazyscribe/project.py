@@ -114,6 +114,7 @@ class Project:
     mode: Literal["r", "a", "w", "w+"]
     author: str
     storage_options: dict[str, Any]
+    experiments: list[Experiment]
 
     def __init__(
         self,
@@ -133,7 +134,7 @@ class Project:
         self.storage_options = storage_options
 
         # If in ``r``, ``a``, or ``w+`` mode, read in the existing project.
-        self.experiments: list[Experiment] = []
+        self.experiments = []
         self.fs = fsspec.filesystem(self.protocol, **storage_options)
 
         if mode not in ("r", "a", "w", "w+"):
