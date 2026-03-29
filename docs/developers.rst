@@ -40,18 +40,18 @@ please make sure to run our QA tools before submitting a PR:
 
 .. code-block:: python
 
-    python -m pip install -e .[qa]
-    python -m ruff check .
-    python -m ruff format .
-    python -m mypy lazyscribe
+    uv sync --extra qa
+    uvx ruff check .
+    uvx ruff format .
+    uv run mypy lazyscribe
 
 If you're writing sphinx documentation, make sure to build the docs locally and preview
 them before submitting a PR:
 
 .. code-block:: python
 
-    python -m pip install -e .[docs]
-    make docs
+    uv sync --extra docs
+    uv run make docs
     cd docs/
     python -m http.server
 
@@ -78,27 +78,31 @@ Ready to contribute? Here's how you can set up:
 
     $ git remote add upstream https://github.com/lazyscribe/lazyscribe.git
 
-#. Install your local copy into a virtualenv. We recommend using `mamba <https://mamba.readthedocs.io/en/latest/index.html>`_::
+#. Install your local copy into a virtualenv and use install ``pre-commit`` hooks.
+   We recommend using `uv <https://docs.astral.sh/uv/>`_::
 
-    $ mamba create -n lazyscribe python=3.12 -y
-    $ conda activate lazyscribe
-    $ python -m pip install -r requirements.txt -e .[dev]
+    $ uv sync --all-extras --dev --python 3.14
+    $ uv run pre-commit install --install-hooks
 
 #. Create a branch for local development::
 
     $ git checkout -b name-of-branch
 
-#. When you're done making changes, run the QA tooling and tests::
+#. When you're done making changes, run the tests::
 
-    $ python -m ruff check .
-    $ python -m ruff format .
-    $ python -m mypy lazyscribe
-    $ python -m pytest tests --cov=lazyscribe --cov-report=term-missing
+    $ uvx nox
 
-#. Commit your changes and push your branch to GitHub::
+#. You can run the QA tooling before ``pre-commit`` as well::
+
+    $ uvx ruff format .
+    $ uvx ruff check .
+    $ uv run mypy lazyscribe
+
+#. Commit your changes (using `conventional commits <https://www.conventionalcommits.org/en/v1.0.0/#summary>`_)
+   and push your branch to GitHub::
 
     $ git add .
-    $ git commit -m "A detailed description"
+    $ git commit -m "feat: a detailed description"
     $ git push origin name-of-branch
 
 #. Submit a pull request!
