@@ -1,5 +1,6 @@
 """Test the artifact handlers."""
 
+import pickle
 import zoneinfo
 from datetime import datetime
 from unittest.mock import Mock, patch
@@ -39,6 +40,16 @@ def test_json_handler(tmp_path):
     assert data == out
 
 
+def test_json_handler_serialization():
+    """Test serializing the handler itself."""
+    data = [{"key": "value"}]
+    handler = JSONArtifact.construct(name="My output JSON", value=data)
+    out = pickle.dumps(handler)
+    recon = pickle.loads(out)
+
+    assert recon == handler
+
+
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
@@ -64,6 +75,16 @@ def test_pickle_handler(tmp_path):
         out = handler.read(buf)
 
     assert data == out
+
+
+def test_pickle_handler_serialization():
+    """Test serializing the pickle handler itself."""
+    data = [{"key": "value"}]
+    handler = PickleArtifact.construct(name="My output pickle", value=data)
+    out = pickle.dumps(handler)
+    recon = pickle.loads(out)
+
+    assert handler == recon
 
 
 def test_get_handler():

@@ -1,56 +1,81 @@
 default_stages: [pre-commit]
 default_install_hook_types: [commit-msg, pre-commit]
 repos:
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.5
-    hooks:
-      # Run the linter.
-      - id: ruff-check
-        args: [ --fix ]
-      # Run the formatter.
-      - id: ruff-format
-        types_or: [ python, jupyter ]
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.19.1
-    hooks:
-      - id: mypy
-        exclude: (^docs\/|^lazyscribe\/^tests\/)
-        language_version: python3.10
-        pass_filenames: false
-        args: [
-          --namespace-packages,
-          --explicit-package-bases,
-          --ignore-missing-imports,
-          --disallow-untyped-defs,
-          --non-interactive,
-          --install-types
-        ]
-  - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.10.2
-    hooks:
-      # Compile requirements
-      - id: pip-compile
-        name: pip-compile requirements
-        args: [pyproject.toml, -o, requirements.txt, --upgrade]
-        files: ^pyproject\.toml$
-      - id: pip-compile
-        name: pip-compile dev requirements
-        args: [pyproject.toml, -o, dev-requirements.txt, --extra, dev, --upgrade]
-        files: ^pyproject\.toml$
-      - id: uv-lock
-  - repo: https://github.com/tox-dev/pyproject-fmt
-    rev: v2.15.3
-    hooks:
-      - id: pyproject-fmt
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v6.0.0
-    hooks:
-      - id: trailing-whitespace
-      - id: debug-statements
-      - id: end-of-file-fixer
-  - repo: https://github.com/compilerla/conventional-pre-commit
-    rev: v4.3.0
-    hooks:
-      - id: conventional-pre-commit
-        stages: [commit-msg]
-        args: [feat, fix, test, refactor, perf, docs, style, build, ci, revert, chore, upgrade, review, bump]
+    - repo: https://github.com/astral-sh/ruff-pre-commit
+      rev: v0.15.5
+      hooks:
+          # Run the linter.
+          - id: ruff-check
+            args: [--fix]
+          # Run the formatter.
+          - id: ruff-format
+            types_or: [python, jupyter]
+    - repo: https://github.com/pre-commit/mirrors-mypy
+      rev: v1.19.1
+      hooks:
+          - id: mypy
+            exclude: (^docs\/|^lazyscribe\/^tests\/)
+            language_version: python3.12
+            pass_filenames: false
+            args:
+                [
+                    --namespace-packages,
+                    --explicit-package-bases,
+                    --ignore-missing-imports,
+                    --disallow-untyped-defs,
+                    --non-interactive,
+                    --install-types,
+                ]
+    - repo: https://github.com/astral-sh/uv-pre-commit
+      rev: 0.10.2
+      hooks:
+          # Compile requirements
+          - id: pip-compile
+            name: pip-compile requirements
+            args: [pyproject.toml, -o, requirements.txt, --upgrade]
+            files: ^pyproject\.toml$
+          - id: pip-compile
+            name: pip-compile dev requirements
+            args:
+                [
+                    pyproject.toml,
+                    -o,
+                    dev-requirements.txt,
+                    --extra,
+                    dev,
+                    --upgrade,
+                ]
+            files: ^pyproject\.toml$
+          - id: uv-lock
+    - repo: https://github.com/tox-dev/pyproject-fmt
+      rev: v2.15.3
+      hooks:
+          - id: pyproject-fmt
+    - repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: v6.0.0
+      hooks:
+          - id: trailing-whitespace
+          - id: debug-statements
+          - id: end-of-file-fixer
+    - repo: https://github.com/compilerla/conventional-pre-commit
+      rev: v4.3.0
+      hooks:
+          - id: conventional-pre-commit
+            stages: [commit-msg]
+            args:
+                [
+                    feat,
+                    fix,
+                    test,
+                    refactor,
+                    perf,
+                    docs,
+                    style,
+                    build,
+                    ci,
+                    revert,
+                    chore,
+                    upgrade,
+                    review,
+                    bump,
+                ]

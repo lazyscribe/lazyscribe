@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
 from datetime import datetime
-from io import IOBase
+from io import BytesIO, IOBase, StringIO
 from typing import Any, ClassVar
 
-from attrs import define, field
+from attrs import asdict, define, field
 
 
 @define
@@ -146,3 +146,36 @@ class Artifact(metaclass=ABCMeta):
         **kwargs
             Keyword arguments for the write method.
         """
+
+    def __getstate__(self) -> dict:  # type: ignore
+        """Serialize the artifact handler.
+
+        Since the handler defines basic serialization, we can use that information
+        to efficiently pass the state to ``pickle``.
+        """
+        state = asdict(self)
+        # Check for the existence of an artifact
+        if (obj := state.get("value")) is not None:
+            buf = BytesIO() if self.binary else StringIO()
+            with buf:
+                self.write(obj, buf, **self.writer_kwargs)
+                state["value"] = buf.getvalue()
+
+        return state
+
+    def __setstate__(self, state: dict) -> None:  # type: ignore
+        """Deserialize the artifact handler.
+
+        Since the handler defines basic serialization, we can use that information
+        to efficiently convert the state from the output of ``pickle``.
+        """
+        for key, value in state.items():
+            match key:
+                case "value":
+                    if value is not None:
+                        buf = BytesIO(value) if self.binary else StringIO(value)
+                        self.value = self.read(buf)
+                    else:
+                        self.value = None
+                case _:
+                    setattr(self, key, value)

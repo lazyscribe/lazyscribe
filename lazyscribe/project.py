@@ -6,10 +6,12 @@ import getpass
 import json
 import logging
 import warnings
+from bisect import insort
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
+from threading import Lock
 from typing import Any, Literal
 from urllib.parse import urlparse
 
@@ -132,7 +134,7 @@ class Project:
         self.storage_options = storage_options
 
         # If in ``r``, ``a``, or ``w+`` mode, read in the existing project.
-        self.experiments: list[Experiment] = []
+        self.experiments = []
         self.fs = fsspec.filesystem(self.protocol, **storage_options)
 
         if mode not in ("r", "a", "w", "w+"):
@@ -142,6 +144,7 @@ class Project:
             self.load()
 
         self.author = getpass.getuser() if author is None else author
+        self.mutex_ = Lock()
 
     def load(self) -> None:
         """Load existing experiments.
@@ -236,7 +239,8 @@ class Project:
                     )
 
             if self.mode in ("r", "a"):
-                self.experiments.append(
+                insort(
+                    self.experiments,
                     ReadOnlyExperiment(
                         **exp,
                         project=self.fpath,
@@ -245,10 +249,11 @@ class Project:
                         tests=tests,
                         artifacts=artifacts,
                         dirty=False,
-                    )
+                    ),
                 )
             else:
-                self.experiments.append(
+                insort(
+                    self.experiments,
                     Experiment(
                         **exp,
                         project=self.fpath,
@@ -257,7 +262,7 @@ class Project:
                         tests=tests,
                         artifacts=artifacts,
                         dirty=False,
-                    )
+                    ),
                 )
 
     def save(self) -> None:
@@ -380,7 +385,8 @@ class Project:
         """
         if self.mode == "r":
             raise ReadOnlyError("Project is in read-only mode.")
-        self.experiments.append(other)
+        with self.mutex_:
+            insort(self.experiments, other)
 
     @contextmanager
     def log(self, name: str) -> Iterator[Experiment]:
@@ -478,18 +484,6 @@ class Project:
                 break
         else:
             raise KeyError(f"No experiment with slug {arg}")
-
-        # If short slug is used, return the latest experiment saved with that slug, but may not correspond to the latest "last_updated" timestamp if it was manually set.
-        short_slug_timestamp: list[datetime] = [
-            exp.last_updated for exp in self.experiments if exp.short_slug == arg
-        ]
-        if len(short_slug_timestamp) > 0:
-            latest_datetime = max(short_slug_timestamp)
-            if out.last_updated != latest_datetime:
-                LOG.warning(
-                    f"Returning experiment last saved, with ``last_updated`` manually set as {exp.last_updated}. \
-                            The latest ``last_updated`` timestamp is {latest_datetime}."
-                )
 
         return out
 

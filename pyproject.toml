@@ -22,6 +22,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: Free Threading :: 2 - Beta",
 ]
 dependencies = [
     "attrs<=26.1.0,>=21.2.0",
@@ -51,8 +52,8 @@ optional-dependencies.qa = [
     "edgetest",
     "edgetest-pip-tools",
     "mypy",
-    "pip-tools",
     "pre-commit",
+    "pre-commit-uv>=4.2.1",
     "pyproject-fmt",
     "ruff",
     "types-python-slugify",
