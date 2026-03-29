@@ -2,9 +2,9 @@
 
 import json
 import tempfile
-import threading
 import zoneinfo
-from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import time_machine
@@ -14,7 +14,11 @@ from lazyscribe import Project
 
 
 class TestProjectConcurrency:
-    """Test logging experiments in multiple threads."""
+    """Test logging experiments in multiple threads.
+
+    Testing design largely built based on the Free Threading guide:
+    https://py-free-threading.github.io/testing/
+    """
 
     @classmethod
     def setup_class(cls):
@@ -22,32 +26,25 @@ class TestProjectConcurrency:
         cls.location = tempfile.TemporaryDirectory()
         cls.dir = Path(cls.location.name)
 
+        # Create standard parameters for experiments
+        cls.params = [
+            (
+                f"{idx} Experiment",
+                idx / 100,
+                datetime(2026, 3, 1, 0, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC"))
+                + timedelta(hours=idx),
+            )
+            for idx in range(1, 101)
+        ]
+
         # Create a few experiments
         project = Project(cls.dir / "repository.json", mode="w")
-        with (
-            time_machine.travel(
-                datetime(2026, 3, 15, 0, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC")),
-                tick=False,
-            ),
-            project.log(name="First experiment") as exp,
-        ):
-            exp.log_metric("name", 0.5)
-        with (
-            time_machine.travel(
-                datetime(2026, 3, 20, 0, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC")),
-                tick=False,
-            ),
-            project.log(name="Second experiment") as exp,
-        ):
-            exp.log_metric("name", 0.75)
-        with (
-            time_machine.travel(
-                datetime(2026, 3, 25, 0, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC")),
-                tick=False,
-            ),
-            project.log(name="Third experiment") as exp,
-        ):
-            exp.log_metric("name", 1.0)
+        for param in cls.params:
+            with (
+                time_machine.travel(param[2], tick=False),
+                project.log(name=param[0]) as exp,
+            ):
+                exp.log_metric("name", param[1])
 
         project.save()
 
@@ -55,44 +52,28 @@ class TestProjectConcurrency:
         """Test logging experiments in multiple threads."""
 
         # Create a function that logs experiments
-        def _logging_function(project: Project, name: str, metric: float, ts: datetime):
+        def _logging_function(
+            project: Project,
+            name: str,
+            metric: float,
+            ts: datetime,
+        ):
             """Create an experiment."""
             with project.log(name) as exp:
                 exp.log_metric("name", metric)
                 # Manually setting timestamp-related fields because time-machine
                 # is not thread-safe
-                exp.created_at = ts
-                exp.last_updated = ts
+                exp.created_at = ts.replace(tzinfo=None)
+                exp.last_updated = ts.replace(tzinfo=None)
                 exp.slug = f"{slugify(name)}-{ts.strftime('%Y%m%d%H%M%S')}"
 
         project = Project(self.dir / "threaded-repository.json", mode="w")
-        threads = [
-            threading.Thread(target=_logging_function, args=param)
-            for param in [
-                (
-                    project,
-                    "First experiment",
-                    0.5,
-                    datetime(2026, 3, 15, 0, 0, 0),
-                ),
-                (
-                    project,
-                    "Second experiment",
-                    0.75,
-                    datetime(2026, 3, 20, 0, 0, 0),
-                ),
-                (
-                    project,
-                    "Third experiment",
-                    1.0,
-                    datetime(2026, 3, 25, 0, 0, 0),
-                ),
-            ]
-        ]
-        for t in threads:
-            t.start()
-        for t in threads:
-            t.join()
+        with ThreadPoolExecutor(max_workers=4) as tpe:
+            futures = []
+            for arg in self.params:
+                futures.append(tpe.submit(_logging_function, project, *arg))
+            for f in futures:
+                f.result()
 
         project.save()
 
