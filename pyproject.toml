@@ -53,6 +53,7 @@ optional-dependencies.qa = [
     "mypy",
     "pip-tools",
     "pre-commit",
+    "pre-commit-uv>=4.2.1",
     "pyproject-fmt",
     "ruff==0.15.7",
     "types-python-slugify",
