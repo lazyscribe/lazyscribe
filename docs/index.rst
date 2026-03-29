@@ -45,6 +45,7 @@ Contents
     how-to/external-fs
     how-to/readonly
     how-to/merge
+    how-to/concurrency
 
 .. toctree::
     :maxdepth: 2
