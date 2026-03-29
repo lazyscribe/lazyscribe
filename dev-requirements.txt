@@ -5,33 +5,31 @@ accessible-pygments==0.0.5
 alabaster==1.0.0
     # via sphinx
 argcomplete==3.6.3
-    # via
-    #   commitizen
-    #   nox
+    # via commitizen
 attrs==26.1.0
-    # via
-    #   lazyscribe (pyproject.toml)
-    #   nox
+    # via lazyscribe (pyproject.toml)
 babel==2.18.0
     # via sphinx
 beautifulsoup4==4.14.3
     # via furo
+build==1.4.2
+    # via pip-tools
 cerberus==1.3.8
     # via edgetest
 certifi==2026.2.25
     # via requests
 cfgv==3.5.0
     # via pre-commit
-charset-normalizer==3.4.7
+charset-normalizer==3.4.6
     # via
     #   commitizen
     #   requests
 click==8.3.1
-    # via edgetest
+    # via
+    #   edgetest
+    #   pip-tools
 colorama==0.4.6
     # via commitizen
-colorlog==6.10.1
-    # via nox
 commitizen==4.13.9
     # via lazyscribe (pyproject.toml)
 contourpy==1.3.3
@@ -42,8 +40,6 @@ cycler==0.12.1
     # via matplotlib
 decli==0.6.3
     # via commitizen
-dependency-groups==1.3.1
-    # via nox
 deprecated==1.3.1
     # via commitizen
 distlib==0.4.0
@@ -66,8 +62,6 @@ fsspec==2026.2.0
     # via lazyscribe (pyproject.toml)
 furo==2025.12.19
     # via lazyscribe (pyproject.toml)
-humanize==4.15.0
-    # via nox
 identify==2.6.18
     # via pre-commit
 idna==3.11
@@ -90,14 +84,12 @@ markupsafe==3.0.3
     # via jinja2
 matplotlib==3.10.8
     # via lazyscribe (pyproject.toml)
-mypy==1.20.0
+mypy==1.19.1
     # via lazyscribe (pyproject.toml)
 mypy-extensions==1.1.0
     # via mypy
 nodeenv==1.10.0
     # via pre-commit
-nox==2026.2.9
-    # via lazyscribe (pyproject.toml)
 numpy==2.4.4
     # via
     #   contourpy
@@ -107,22 +99,26 @@ numpy==2.4.4
     #   scipy
 packaging==26.0
     # via
+    #   build
     #   commitizen
-    #   dependency-groups
     #   edgetest
     #   matplotlib
-    #   nox
     #   pytest
     #   sphinx
-pandas==3.0.2
+    #   wheel
+pandas==3.0.1
     # via lazyscribe (pyproject.toml)
 pathspec==1.0.4
     # via mypy
-pillow==12.2.0
+pillow==12.1.1
     # via
     #   lazyscribe (pyproject.toml)
     #   matplotlib
     #   sphinx-gallery
+pip==26.0.1
+    # via pip-tools
+pip-tools==7.5.3
+    # via lazyscribe (pyproject.toml)
 platformdirs==4.9.4
     # via
     #   python-discovery
@@ -154,6 +150,10 @@ pyproject-fmt==2.11.1
     # via
     #   lazyscribe (pyproject.toml)
     #   edgetest
+pyproject-hooks==1.2.0
+    # via
+    #   build
+    #   pip-tools
 pytest==9.0.2
     # via
     #   lazyscribe (pyproject.toml)
@@ -174,18 +174,20 @@ pyyaml==6.0.3
     #   pre-commit
 questionary==2.1.1
     # via commitizen
-requests==2.33.1
+requests==2.33.0
     # via
     #   lazyscribe (pyproject.toml)
     #   sphinx
 roman-numerals==4.1.0
     # via sphinx
-ruff==0.15.7
+ruff==0.15.8
     # via lazyscribe (pyproject.toml)
 scikit-learn==1.8.0
     # via lazyscribe (pyproject.toml)
 scipy==1.17.1
     # via scikit-learn
+setuptools==82.0.1
+    # via pip-tools
 six==1.17.0
     # via python-dateutil
 snowballstemmer==3.0.1
@@ -247,10 +249,10 @@ uv==0.9.26
     #   edgetest
     #   pre-commit-uv
 virtualenv==21.2.0
-    # via
-    #   nox
-    #   pre-commit
+    # via pre-commit
 wcwidth==0.6.0
     # via prompt-toolkit
+wheel==0.46.3
+    # via pip-tools
 wrapt==2.1.2
     # via deprecated
