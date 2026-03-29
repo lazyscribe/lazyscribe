@@ -34,7 +34,7 @@ or artifact. Let's create a handler for text files to demonstrate.
 
     from lazyscribe.artifacts.base import Artifact
 
-    @define(auto_attribs=True)
+    @define(auto_attribs=True, getstate_setstate=False)
     class TextArtifact(Artifact):
         """Handler for Text artifacts."""
 
@@ -42,6 +42,13 @@ or artifact. Let's create a handler for text files to demonstrate.
         suffix: ClassVar[str] = "txt"
         binary: ClassVar[bool] = False
         output_only: ClassVar[bool] = False
+
+.. note::
+
+    ``getstate_setstate=False`` is only relevant for artifact handlers that may
+    be used for process-based concurrent artifact logging. This parameter tells
+    ``attrs`` to leverage the implementations of ``__getstate__`` and ``__setstate__``
+    in :py:class:`lazyscribe.artifacts.base.Artifact`.
 
 Next, we have to write a ``construct`` method to build our artifact handler. If we had
 additional metadata to capture, this is where we would capture it
@@ -58,7 +65,7 @@ additional metadata to capture, this is where we would capture it
 
     from lazyscribe.artifacts.base import Artifact
 
-    @define(auto_attribs=True)
+    @define(auto_attribs=True, getstate_setstate=False)
     class TextArtifact(Artifact):
         """Handler for Text artifacts."""
 
@@ -96,7 +103,7 @@ methods should expect a file buffer from the ``fsspec`` filesystem.
 
 .. code-block:: python
 
-
+    @define(auto_attribs=True, getstate_setstate=False)
     class TextArtifact(Artifact):
         ...
 
