@@ -1,4 +1,7 @@
-"""Multi-python version testing."""
+"""Multi-python version testing.
+
+Useful for validating free-threading support on local.
+"""
 
 import nox
 

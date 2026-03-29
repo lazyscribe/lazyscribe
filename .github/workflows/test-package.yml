@@ -16,18 +16,20 @@ jobs:
         strategy:
             matrix:
                 python-version:
-                    - '3.10'
-                    - '3.11'
-                    - '3.12'
-                    - '3.13'
-                    - '3.14'
+                    - "3.10"
+                    - "3.11"
+                    - "3.12"
+                    - "3.13"
+                    - "3.13t"
+                    - "3.14"
+                    - "3.14t"
         steps:
             - uses: actions/checkout@v6
 
             - name: Install uv and set the Python version
               uses: astral-sh/setup-uv@v7
               with:
-                python-version: ${{ matrix.python-version }}
+                  python-version: ${{ matrix.python-version }}
 
             - name: Install dependencies
               run: uv sync --locked --all-extras --dev
@@ -49,13 +51,13 @@ jobs:
               uses: py-cov-action/python-coverage-comment-action@v3
               if: matrix.python-version == '3.14'
               with:
-                GITHUB_TOKEN: ${{ github.token }}
+                  GITHUB_TOKEN: ${{ github.token }}
 
             - name: Store Pull Request comment to be posted
               uses: actions/upload-artifact@v7
               if: steps.coverage_comment.outputs.COMMENT_FILE_WRITTEN == 'true' && matrix.python-version == '3.14'
               with:
-                # If you use a different name, update COMMENT_ARTIFACT_NAME accordingly
-                name: python-coverage-comment-action
-                # If you use a different name, update COMMENT_FILENAME accordingly
-                path: python-coverage-comment-action.txt
+                  # If you use a different name, update COMMENT_ARTIFACT_NAME accordingly
+                  name: python-coverage-comment-action
+                  # If you use a different name, update COMMENT_FILENAME accordingly
+                  path: python-coverage-comment-action.txt
