@@ -59,6 +59,7 @@ optional-dependencies.qa = [
     "types-python-slugify",
 ]
 optional-dependencies.tests = [
+    "nox>=2026.2.9",
     "pytest",
     "pytest-cov",
     "requests",

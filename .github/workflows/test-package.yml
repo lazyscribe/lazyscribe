@@ -44,7 +44,7 @@ jobs:
               run: uv run mypy lazyscribe
 
             - name: Run unit testing
-              run: uv run pytest tests --cov=./ --cov-report=xml
+              run: uv run pytest tests --cov=lazyscribe/ --cov-report=xml
 
             - name: Coverage comment
               id: coverage_comment
