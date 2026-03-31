@@ -11,6 +11,7 @@ from contextlib import contextmanager
 from copy import copy
 from datetime import datetime
 from pathlib import Path
+from threading import Lock
 from typing import Any
 
 from attrs import (
@@ -106,6 +107,7 @@ class Experiment:
     artifacts: list[Artifact] = Factory(factory=lambda: [])
     tags: list[str] = Factory(factory=lambda: [])
     dirty: bool = field(eq=False, factory=lambda: True)
+    mutex_: Lock = field(eq=False, factory=lambda: Lock())
 
     @dir.default
     def _dir_factory(self) -> Path:
@@ -357,10 +359,11 @@ class Experiment:
 
         yield test
 
-        self.last_updated = utcnow()
-        self.tests.append(test)
+        with self.mutex_:
+            self.last_updated = utcnow()
+            self.tests.append(test)
 
-        self.dirty = True
+            self.dirty = True
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize the experiment to a dictionary.
@@ -378,6 +381,7 @@ class Experiment:
                 fields(Experiment).project,
                 fields(Experiment).fs,
                 fields(Experiment).dirty,
+                fields(Experiment).mutex_,
             ),
         )
 
