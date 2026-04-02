@@ -7,6 +7,7 @@ name = "lazyscribe"
 version = "2.0.1"
 description = "Lightweight and lazy experiment logging"
 readme = { file = "README.md", content-type = "text/markdown" }
+keywords = [ "experiment", "machine learning", "model" ]
 license = { text = "MIT license" }
 authors = [
     { name = "Akshay Gupta", email = "akgcodes@gmail.com" },
@@ -14,6 +15,8 @@ authors = [
 requires-python = ">=3.10.0"
 classifiers = [
     "Development Status :: 4 - Beta",
+    "Indended Audience :: Science/Research",
+    "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
     "Programming Language :: Python :: 3 :: Only",
@@ -23,6 +26,11 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: Free Threading :: 2 - Beta",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Software Development",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Software Development :: Documentation",
 ]
 dependencies = [
     "attrs<=26.1.0,>=21.2.0",
