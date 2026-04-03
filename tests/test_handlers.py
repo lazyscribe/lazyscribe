@@ -48,6 +48,18 @@ def test_json_handler_serialization():
     recon = pickle.loads(out)
 
     assert recon == handler
+    # Test equality for fields we don't typically care about
+    for field in [
+        "name",
+        "fname",
+        "value",
+        "writer_kwargs",
+        "created_at",
+        "expiry",
+        "version",
+        "dirty",
+    ]:
+        assert getattr(recon, field) == getattr(handler, field)
 
 
 @time_machine.travel(
@@ -85,6 +97,18 @@ def test_pickle_handler_serialization():
     recon = pickle.loads(out)
 
     assert handler == recon
+    # Test equality for fields we don't typically care about
+    for field in [
+        "name",
+        "fname",
+        "value",
+        "writer_kwargs",
+        "created_at",
+        "expiry",
+        "version",
+        "dirty",
+    ]:
+        assert getattr(recon, field) == getattr(handler, field)
 
 
 def test_get_handler():
