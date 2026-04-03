@@ -323,6 +323,36 @@ def test_experiment_comparison():
     assert exp_diff > exp
 
 
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
+def test_experiment_pickle():
+    """Test serializing an experiment to bytes.
+
+    The sample experiment we serialize will have a test, artifacts, and dependencies
+    to validate the maximum possible serialization parameters.
+    """
+    upstream = Experiment(
+        name="My upstream experiment", project=Path("other-project.json"), author="root"
+    )
+    exp = Experiment(
+        name="My experiment",
+        project=Path("project.json"),
+        dependencies={"my-upstream-experiment": upstream},
+        author="root",
+    )
+    exp.log_metric("metric", 0.5)
+    exp.log_artifact(name="features", value=[0, 1, 2], handler="json")
+    with exp.log_test(name="My test") as test:
+        test.log_metric("name-subpop", 0.3)
+
+    # serialize the experiment to bytes
+    out = pickle.dumps(exp)
+    recon = pickle.loads(out)
+
+    assert exp == recon
+
+
 def test_frozen_experiment():
     """Test raising errors with a read-only experiment."""
     exp = ReadOnlyExperiment(name="My experiment", project=Path("project.json"))
