@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import pickle
 import warnings
 from pathlib import Path
 from typing import Any
@@ -220,6 +221,34 @@ class Test:
             value_serializer=serializer,
             filter=filters.exclude(fields(Test).path, fields(Test).fs),
         )
+
+    def __getstate__(self) -> dict:
+        """Serialize the test.
+
+        This function is useful when we want to serialize higher-level Lazyscribe
+        objects for multiprocessing.
+        """
+        state = asdict(self)
+        # Check for artifacts
+        artifacts_ = []
+        for art in self.artifacts:
+            artifacts_.append(pickle.dumps(art))
+        state["artifacts"] = artifacts_
+
+        return state
+
+    def __setstate__(self, state: dict) -> None:
+        """Deserialize the test.
+
+        All we need to do is assign the attributes, with the notable exception of
+        artifact handlers.
+        """
+        for key, value in state.items():
+            match key:
+                case "artifacts":
+                    self.artifacts = [pickle.loads(art) for art in value]
+                case _:
+                    setattr(self, key, value)
 
 
 @frozen

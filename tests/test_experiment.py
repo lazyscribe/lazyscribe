@@ -1,5 +1,6 @@
 """Test the experiment dataclass."""
 
+import pickle
 import warnings
 import zoneinfo
 from datetime import datetime
@@ -420,6 +421,19 @@ def test_test_artifact_serialization():
     assert "value" not in d["artifacts"][0]
     assert "writer_kwargs" not in d["artifacts"][0]
     assert "dirty" not in d["artifacts"][0]
+
+
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
+def test_test_serialization():
+    """Test serializing a Test object via ``pickle``."""
+    test = Test(name="My test")
+    test.log_artifact(name="conf", value={"a": 1}, handler="json")
+    out = pickle.dumps(test)
+    recon = pickle.loads(out)
+
+    assert recon == test
 
 
 def test_test_artifact_overwrite():
