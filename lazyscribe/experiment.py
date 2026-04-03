@@ -5,6 +5,7 @@ from __future__ import annotations
 import getpass
 import logging
 import os
+import pickle
 import warnings
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -517,6 +518,39 @@ class Experiment:
         the ``created_at`` value.
         """
         return bool(self == other or self < other)
+
+    def __getstate__(self) -> dict:
+        """Serialize the experiment.
+
+        This function is useful when we want to serialize higher-level Lazyscribe
+        objects for multiprocessing.
+        """
+        state = asdict(self, filter=filters.exclude(fields(Experiment).mutex_))
+        # Check for tests, artifacts, dependencies
+        state["tests"] = [pickle.dumps(test) for test in self.tests]
+        state["artifacts"] = [pickle.dumps(art) for art in self.artifacts]
+        state["dependencies"] = {
+            key: pickle.dumps(value) for key, value in self.dependencies.items()
+        }
+
+        return state
+
+    def __setstate__(self, state: dict) -> None:
+        """Deserialize the experiment.
+
+        All we need to do is assign the attributes and deserialize artifacts/tests.
+        """
+        self.mutex_ = Lock()
+        for key, value in state.items():
+            match key:
+                case "artifacts" | "tests":
+                    setattr(self, key, [pickle.loads(val) for val in value])
+                case "dependencies":
+                    self.dependencies = {
+                        name: pickle.loads(exp) for name, exp in value.items()
+                    }
+                case _:
+                    setattr(self, key, value)
 
 
 @frozen
