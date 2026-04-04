@@ -25,7 +25,7 @@ classifiers = [
 ]
 dependencies = [
     "attrs<=26.1.0,>=21.2.0",
-    "fsspec<=2026.2.0,>=0.4.0",
+    "fsspec<=2026.3.0,>=0.4.0",
     "python-slugify<=8.0.4,>=5.0.0",
     "tomli<=2.3.0,>=2.2.1; python_version<='3.10'",
 ]
@@ -115,6 +115,9 @@ indent = 4
 keep_full_version = true
 max_supported_python = "3.14"
 
+[tool.coverage]
+run.relative_files = true
+
 [tool.mypy]
 python_version = "3.10"
 exclude = [
@@ -125,9 +128,6 @@ strict = true
 warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
-
-[tool.coverage]
-run.relative_files = true
 
 [tool.commitizen]
 version_provider = "uv"
