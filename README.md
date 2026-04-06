@@ -8,30 +8,18 @@
 | lazyscribe/\_meta.py                 |        1 |        0 |    100% |           |
 | lazyscribe/\_utils.py                |       54 |        0 |    100% |           |
 | lazyscribe/artifacts/\_\_init\_\_.py |       20 |        0 |    100% |           |
-| lazyscribe/artifacts/base.py         |       29 |        0 |    100% |           |
+| lazyscribe/artifacts/base.py         |       47 |        0 |    100% |           |
 | lazyscribe/artifacts/json.py         |       25 |        0 |    100% |           |
 | lazyscribe/artifacts/pickle.py       |       30 |        0 |    100% |           |
 | lazyscribe/exception.py              |        8 |        0 |    100% |           |
 | lazyscribe/experiment.py             |      152 |        3 |     98% |285, 506, 515 |
 | lazyscribe/linked.py                 |       44 |        0 |    100% |           |
-| lazyscribe/project.py                |      187 |        5 |     97% |172, 174, 320-323, 382 |
+| lazyscribe/project.py                |      186 |        5 |     97% |175, 177, 325-328, 387 |
 | lazyscribe/registry.py               |       25 |        0 |    100% |           |
 | lazyscribe/release.py                |      126 |        3 |     98% |25, 106, 108 |
 | lazyscribe/repository.py             |      207 |        6 |     97% |90, 488, 490, 567-569 |
 | lazyscribe/test.py                   |       57 |        2 |     96% |  159, 176 |
-| tests/\_\_init\_\_.py                |        0 |        0 |    100% |           |
-| tests/conftest.py                    |       24 |        0 |    100% |           |
-| tests/smoke\_test.py                 |       19 |        0 |    100% |           |
-| tests/test\_experiment.py            |      228 |        0 |    100% |           |
-| tests/test\_handlers.py              |       54 |        0 |    100% |           |
-| tests/test\_linked.py                |       39 |        0 |    100% |           |
-| tests/test\_project.py               |      372 |        0 |    100% |           |
-| tests/test\_promotion.py             |      133 |        0 |    100% |           |
-| tests/test\_registry.py              |       14 |        0 |    100% |           |
-| tests/test\_release.py               |      206 |        0 |    100% |           |
-| tests/test\_repository.py            |      384 |        1 |     99% |       594 |
-| tests/test\_utils.py                 |       11 |        0 |    100% |           |
-| **TOTAL**                            | **2455** |   **20** | **99%** |           |
+| **TOTAL**                            |  **988** |   **19** | **98%** |           |
 
 
 ## Setup coverage badge
