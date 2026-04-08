@@ -222,7 +222,7 @@ class Test:
             filter=filters.exclude(fields(Test).path, fields(Test).fs),
         )
 
-    def __getstate__(self) -> dict:
+    def __getstate__(self) -> dict:  # type: ignore[type-arg]
         """Serialize the test.
 
         This function is useful when we want to serialize higher-level Lazyscribe
@@ -237,7 +237,7 @@ class Test:
 
         return state
 
-    def __setstate__(self, state: dict) -> None:
+    def __setstate__(self, state: dict) -> None:  # type: ignore[type-arg]
         """Deserialize the test.
 
         All we need to do is assign the attributes, with the notable exception of
