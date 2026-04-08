@@ -62,7 +62,7 @@ filelock==3.25.2
     #   virtualenv
 fonttools==4.62.1
     # via matplotlib
-fsspec==2026.2.0
+fsspec==2026.3.0
     # via lazyscribe (pyproject.toml)
 furo==2025.12.19
     # via lazyscribe (pyproject.toml)
@@ -154,7 +154,7 @@ pyproject-fmt==2.11.1
     # via
     #   lazyscribe (pyproject.toml)
     #   edgetest
-pytest==9.0.2
+pytest==9.0.3
     # via
     #   lazyscribe (pyproject.toml)
     #   pytest-cov
@@ -164,7 +164,7 @@ python-dateutil==2.9.0.post0
     # via
     #   matplotlib
     #   pandas
-python-discovery==1.2.1
+python-discovery==1.2.2
     # via virtualenv
 python-slugify==8.0.4
     # via lazyscribe (pyproject.toml)
