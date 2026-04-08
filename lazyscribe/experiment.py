@@ -519,7 +519,7 @@ class Experiment:
         """
         return bool(self == other or self < other)
 
-    def __getstate__(self) -> dict:
+    def __getstate__(self) -> dict:  # type: ignore[type-arg]
         """Serialize the experiment.
 
         This function is useful when we want to serialize higher-level Lazyscribe
@@ -535,7 +535,7 @@ class Experiment:
 
         return state
 
-    def __setstate__(self, state: dict) -> None:
+    def __setstate__(self, state: dict) -> None:  # type: ignore[type-arg]
         """Deserialize the experiment.
 
         All we need to do is assign the attributes and deserialize artifacts/tests.
