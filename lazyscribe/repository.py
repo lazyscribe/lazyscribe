@@ -39,7 +39,7 @@ class Repository:
     fpath : str | Path, optional (default "repository.json")
         The location of the repository file. If no repository file exists, this will be the location
         of the output JSON file when ``save`` is called.
-    mode : {"r", "a", "w", "w+"}, optional (default "w+")
+    mode : {"r", "w", "w+"}, optional (default "w+")
         The mode for opening the repository.
 
         * ``r``: All artifacts will be loaded. No new artifacts can be logged.

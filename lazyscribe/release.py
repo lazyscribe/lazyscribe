@@ -48,7 +48,7 @@ class Release:
     artifacts: list[tuple[str, int]] = field()
     created_at: datetime = Factory(utcnow)
 
-    def to_dict(self) -> dict[str, list[tuple[str, int]] | str]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize the release to a dictionary.
 
         Returns
@@ -101,6 +101,14 @@ def create_release(repository: Repository, tag: str) -> Release:
     -------
     lazyscribe.release.Release
         The release object.
+
+    Raises
+    ------
+    RuntimeError
+        Raised if:
+
+            * The repository is not in read-only mode.
+            * Or, at least one artifact has changed since it was last saved.
     """
     if repository.mode != "r":
         raise RuntimeError("Repository must be in read-only mode for filtering.")
@@ -431,7 +439,7 @@ def minimal_repository_from_release(
 
     Parameters
     ----------
-    location : str | Path
+    location : str | pathlib.Path
         Directory location for the new repository. Must use the same base filesystem as the
         source repository.
     repository : lazyscribe.repository.Repository
