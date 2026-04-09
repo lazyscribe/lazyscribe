@@ -123,7 +123,7 @@ pillow==12.2.0
     #   lazyscribe (pyproject.toml)
     #   matplotlib
     #   sphinx-gallery
-platformdirs==4.9.4
+platformdirs==4.9.6
     # via
     #   python-discovery
     #   virtualenv
