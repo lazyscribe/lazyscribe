@@ -84,7 +84,7 @@ joblib==1.5.3
     # via scikit-learn
 kiwisolver==1.5.0
     # via matplotlib
-librt==0.8.1
+librt==0.9.0
     # via mypy
 markupsafe==3.0.3
     # via jinja2
@@ -246,7 +246,7 @@ uv==0.9.26
     #   lazyscribe (pyproject.toml)
     #   edgetest
     #   pre-commit-uv
-virtualenv==21.2.0
+virtualenv==21.2.1
     # via
     #   nox
     #   pre-commit
