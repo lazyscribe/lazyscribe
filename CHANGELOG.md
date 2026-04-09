@@ -1,3 +1,16 @@
+## v2.1.0 (2026-04-09)
+
+### Feat
+
+- **experiment**: adding custom bytes serialization for experiments
+- **test**: adding a serialization method for Test
+- **experiment**: adding the ability to log tests in multiple threads
+- **artifacts**: starting point for concurrency handling in lazyscribe
+- **project**: adding a mutex lock, insort for experiment logging
+- **artifacts**: starting point for concurrency handling in lazyscribe
+- **test**: add artifact logging to Test class (#200)
+- **release**: adding the ability to slim down a given repository based on release artifacts (#199)
+
 ## v2.0.1 (2026-02-12)
 
 ### Refactor
