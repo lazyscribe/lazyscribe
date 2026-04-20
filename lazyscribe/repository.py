@@ -6,7 +6,6 @@ import copy
 import difflib
 import json
 import logging
-import pickle
 import warnings
 from bisect import bisect
 from collections.abc import Iterator, Sequence
@@ -39,7 +38,7 @@ class RepositoryState(TypedDict):
     protocol: str
     dir: Path
     storage_options: dict[str, Any]
-    artifacts: list[bytes]
+    artifacts: list[Artifact]
     mode: Literal["r", "w", "w+"]
 
 
@@ -700,7 +699,7 @@ class Repository:
             "protocol": self.protocol,
             "dir": self.dir,
             "storage_options": self.storage_options,
-            "artifacts": [pickle.dumps(art) for art in self.artifacts],
+            "artifacts": self.artifacts,
             "mode": self.mode,
         }
 
@@ -709,12 +708,7 @@ class Repository:
 
         All we need to do is assign attributes and re-instate the filesystem.
         """
-        self.artifacts = [pickle.loads(art) for art in state["artifacts"]]
         for key, value in state.items():
-            match key:
-                case "artifacts":
-                    continue
-                case _:
-                    setattr(self, key, value)
+            setattr(self, key, value)
         # Re-create the filesystem
         self.fs = fsspec.filesystem(self.protocol, **self.storage_options)
