@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import getpass
 import json
 import logging
@@ -24,7 +25,6 @@ from lazyscribe.artifacts import _get_handler
 from lazyscribe.artifacts.base import Artifact
 from lazyscribe.exception import ReadOnlyError, SaveError
 from lazyscribe.experiment import Experiment, ReadOnlyExperiment
-from lazyscribe.linked import LinkedList, merge
 from lazyscribe.registry import registry
 from lazyscribe.test import ReadOnlyTest, Test
 
@@ -346,26 +346,44 @@ class Project:
                 if exp.dirty:
                     exp.dirty = False
 
-    def merge(self, other: Project) -> Project:
-        """Merge two projects.
+    def merge(self, *others: Project, other: Project | None = None) -> Project:
+        """Merge multiple projects.
 
         The new project will inherit the current project ``fpath``,
         ``author``, and ``mode``.
 
         For details on the merging process, see :ref:`here <Project Updating>`.
 
+        Parameters
+        ----------
+        others : Project
+            The projects to merge back to the original.
+        other : Project, optional (default None)
+            .. deprecated:: 2.2
+
+                This argument has been deprecated to support multiple projects
+                merging.
+
+            A single other project to merge back to the original.
+
         Returns
         -------
         lazyscribe.project.Project
             A new project.
         """
-        # Create linked lists of experiments
-        cexp = LinkedList.from_list(self.experiments)
-        oexp = LinkedList.from_list(other.experiments)
-        # Get the merged list of experiments
-        merged = merge(cexp.head, oexp.head).to_list()  # type: ignore[arg-type]
-        # De-dupe the merged list based on slug
-        slugs: list[str] = [exp.slug for exp in merged]
+        other_projects_ = list(others)
+        if other is not None:
+            other_projects_.append(other)
+        cexp = copy.copy(self.experiments)
+        for proj in other_projects_:
+            for exp in proj.experiments:
+                if exp in cexp:
+                    continue
+                insort(cexp, exp)
+        slugs: list[str] = [exp.slug for exp in cexp]
+        cexp = [
+            val for idx, val in enumerate(cexp) if val.slug not in slugs[(idx + 1) :]
+        ]
 
         new = Project(
             fpath=self.fpath,
@@ -373,9 +391,7 @@ class Project:
             author=self.author,
             **self.storage_options,
         )
-        new.experiments = [
-            val for idx, val in enumerate(merged) if val.slug not in slugs[idx + 1 :]
-        ]
+        new.experiments = cexp
 
         return new
 
