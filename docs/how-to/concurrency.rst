@@ -4,6 +4,9 @@ Run lazyscribe concurrently
 Logging experiments
 -------------------
 
+Multithreading
+^^^^^^^^^^^^^^
+
 .. note::
 
     While experimental, we have tested the following functionality
@@ -40,6 +43,39 @@ threads and log experiments safely:
         t.join()
 
     project["second-experiment"]  # View the second experiment
+
+Multiprocessing
+^^^^^^^^^^^^^^^
+
+Using multiprocessing, we can modify :py:class:`lazyscribe.project.Project`. Instead
+of using shared state, we create new "projects" that we can merge back to the original.
+
+.. code-block:: python
+
+    from concurrent.futures import ProcessPoolExecutor
+
+    from lazyscribe import Project
+
+    project = Project("project.json", mode="w")
+
+    def _closure(project, name: str, metric: float):
+        with project.log(name) as exp:
+            exp.log_metric("metric", metric)
+
+        return project
+
+    with ProcessPoolExecutor(max_workers=2) as ppe:
+        futures = [
+            ppe.submit(_closure, project, *params)
+            for params in [
+                ("First experiment", 0.5),
+                ("Second experiment", 0.75),
+                ("Third experiment", 1.0)
+            ]
+        ]
+        outputs_ = [f.result() for f in futures]
+
+    project = project.merge(*outputs_)
 
 Logging tests
 -------------
