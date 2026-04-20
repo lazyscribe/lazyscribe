@@ -3,7 +3,7 @@
 import json
 import tempfile
 import zoneinfo
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from datetime import datetime, timedelta
 from operator import itemgetter
 from pathlib import Path
@@ -12,6 +12,24 @@ import time_machine
 from slugify import slugify
 
 from lazyscribe import Experiment, Project
+
+
+def _project_logging_function(
+    project: Project,
+    name: str,
+    metric: float,
+    ts: datetime,
+):
+    """Create an experiment."""
+    with project.log(name) as exp:
+        exp.log_metric("name", metric)
+        # Manually setting timestamp-related fields because time-machine
+        # is not thread-safe
+        exp.created_at = ts.replace(tzinfo=None)
+        exp.last_updated = ts.replace(tzinfo=None)
+        exp.slug = f"{slugify(name)}-{ts.strftime('%Y%m%d%H%M%S')}"
+
+    return project
 
 
 class TestProjectConcurrency:
@@ -51,30 +69,13 @@ class TestProjectConcurrency:
 
     def test_multithreaded_logging(self):
         """Test logging experiments in multiple threads."""
-
-        # Create a function that logs experiments
-        def _logging_function(
-            project: Project,
-            name: str,
-            metric: float,
-            ts: datetime,
-        ):
-            """Create an experiment."""
-            with project.log(name) as exp:
-                exp.log_metric("name", metric)
-                # Manually setting timestamp-related fields because time-machine
-                # is not thread-safe
-                exp.created_at = ts.replace(tzinfo=None)
-                exp.last_updated = ts.replace(tzinfo=None)
-                exp.slug = f"{slugify(name)}-{ts.strftime('%Y%m%d%H%M%S')}"
-
         project = Project(self.dir / "threaded-repository.json", mode="w")
         with ThreadPoolExecutor(max_workers=4) as tpe:
             futures = []
             for arg in self.params:
-                futures.append(tpe.submit(_logging_function, project, *arg))
+                futures.append(tpe.submit(_project_logging_function, project, *arg))
             for f in futures:
-                f.result()
+                _ = f.result()
 
         project.save()
 
@@ -86,6 +87,25 @@ class TestProjectConcurrency:
             threaded_project_ = json.load(infile)
 
         assert threaded_project_ == ref_project_
+
+    def test_multiprocessing_logging(self):
+        """Test logging experiments in multiple processes."""
+        project = Project(self.dir / "multiprocess-repository.json", mode="w")
+        with ProcessPoolExecutor(max_workers=4) as ppe:
+            futures = []
+            for arg in self.params:
+                futures.append(ppe.submit(_project_logging_function, project, *arg))
+            projects_ = [f.result() for f in futures]
+
+        process_project_ = project.merge(*projects_)
+        process_project_.save()
+
+        with open(self.dir / "repository.json") as infile:
+            ref_project_ = json.load(infile)
+        with open(self.dir / "multiprocess-repository.json") as infile:
+            out_project_ = json.load(infile)
+
+        assert out_project_ == ref_project_
 
     @classmethod
     def teardown_class(cls):
