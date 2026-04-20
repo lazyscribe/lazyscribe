@@ -6,7 +6,6 @@ import copy
 import getpass
 import json
 import logging
-import pickle
 import warnings
 from bisect import insort
 from collections.abc import Callable, Iterator
@@ -35,7 +34,7 @@ class ProjectState(TypedDict):
     """Project serialization state."""
 
     author: str
-    experiments: list[bytes]
+    experiments: list[Experiment]
     fpath: Path
     mode: Literal["r", "a", "w", "w+"]
     protocol: str
@@ -472,7 +471,7 @@ class Project:
         """
         return {
             "author": self.author,
-            "experiments": [pickle.dumps(exp) for exp in self.experiments],
+            "experiments": self.experiments,
             "fpath": self.fpath,
             "mode": self.mode,
             "protocol": self.protocol,
@@ -485,13 +484,8 @@ class Project:
         All we need to do is assign attributes and re-instate the filesystem.
         """
         self.mutex_ = Lock()
-        self.experiments = [pickle.loads(val) for val in state["experiments"]]
         for key, value in state.items():
-            match key:
-                case "experiments":
-                    continue
-                case _:
-                    setattr(self, key, value)
+            setattr(self, key, value)
         # Re-create the filesystem
         self.fs = fsspec.filesystem(self.protocol, **self.storage_options)
 
