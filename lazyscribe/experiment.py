@@ -5,7 +5,6 @@ from __future__ import annotations
 import getpass
 import logging
 import os
-import pickle
 import warnings
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -526,31 +525,22 @@ class Experiment:
         objects for multiprocessing.
         """
         state = asdict(self, filter=filters.exclude(fields(Experiment).mutex_))
-        # Check for tests, artifacts, dependencies
-        state["tests"] = [pickle.dumps(test) for test in self.tests]
-        state["artifacts"] = [pickle.dumps(art) for art in self.artifacts]
-        state["dependencies"] = {
-            key: pickle.dumps(value) for key, value in self.dependencies.items()
-        }
+        # ``asdict`` converts nested objects like tests and artifacts to dictionaries
+        # when we want to use our custom getstate
+        state["tests"] = self.tests
+        state["artifacts"] = self.artifacts
+        state["dependencies"] = self.dependencies
 
         return state
 
     def __setstate__(self, state: dict) -> None:  # type: ignore[type-arg]
         """Deserialize the experiment.
 
-        All we need to do is assign the attributes and deserialize artifacts/tests.
+        All we need to do is assign the attributes and create a new lock.
         """
         self.mutex_ = Lock()
         for key, value in state.items():
-            match key:
-                case "artifacts" | "tests":
-                    setattr(self, key, [pickle.loads(val) for val in value])
-                case "dependencies":
-                    self.dependencies = {
-                        name: pickle.loads(exp) for name, exp in value.items()
-                    }
-                case _:
-                    setattr(self, key, value)
+            setattr(self, key, value)
 
 
 @frozen

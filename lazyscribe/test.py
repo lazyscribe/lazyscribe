@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import pickle
 import warnings
 from pathlib import Path
 from typing import Any
@@ -229,26 +228,19 @@ class Test:
         objects for multiprocessing.
         """
         state = asdict(self)
-        # Check for artifacts
-        artifacts_ = []
-        for art in self.artifacts:
-            artifacts_.append(pickle.dumps(art))
-        state["artifacts"] = artifacts_
+        # ``asdict`` converts our artifacts to dictionaries, we want
+        # the python object
+        state["artifacts"] = self.artifacts
 
         return state
 
     def __setstate__(self, state: dict) -> None:  # type: ignore[type-arg]
         """Deserialize the test.
 
-        All we need to do is assign the attributes, with the notable exception of
-        artifact handlers.
+        All we need to do is assign the attributes.
         """
         for key, value in state.items():
-            match key:
-                case "artifacts":
-                    self.artifacts = [pickle.loads(art) for art in value]
-                case _:
-                    setattr(self, key, value)
+            setattr(self, key, value)
 
 
 @frozen
