@@ -94,35 +94,6 @@ def test_save_repository(tmp_path):
     assert artifact_loaded == artifact_read == {"a": 1}
 
 
-@time_machine.travel(
-    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
-)
-def test_repository_pickle(tmp_path):
-    """Test serializing a repository to bytes."""
-    location = tmp_path / "my-repository"
-    location.mkdir()
-    repository_location = location / "repository.json"
-
-    repository = Repository(repository_location)
-    repository.log_artifact("my-dict", {"a": 1}, handler="json")
-
-    # serialize the repository to bytes
-    out = pickle.dumps(repository)
-    recon = pickle.loads(out)
-
-    attribs = [
-        "dir",
-        "fpath",
-        "mode",
-        "storage_options",
-        "artifacts",
-        "protocol",
-        "fs",
-    ]
-    for obj in attribs:
-        assert getattr(repository, obj) == getattr(recon, obj)
-
-
 def test_save_repository_transaction(tmp_path):
     """Test failing to save a repository due to a SaveError."""
     location = tmp_path / "my-repository"
@@ -853,3 +824,85 @@ def test_repository_filter(tmp_path, caplog):
     assert new_spec_["my-metadata"] == repository._search_artifact_versions(
         "my-metadata", 0
     )
+
+
+class TestRepositoryPickle:
+    """Test serializing a repository to bytes for multiprocessing."""
+
+    @time_machine.travel(
+        datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+    )
+    @patch("lazyscribe.artifacts.base.Artifact.__getstate__")
+    def test_repository_serialization(self, mock_getstate, tmp_path):
+        """Validate that serialization is recursively calling artifact-level getstate."""
+        mock_getstate.return_value = b""
+        location = tmp_path / "my-repository"
+        location.mkdir()
+        repository_location = location / "repository.json"
+
+        repository = Repository(repository_location)
+        repository.log_artifact("my-dict", {"a": 1}, handler="json")
+
+        # serialize the repository to bytes
+        _ = pickle.dumps(repository)
+
+        mock_getstate.assert_called()
+
+    @time_machine.travel(
+        datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+    )
+    @patch("lazyscribe.artifacts.base.Artifact.__setstate__")
+    def test_repository_deserialization(self, mock_setstate, tmp_path):
+        """Validate that deserialization is recursively calling artifact-level setstate."""
+        location = tmp_path / "my-repository"
+        location.mkdir()
+        repository_location = location / "repository.json"
+
+        repository = Repository(repository_location)
+        repository.log_artifact("my-dict", {"a": 1}, handler="json")
+
+        # serialize the repository to bytes
+        out = pickle.dumps(repository)
+        _ = pickle.loads(out)
+
+        today = datetime.now()
+        mock_setstate.assert_called_with(
+            {
+                "name": "my-dict",
+                "fname": f"my-dict-{today.strftime('%Y%m%d%H%M%S')}.json",
+                "value": json.dumps({"a": 1}),
+                "writer_kwargs": {},
+                "created_at": today,
+                "expiry": None,
+                "version": 0,
+                "dirty": True,
+            }
+        )
+
+    @time_machine.travel(
+        datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+    )
+    def test_repository_pickle(self, tmp_path):
+        """Validate that the repository can be (de)serialized safely."""
+        location = tmp_path / "my-repository"
+        location.mkdir()
+        repository_location = location / "repository.json"
+
+        repository = Repository(repository_location)
+        repository.log_artifact("my-dict", {"a": 1}, handler="json")
+
+        # serialize the repository to bytes
+        out = pickle.dumps(repository)
+        recon = pickle.loads(out)
+
+        attribs = [
+            "dir",
+            "fpath",
+            "mode",
+            "storage_options",
+            "artifacts",
+            "protocol",
+            "fs",
+        ]
+        for obj in attribs:
+            assert getattr(repository, obj) == getattr(recon, obj)
