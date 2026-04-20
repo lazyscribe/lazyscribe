@@ -1,3 +1,17 @@
+## v2.2.0 (2026-04-20)
+
+### Feat
+
+- adding the ability to merge multiple projects at once
+- adding getstate/setstate to repository for multiprocessing
+- adding getstate/setstate to Project for multiprocessingg
+
+### Perf
+
+- removing explicit pickle calls in Repository
+- removing explicit pickle calls in Project
+- remove explicit pickle calls in Test/Experiment
+
 ## v2.1.0 (2026-04-09)
 
 ### Feat
