@@ -1,10 +1,12 @@
 """Test the experiment dataclass."""
 
+import json
 import pickle
 import warnings
 import zoneinfo
 from datetime import datetime
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 import time_machine
@@ -323,36 +325,6 @@ def test_experiment_comparison():
     assert exp_diff > exp
 
 
-@time_machine.travel(
-    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
-)
-def test_experiment_pickle():
-    """Test serializing an experiment to bytes.
-
-    The sample experiment we serialize will have a test, artifacts, and dependencies
-    to validate the maximum possible serialization parameters.
-    """
-    upstream = Experiment(
-        name="My upstream experiment", project=Path("other-project.json"), author="root"
-    )
-    exp = Experiment(
-        name="My experiment",
-        project=Path("project.json"),
-        dependencies={"my-upstream-experiment": upstream},
-        author="root",
-    )
-    exp.log_metric("metric", 0.5)
-    exp.log_artifact(name="features", value=[0, 1, 2], handler="json")
-    with exp.log_test(name="My test") as test:
-        test.log_metric("name-subpop", 0.3)
-
-    # serialize the experiment to bytes
-    out = pickle.dumps(exp)
-    recon = pickle.loads(out)
-
-    assert exp == recon
-
-
 def test_frozen_experiment():
     """Test raising errors with a read-only experiment."""
     exp = ReadOnlyExperiment(name="My experiment", project=Path("project.json"))
@@ -546,3 +518,135 @@ def test_frozen_test_log_parameter():
     test = ReadOnlyTest(name="my test")
     with pytest.raises(FrozenInstanceError):
         test.log_parameter("n_estimators", 100)
+
+
+class TestExperimentPickle:
+    """Test serializing an experiment to bytes for multiprocessing."""
+
+    @patch("lazyscribe.test.Test.__getstate__")
+    def test_experiment_serialization_test(self, mock_getstate):
+        """Validate that serialization is recursively calling test-level getstate."""
+        mock_getstate.return_value = b""
+        exp = Experiment(
+            name="My experiment",
+            project=Path("project.json"),
+            author="root",
+        )
+        exp.log_metric("metric", 0.5)
+        with exp.log_test(name="My test") as test:
+            test.log_metric("name-subpop", 0.3)
+
+        _ = pickle.dumps(exp)
+
+        mock_getstate.assert_called()
+
+    @patch("lazyscribe.artifacts.base.Artifact.__getstate__")
+    def test_experiment_serialization_artifact(self, mock_getstate):
+        """Validate that serialization is recursively calling artifact-level getstate."""
+        mock_getstate.return_value = b""
+        exp = Experiment(
+            name="My experiment",
+            project=Path("project.json"),
+            author="root",
+        )
+        exp.log_artifact(name="features", value=[0, 1, 2], handler="json")
+
+        _ = pickle.dumps(exp)
+
+        mock_getstate.assert_called()
+
+    @time_machine.travel(
+        datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+    )
+    @patch("lazyscribe.test.Test.__setstate__")
+    def test_experiment_deserialization_test(self, mock_setstate):
+        """Validate that deserialization is recursively calling test-level setstate."""
+        exp = Experiment(
+            name="My experiment",
+            project=Path("project.json"),
+            author="root",
+        )
+        exp.log_metric("metric", 0.5)
+        with exp.log_test(name="My test") as test:
+            test.log_metric("name-subpop", 0.3)
+
+        # serialize the experiment to bytes
+        out = pickle.dumps(exp)
+        _ = pickle.loads(out)
+
+        today = datetime.now()
+        mock_setstate.assert_called_with(
+            {
+                "name": "My test",
+                "path": Path(".")
+                / f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}"
+                / "my-test",
+                "description": None,
+                "fs": exp.fs,
+                "parameters": {},
+                "metrics": {"name-subpop": 0.3},
+                "artifacts": [],
+            }
+        )
+
+    @time_machine.travel(
+        datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+    )
+    @patch("lazyscribe.artifacts.base.Artifact.__setstate__")
+    def test_experiment_deserialization_artifact(self, mock_setstate):
+        """Validate that deserialization is recursively calling artifact-level getstate."""
+        exp = Experiment(
+            name="My experiment",
+            project=Path("project.json"),
+            author="root",
+        )
+        exp.log_artifact(name="features", value=[0, 1, 2], handler="json")
+
+        # serialize the experiment to bytes
+        out = pickle.dumps(exp)
+        _ = pickle.loads(out)
+
+        today = datetime.now()
+        mock_setstate.assert_called_with(
+            {
+                "name": "features",
+                "fname": f"features-{today.strftime('%Y%m%d%H%M%S')}.json",
+                "value": json.dumps([0, 1, 2]),
+                "writer_kwargs": {},
+                "created_at": today,
+                "expiry": None,
+                "version": 0,
+                "dirty": True,
+            }
+        )
+
+    @time_machine.travel(
+        datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+    )
+    def test_experiment_pickle(self):
+        """Test serializing an experiment to bytes.
+
+        The sample experiment we serialize will have a test, artifacts, and dependencies
+        to validate the maximum possible serialization parameters.
+        """
+        upstream = Experiment(
+            name="My upstream experiment",
+            project=Path("other-project.json"),
+            author="root",
+        )
+        exp = Experiment(
+            name="My experiment",
+            project=Path("project.json"),
+            dependencies={"my-upstream-experiment": upstream},
+            author="root",
+        )
+        exp.log_metric("metric", 0.5)
+        exp.log_artifact(name="features", value=[0, 1, 2], handler="json")
+        with exp.log_test(name="My test") as test:
+            test.log_metric("name-subpop", 0.3)
+
+        # serialize the experiment to bytes
+        out = pickle.dumps(exp)
+        recon = pickle.loads(out)
+
+        assert exp == recon
