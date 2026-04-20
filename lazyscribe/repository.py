@@ -6,13 +6,14 @@ import copy
 import difflib
 import json
 import logging
+import pickle
 import warnings
 from bisect import bisect
 from collections.abc import Iterator, Sequence
 from datetime import datetime
 from operator import attrgetter
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, TypedDict
 from urllib.parse import urlparse
 
 import fsspec
@@ -29,6 +30,17 @@ from lazyscribe.exception import (
 )
 
 LOG = logging.getLogger(__name__)
+
+
+class RepositoryState(TypedDict):
+    """State of the repository object."""
+
+    fpath: Path
+    protocol: str
+    dir: Path
+    storage_options: dict[str, Any]
+    artifacts: list[bytes]
+    mode: Literal["r", "w", "w+"]
 
 
 class Repository:
@@ -676,3 +688,33 @@ class Repository:
     def __iter__(self) -> Iterator[dict[str, Any]]:
         """Iterate through each artifact and return the dictionary."""
         yield from serialize_artifacts(self.artifacts)
+
+    def __getstate__(self) -> RepositoryState:
+        """Serialize the repository.
+
+        This function is useful when we want to serialize the Repository for the
+        purposes of multiprocessing.
+        """
+        return {
+            "fpath": self.fpath,
+            "protocol": self.protocol,
+            "dir": self.dir,
+            "storage_options": self.storage_options,
+            "artifacts": [pickle.dumps(art) for art in self.artifacts],
+            "mode": self.mode,
+        }
+
+    def __setstate__(self, state: RepositoryState) -> None:
+        """Deserialize the object.
+
+        All we need to do is assign attributes and re-instate the filesystem.
+        """
+        self.artifacts = [pickle.loads(art) for art in state["artifacts"]]
+        for key, value in state.items():
+            match key:
+                case "artifacts":
+                    continue
+                case _:
+                    setattr(self, key, value)
+        # Re-create the filesystem
+        self.fs = fsspec.filesystem(self.protocol, **self.storage_options)

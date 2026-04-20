@@ -3,6 +3,7 @@
 import difflib
 import json
 import logging
+import pickle
 import warnings
 import zoneinfo
 from datetime import datetime
@@ -91,6 +92,35 @@ def test_save_repository(tmp_path):
     with open(location / "my-dict" / expected_fname) as infile:
         artifact_read = json.load(infile)
     assert artifact_loaded == artifact_read == {"a": 1}
+
+
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
+def test_repository_pickle(tmp_path):
+    """Test serializing a repository to bytes."""
+    location = tmp_path / "my-repository"
+    location.mkdir()
+    repository_location = location / "repository.json"
+
+    repository = Repository(repository_location)
+    repository.log_artifact("my-dict", {"a": 1}, handler="json")
+
+    # serialize the repository to bytes
+    out = pickle.dumps(repository)
+    recon = pickle.loads(out)
+
+    attribs = [
+        "dir",
+        "fpath",
+        "mode",
+        "storage_options",
+        "artifacts",
+        "protocol",
+        "fs",
+    ]
+    for obj in attribs:
+        assert getattr(repository, obj) == getattr(recon, obj)
 
 
 def test_save_repository_transaction(tmp_path):
