@@ -1,6 +1,7 @@
 """Test the project class."""
 
 import json
+import pickle
 import warnings
 import zoneinfo
 from datetime import datetime, timedelta
@@ -189,6 +190,38 @@ def test_save_project(tmp_path):
             "tags": [],
         }
     ]
+
+
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
+def test_project_pickle(tmp_path):
+    """Test serializing a project to bytes."""
+    location = tmp_path / "my-project"
+    project_location = location / "project.json"
+    project = Project(fpath=project_location, author="root")
+    with project.log(name="My experiment") as exp:
+        exp.log_metric("name", 0.5)
+        exp.log_artifact(name="features", value=["a", "b", "c"], handler="json")
+        with exp.log_test("My test") as test:
+            test.log_metric("name-subpop", 0.3)
+            test.log_parameter("features", ["col3", "col4"])
+
+    # serialize the project to bytes
+    out = pickle.dumps(project)
+    recon = pickle.loads(out)
+
+    attribs = [
+        "fpath",
+        "mode",
+        "author",
+        "storage_options",
+        "experiments",
+        "protocol",
+        "fs",
+    ]
+    for obj in attribs:
+        assert getattr(project, obj) == getattr(recon, obj)
 
 
 def test_save_project_metric_transaction(tmp_path):
