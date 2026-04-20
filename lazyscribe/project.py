@@ -5,6 +5,7 @@ from __future__ import annotations
 import getpass
 import json
 import logging
+import pickle
 import warnings
 from bisect import insort
 from collections.abc import Callable, Iterator
@@ -12,7 +13,7 @@ from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 from threading import Lock
-from typing import Any, Literal
+from typing import Any, Literal, TypedDict
 from urllib.parse import urlparse
 
 import fsspec
@@ -28,6 +29,17 @@ from lazyscribe.registry import registry
 from lazyscribe.test import ReadOnlyTest, Test
 
 LOG = logging.getLogger(__name__)
+
+
+class ProjectState(TypedDict):
+    """Project serialization state."""
+
+    author: str
+    experiments: list[bytes]
+    fpath: Path
+    mode: Literal["r", "a", "w", "w+"]
+    protocol: str
+    storage_options: dict[str, Any]
 
 
 def _write_artifact(
@@ -435,6 +447,37 @@ class Project:
         for exp in self.experiments:
             if func(exp):
                 yield exp
+
+    def __getstate__(self) -> ProjectState:
+        """Serialize the project.
+
+        This function is useful when we want to serialize :py:class:`lazyscribe.project.Project`
+        for the purposes of multiprocessing.
+        """
+        return {
+            "author": self.author,
+            "experiments": [pickle.dumps(exp) for exp in self.experiments],
+            "fpath": self.fpath,
+            "mode": self.mode,
+            "protocol": self.protocol,
+            "storage_options": self.storage_options,
+        }
+
+    def __setstate__(self, state: ProjectState) -> None:
+        """Deserialize the project.
+
+        All we need to do is assign attributes and re-instate the filesystem.
+        """
+        self.mutex_ = Lock()
+        self.experiments = [pickle.loads(val) for val in state["experiments"]]
+        for key, value in state.items():
+            match key:
+                case "experiments":
+                    continue
+                case _:
+                    setattr(self, key, value)
+        # Re-create the filesystem
+        self.fs = fsspec.filesystem(self.protocol, **self.storage_options)
 
     def __contains__(self, item: str) -> bool:
         """Check if the project contains an experiment with the given slug or short slug.
