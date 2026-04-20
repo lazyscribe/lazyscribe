@@ -14,6 +14,7 @@ import time_machine
 from slugify import slugify
 
 from lazyscribe import Project
+from lazyscribe.artifacts.json import JSONArtifact
 from lazyscribe.exception import ArtifactLoadError, ReadOnlyError, SaveError
 from lazyscribe.experiment import Experiment, ReadOnlyExperiment
 from lazyscribe.registry import Registry
@@ -190,38 +191,6 @@ def test_save_project(tmp_path):
             "tags": [],
         }
     ]
-
-
-@time_machine.travel(
-    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
-)
-def test_project_pickle(tmp_path):
-    """Test serializing a project to bytes."""
-    location = tmp_path / "my-project"
-    project_location = location / "project.json"
-    project = Project(fpath=project_location, author="root")
-    with project.log(name="My experiment") as exp:
-        exp.log_metric("name", 0.5)
-        exp.log_artifact(name="features", value=["a", "b", "c"], handler="json")
-        with exp.log_test("My test") as test:
-            test.log_metric("name-subpop", 0.3)
-            test.log_parameter("features", ["col3", "col4"])
-
-    # serialize the project to bytes
-    out = pickle.dumps(project)
-    recon = pickle.loads(out)
-
-    attribs = [
-        "fpath",
-        "mode",
-        "author",
-        "storage_options",
-        "experiments",
-        "protocol",
-        "fs",
-    ]
-    for obj in attribs:
-        assert getattr(project, obj) == getattr(recon, obj)
 
 
 def test_save_project_metric_transaction(tmp_path):
@@ -973,3 +942,119 @@ def test_save_project_test_artifact_when_exp_not_dirty(tmp_path):
     conf_fname = existing_test.artifacts[0].fname
     artifact_path = location / exp2.slug / slugify("My test") / conf_fname
     assert artifact_path.is_file()
+
+
+class TestProjectPickle:
+    """Test serializing a project to bytes for multiprocessing."""
+
+    @time_machine.travel(
+        datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+    )
+    @patch("lazyscribe.experiment.Experiment.__getstate__")
+    def test_project_serialization(self, mock_getstate, tmp_path):
+        """Validate that serialization is recursively calling experiment-level getstate."""
+        mock_getstate.return_value = b""
+        location = tmp_path / "my-project"
+        project_location = location / "project.json"
+        project = Project(fpath=project_location, author="root")
+        with project.log(name="My experiment") as exp:
+            exp.log_metric("name", 0.5)
+            exp.log_artifact(name="features", value=["a", "b", "c"], handler="json")
+            with exp.log_test("My test") as test:
+                test.log_metric("name-subpop", 0.3)
+                test.log_parameter("features", ["col3", "col4"])
+
+        # serialize the project to bytes
+        _ = pickle.dumps(project)
+
+        mock_getstate.assert_called()
+
+    @time_machine.travel(
+        datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+    )
+    @patch("lazyscribe.experiment.Experiment.__setstate__")
+    def test_project_deserialization(self, mock_setstate, tmp_path):
+        """Validate that deserialization is recursively calling experiment-level setstate."""
+        location = tmp_path / "my-project"
+        project_location = location / "project.json"
+        today = datetime.now()
+        project = Project(fpath=project_location, author="root")
+        with project.log(name="My experiment") as exp:
+            exp.log_metric("name", 0.5)
+            exp.log_artifact(name="features", value=["a", "b", "c"], handler="json")
+            with exp.log_test("My test") as test:
+                test.log_metric("name-subpop", 0.3)
+                test.log_parameter("features", ["col3", "col4"])
+
+        # serialize the project to bytes
+        out = pickle.dumps(project)
+        _ = pickle.loads(out)
+
+        mock_setstate.assert_called_with(
+            {
+                "name": "My experiment",
+                "project": project_location,
+                "dir": location,
+                "fs": project.fs,
+                "author": "root",
+                "last_updated_by": "root",
+                "metrics": {"name": 0.5},
+                "parameters": {},
+                "created_at": today,
+                "last_updated": today,
+                "dependencies": {},
+                "short_slug": "my-experiment",
+                "slug": f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}",
+                "tests": [
+                    Test(
+                        name="My test",
+                        path=location
+                        / f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}"
+                        / "my-test",
+                        fs=project.fs,
+                        metrics={"name-subpop": 0.3},
+                        parameters={"features": ["col3", "col4"]},
+                        artifacts=[],
+                    )
+                ],
+                "artifacts": [
+                    JSONArtifact.construct(
+                        name="features",
+                        value=["a", "b", "c"],
+                    )
+                ],
+                "tags": [],
+                "dirty": True,
+            }
+        )
+
+    @time_machine.travel(
+        datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+    )
+    def test_project_pickle(self, tmp_path):
+        """Validate that the project can be (de)serialized safely."""
+        location = tmp_path / "my-project"
+        project_location = location / "project.json"
+        project = Project(fpath=project_location, author="root")
+        with project.log(name="My experiment") as exp:
+            exp.log_metric("name", 0.5)
+            exp.log_artifact(name="features", value=["a", "b", "c"], handler="json")
+            with exp.log_test("My test") as test:
+                test.log_metric("name-subpop", 0.3)
+                test.log_parameter("features", ["col3", "col4"])
+
+        # serialize the project to bytes
+        out = pickle.dumps(project)
+        recon = pickle.loads(out)
+
+        attribs = [
+            "fpath",
+            "mode",
+            "author",
+            "storage_options",
+            "experiments",
+            "protocol",
+            "fs",
+        ]
+        for obj in attribs:
+            assert getattr(project, obj) == getattr(recon, obj)
