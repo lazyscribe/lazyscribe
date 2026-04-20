@@ -372,6 +372,14 @@ class Project:
         """
         other_projects_ = list(others)
         if other is not None:
+            warnings.warn(
+                (
+                    "Named argument ``other`` is deprecated and will be removed in "
+                    "version 3.0. Please use a positional argument"
+                ),
+                DeprecationWarning,
+                stacklevel=2,
+            )
             other_projects_.append(other)
         cexp = copy.copy(self.experiments)
         for proj in other_projects_:
