@@ -449,7 +449,7 @@ class Repository:
                     continue
 
                 try:
-                    self.fs.makedirs(str(artifact_dir), exist_ok=True)
+                    self.fs.makedirs(str(fpath.parent), exist_ok=True)
                     LOG.debug(f"Saving '{artifact.name}' to {fpath!s}...")
                     with self.fs.open(str(fpath), fmode) as buf:
                         artifact.write(artifact.value, buf, **artifact.writer_kwargs)
