@@ -69,7 +69,7 @@ def _write_artifact(
     fpath = path / artifact.fname
     label_str = f"{label} " if label else ""
     try:
-        fs.makedirs(str(path), exist_ok=True)
+        fs.makedirs(str(fpath.parent), exist_ok=True)
         with fs.open(str(fpath), fmode) as buf:
             artifact.write(artifact.value, buf, **artifact.writer_kwargs)
     except Exception as exc:
