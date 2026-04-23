@@ -94,6 +94,46 @@ def test_save_repository(tmp_path):
     assert artifact_loaded == artifact_read == {"a": 1}
 
 
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
+def test_save_repository_subdir(tmp_path):
+    """Test saving repository to output JSON with a subdirectory."""
+    location = tmp_path / "my-repository"
+    location.mkdir()
+    repository_location = location / "repository.json"
+
+    repository = Repository(repository_location)
+    repository.log_artifact(
+        "my-dict", {"a": 1}, fname="mydir/subdir/my-dict.json", handler="json"
+    )
+
+    repository.save()
+
+    assert repository["my-dict"].dirty is False
+    assert repository_location.is_file()
+
+    with open(repository_location) as infile:
+        serialized = json.load(infile)
+
+    assert serialized == [
+        {
+            "created_at": "2025-01-20T13:23:30",
+            "expiry": None,
+            "fname": "mydir/subdir/my-dict.json",
+            "handler": "json",
+            "name": "my-dict",
+            "version": 0,
+        },
+    ]
+
+    repository_read = Repository(repository_location, "r")
+    artifact_loaded = repository_read.load_artifact("my-dict")
+    with open(location / "my-dict" / "mydir" / "subdir" / "my-dict.json") as infile:
+        artifact_read = json.load(infile)
+    assert artifact_loaded == artifact_read == {"a": 1}
+
+
 def test_save_repository_transaction(tmp_path):
     """Test failing to save a repository due to a SaveError."""
     location = tmp_path / "my-repository"

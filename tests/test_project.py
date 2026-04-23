@@ -314,6 +314,44 @@ def test_save_project_artifact_str_path(tmp_path):
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
+def test_save_project_artifact_subdir(tmp_path):
+    """Test saving a project with an artifact in a sub-directory."""
+    location = tmp_path / "my-project"
+    project_location = str(location / "project.json")
+    today = datetime.now()
+
+    project = Project(fpath=project_location, author="root")
+    with project.log(name="My experiment") as exp:
+        exp.log_artifact(
+            name="features",
+            value=[0, 1, 2],
+            fname="mydir/subdir/features.json",
+            handler="json",
+        )
+
+    project.save()
+
+    assert project["my-experiment"].dirty is False
+    assert project["my-experiment"].artifacts[0].dirty is False
+    assert Path(project_location).is_file()
+
+    assert (
+        location
+        / f"my-experiment-{today.strftime('%Y%m%d%H%M%S')}"
+        / "mydir"
+        / "subdir"
+        / "features.json"
+    ).is_file()
+
+    with open(location / exp.path / "mydir" / "subdir" / "features.json") as infile:
+        artifact = json.load(infile)
+
+    assert artifact == [0, 1, 2]
+
+
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
 def test_save_project_artifact_failed_validation(tmp_path):
     """Test saving and loading project with an artifact."""
     location = tmp_path / "my-project"
