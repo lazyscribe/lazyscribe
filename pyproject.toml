@@ -4,7 +4,7 @@ requires = [ "uv-build>=0.8.0,<=0.9.5" ]
 
 [project]
 name = "lazyscribe"
-version = "2.2.0"
+version = "2.2.1"
 description = "Lightweight and lazy experiment logging"
 readme = { file = "README.md", content-type = "text/markdown" }
 keywords = [ "experiment", "machine learning", "model" ]
@@ -46,10 +46,10 @@ optional-dependencies.dev = [
     "lazyscribe[tests]",
 ]
 optional-dependencies.docs = [
-    "furo",
     "matplotlib",
     "pandas",
     "pillow",
+    "pydata-sphinx-theme",
     "scikit-learn",
     "sphinx",
     "sphinx-gallery",
@@ -74,7 +74,7 @@ optional-dependencies.tests = [
     "scikit-learn",
     "time-machine",
 ]
-urls.documentation = "https://lazyscribe.github.io/lazyscribe/"
+urls.documentation = "https://docs.lazyscribe.dev/"
 urls.repository = "https://github.com/lazyscribe/lazyscribe"
 entry-points."lazyscribe.artifact_type".base = "lazyscribe.artifacts.base:Artifact"
 entry-points."lazyscribe.artifact_type".json = "lazyscribe.artifacts.json:JSONArtifact"

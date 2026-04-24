@@ -1,3 +1,9 @@
+## v2.2.1 (2026-04-24)
+
+### Fix
+
+- allowing artifacts to be saved to subdirectories
+
 ## v2.2.0 (2026-04-20)
 
 ### Feat
