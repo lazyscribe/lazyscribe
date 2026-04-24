@@ -46,10 +46,10 @@ optional-dependencies.dev = [
     "lazyscribe[tests]",
 ]
 optional-dependencies.docs = [
-    "furo",
     "matplotlib",
     "pandas",
     "pillow",
+    "pydata-sphinx-theme",
     "scikit-learn",
     "sphinx",
     "sphinx-gallery",

@@ -32,20 +32,7 @@ Contents
     :maxdepth: 2
     :caption: How-to...
 
-    how-to/basic
-    how-to/tag
-    how-to/filter
-    how-to/tests
-    how-to/tabular
-    how-to/artifact
-    how-to/custom-artifact
-    how-to/version-artifacts
-    how-to/filter-artifacts
-    how-to/dependencies
-    how-to/external-fs
-    how-to/readonly
-    how-to/merge
-    how-to/concurrency
+    how-to/index
 
 .. toctree::
     :maxdepth: 2
@@ -56,5 +43,4 @@ Contents
     :caption: Reference
 
     developers
-    GitHub repository <https://github.com/lazyscribe/lazyscribe>
     api/modules
