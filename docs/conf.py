@@ -117,8 +117,8 @@ html_theme_options = {
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 
-# Flavicon and logo
-html_flavicon = "_static/flavicon.svg"
+# Favicon and logo
+html_favicon = "_static/favicon.ico"
 
 # -- Options for HTMLHelp output ---------------------------------------
 
