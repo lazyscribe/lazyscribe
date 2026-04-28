@@ -54,7 +54,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "Lazyscribe"
-copyright = "2025, Akshay Gupta"
+copyright = "2026, Akshay Gupta"
 author = "Akshay Gupta"
 
 # The version info for the project you're documenting, acts as replacement
@@ -119,6 +119,9 @@ html_static_path = ["_static"]
 
 # Favicon and logo
 html_favicon = "_static/favicon.ico"
+
+# CSS
+html_css_files = ["css/custom.css"]
 
 # -- Options for HTMLHelp output ---------------------------------------
 
