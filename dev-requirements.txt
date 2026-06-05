@@ -36,7 +36,7 @@ colorama==0.4.6
     # via commitizen
 colorlog==6.10.1
     # via nox
-commitizen==4.16.2
+commitizen==4.16.3
     # via lazyscribe (pyproject.toml)
 contourpy==1.3.2
     # via matplotlib
@@ -50,7 +50,7 @@ dependency-groups==1.3.1
     # via nox
 deprecated==1.3.1
     # via commitizen
-distlib==0.4.0
+distlib==0.4.1
     # via virtualenv
 docutils==0.21.2
     # via
@@ -60,7 +60,7 @@ edgetest==2026.5.1
     # via lazyscribe (pyproject.toml)
 exceptiongroup==1.3.1
     # via pytest
-filelock==3.29.0
+filelock==3.29.1
     # via
     #   python-discovery
     #   virtualenv
@@ -72,7 +72,7 @@ humanize==4.15.0
     # via nox
 identify==2.6.19
     # via pre-commit
-idna==3.17
+idna==3.18
     # via requests
 imagesize==2.0.0
     # via sphinx
@@ -192,7 +192,7 @@ scipy==1.15.3
     # via scikit-learn
 six==1.17.0
     # via python-dateutil
-snowballstemmer==3.1.0
+snowballstemmer==3.1.1
     # via sphinx
 soupsieve==2.8.4
     # via beautifulsoup4
@@ -263,7 +263,7 @@ uv==0.11.16
     #   lazyscribe (pyproject.toml)
     #   edgetest
     #   pre-commit-uv
-virtualenv==21.4.1
+virtualenv==21.4.2
     # via
     #   nox
     #   pre-commit
