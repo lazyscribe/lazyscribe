@@ -29,7 +29,7 @@ class PickleArtifact(Artifact):
 
     .. note::
 
-        For the attributes documentation, please see the "Attributes" section of
+        For the attributes documentation, see also the "Attributes" section of
         :py:class:`lazyscribe.artifacts.base.Artifact`.
 
     Attributes
