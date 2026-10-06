@@ -10,7 +10,7 @@ Multithreading
 .. note::
 
     While experimental, we have tested the following functionality
-    against free-threaded python (3.13t, 3.14t).
+    against free-threaded python (3.14t).
 
 Lazyscribe provides basic support for concurrent experiment logging.
 You can reference a :py:class:`lazyscribe.project.Project` object across
@@ -83,7 +83,7 @@ Logging tests
 .. note::
 
     While experimental, we have tested the following functionality
-    against free-threaded python (3.13t, 3.14t).
+    against free-threaded python (3.14t).
 
 Similar to the functionality described above, ``lazyscribe`` supports logging
 tests in parallel threads:
