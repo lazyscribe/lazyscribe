@@ -1289,7 +1289,7 @@ wheels = [
 
 [[package]]
 name = "lazyscribe"
-version = "2.2.1"
+version = "2.2.2"
 source = { editable = "." }
 dependencies = [
     { name = "attrs" },
