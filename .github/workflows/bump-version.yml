@@ -1,0 +1,86 @@
+# This workflow uses commitizen to bump the version of lazyscribe and opens a PR with the changes.
+# After the PR is merged, create a GitHub release for the new tag to publish the package.
+
+name: Bump version
+on:
+  workflow_dispatch:
+    inputs:
+      increment:
+        description: Version increment. "auto" lets commitizen choose based on the conventional commits.
+        type: choice
+        options:
+          - auto
+          - PATCH
+          - MINOR
+          - MAJOR
+        default: auto
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    name: bumping version
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      # Every file that a version bump (or the pre-commit hooks that follow it) can change
+      BUMP_FILES: >-
+        pyproject.toml
+        uv.lock
+        CHANGELOG.md
+        lazyscribe/_meta.py
+        docs/conf.py
+        requirements.txt
+        dev-requirements.txt
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Install uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: '3.14'
+      - name: Get current version
+        id: old
+        run: echo "version=$(uv run --extra build cz version --project)" >> "$GITHUB_OUTPUT"
+      - name: Bump version
+        env:
+          INCREMENT: ${{ inputs.increment }}
+        run: |
+          ARGS=""
+          if [ "$INCREMENT" != "auto" ]; then
+            ARGS="--increment $INCREMENT"
+          fi
+          # --files-only: update files and changelog, but leave commits and tags to the PR and release
+          uv run --extra build cz bump --yes --files-only $ARGS
+      - name: Get new version
+        id: new
+        run: echo "version=$(uv run --extra build cz version --project)" >> "$GITHUB_OUTPUT"
+      - name: Run pre-commit on bumped files
+        run: |
+          # The first pass may modify files (formatting, recompiled requirements, lock file)
+          uvx pre-commit run --files $BUMP_FILES || true
+          git add $BUMP_FILES
+          # The second pass must succeed on the final contents
+          uvx pre-commit run --files $BUMP_FILES
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          branch: bump-version-v${{ steps.new.outputs.version }}-${{ github.run_id }}
+          base: main
+          delete-branch: true
+          title: 'chore: version ${{ steps.old.outputs.version }} -> ${{ steps.new.outputs.version }}'
+          commit-message: 'chore: version ${{ steps.old.outputs.version }} -> ${{ steps.new.outputs.version }}'
+          body: |
+            Automated version bump from `${{ steps.old.outputs.version }}` to `${{ steps.new.outputs.version }}`
+            (increment: `${{ inputs.increment }}`) using [commitizen](https://commitizen-tools.github.io/commitizen/).
+
+            After merging, create a GitHub release for tag `v${{ steps.new.outputs.version }}` to publish the package.
+          add-paths: |
+            pyproject.toml
+            uv.lock
+            CHANGELOG.md
+            lazyscribe/_meta.py
+            docs/conf.py
+            requirements.txt
+            dev-requirements.txt
