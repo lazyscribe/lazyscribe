@@ -707,7 +707,7 @@ def test_merge_append():
     current = Project(fpath=DATA_DIR / "project.json", mode="r")
     newer = Project(fpath=DATA_DIR / "merge_append.json", mode="r")
 
-    new = current.merge(other=newer)
+    new = current.merge(newer)
 
     assert new.experiments == [
         ReadOnlyExperiment(
