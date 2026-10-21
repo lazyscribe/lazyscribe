@@ -29,6 +29,34 @@ else:
 LOG = logging.getLogger(__name__)
 
 
+@define(auto_attribs=True)
+class ReleaseDiff:
+    """Dataclass for holding the difference between two release objects.
+
+    In particular, this class will be used to generate human-readable reports on the differences
+    between two releases.
+
+    Parameters
+    ----------
+    tags : tuple[str, str]
+        Tags of the releases being compared.
+    identical : list[str]
+        The list of artifact-version combinations that are identical between the releases.
+    modified : list[tuple[str, int, int]]
+        A list of artifacts that exist in both releases, just with different versions.
+        The second entry in each tuple is the version of the artifact present in the release
+        corresponding to the first entry of ``tags``. The second entry in each tuple is the
+        version corresponding to the second entry.
+    unique : tuple[list[tuple[str, int]], list[tuple[str, int]]]
+        A tuple of artifact-versions that exist only in the respective releases.
+    """
+
+    tags: tuple[str, str]
+    identical: list[str]
+    modified: list[tuple[str, int, int]]
+    unique: list[list[tuple[str, int]], list[tuple[str, int]]]
+
+
 @define
 class Release:
     """Create a release associated with a Repository instance.
@@ -82,33 +110,54 @@ class Release:
             created_at=datetime.fromisoformat(info["created_at"]),
         )
 
+    def __sub__(self, other: Release) -> ReleaseDiff:
+        """Compare two releases.
 
-@define(auto_attribs=True)
-class ReleaseDiff:
-    """Dataclass for holding the difference between two release objects.
+        The output dataclass can be used to generate reporting.
 
-    In particular, this class will be used to generate human-readable reports on the differences
-    between two releases.
+        Parameters
+        ----------
+        other : lazyscribe.release.Release
+            The other release object.
 
-    Parameters
-    ----------
-    tags : tuple[str, str]
-        Tags of the releases being compared.
-    identical : list[str]
-        The list of artifact-version combinations that are identical between the releases.
-    modified : list[tuple[str, int, int]]
-        A list of artifacts that exist in both releases, just with different versions.
-        The second entry in each tuple is the version of the artifact present in the release
-        corresponding to the first entry of ``tags``. The second entry in each tuple is the
-        version corresponding to the second entry.
-    unique : tuple[list[tuple[str, int]], list[tuple[str, int]]]
-        A tuple of artifact-versions that exist only in the respective releases.
-    """
+        Returns
+        -------
+        lazyscribe.release.ReleaseDiff
+            A lightweight dataclass for reporting the differences between
+            :py:class:`lazyscribe.release.Release` objects.
+        """
+        identical_: set[str] = set()
+        modified_: set[tuple[str, int, int]] = set()
+        unique_: set[tuple[str, int]] = set()
 
-    tags: tuple[str, str]
-    identical: list[str]
-    modified: list[tuple[str, int, int]]
-    unique: list[list[tuple[str, int]], list[tuple[str, int]]]
+        other_names_: list[str] = [art[0] for art in other.artifacts]
+        for art, version in self.artifacts:
+            try:
+                other_art_: tuple[str, int] = other.artifacts[other_names_.index(art)]
+                if other_art_[1] == version:
+                    identical_.add(art)
+                else:
+                    modified_.add((art, version, other_art_[1]))
+            except ValueError:
+                unique_.add((art, version))
+
+        other_unique_: set[tuple[str, int]] = set()
+        for art, version in other.artifacts:
+            if art in identical_:
+                continue
+            if art in {i[0] for i in modified_}:
+                continue
+            other_unique_.add((art, version))
+
+        return ReleaseDiff(
+            tags=(self.tag, other.tag),
+            identical=sorted(identical_),
+            modified=sorted(modified_, key=lambda x: x[0]),
+            unique=(
+                sorted(unique_, key=lambda x: x[0]),
+                sorted(other_unique_, key=lambda x: x[0]),
+            ),
+        )
 
 
 def create_release(repository: Repository, tag: str) -> Release:
@@ -223,58 +272,6 @@ def find_release(
     LOG.info(f"Found release '{out.tag}' ({out.created_at!s})")
 
     return out
-
-
-def compare_releases(base: Release, other: Release) -> dict:
-    """Compare two releases.
-
-    This function will identify artifacts that are identical, artifacts that have been
-    modified, and net new artifacts between releases.
-
-    Parameters
-    ----------
-    base : lazyscribe.release.Release
-        The base release.
-    other : lazyscribe.release.Release
-        The comparison release.
-
-    Returns
-    -------
-    dict
-        A dictionary with the release diff information.
-    """
-    identical_: set[str] = set()
-    modified_: set[tuple[str, int, int]] = set()
-    unique_: set[tuple[str, int]] = set()
-
-    other_names_: list[str] = [art[0] for art in other.artifacts]
-    for art, version in base.artifacts:
-        try:
-            other_art_: tuple[str, int] = other.artifacts[other_names_.index(art)]
-            if other_art_[1] == version:
-                identical_.add(art)
-            else:
-                modified_.add((art, version, other_art_[1]))
-        except ValueError:
-            unique_.add((art, version))
-
-    other_unique_: set[tuple[str, int]] = set()
-    for art, version in other.artifacts:
-        if art in identical_:
-            continue
-        if art in {i[0] for i in modified_}:
-            continue
-        other_unique_.add((art, version))
-
-    return ReleaseDiff(
-        tags=(base.tag, other.tag),
-        identical=sorted(identical_),
-        modified=sorted(modified_, key=lambda x: x[0]),
-        unique=(
-            sorted(unique_, key=lambda x: x[0]),
-            sorted(other_unique_, key=lambda x: x[0]),
-        ),
-    )
 
 
 def dump(obj: list[Release], fp: IOBase, **kwargs: Any) -> None:
