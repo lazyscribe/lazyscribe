@@ -271,7 +271,7 @@ def test_compare_release_basic():
         datetime(2025, 2, 1, 0, 0, 0),
     )
 
-    comparison = lzr.compare_releases(base, other)
+    comparison = base - other
 
     assert comparison == lzr.ReleaseDiff(
         tags=("0.1.0", "0.2.0"),
