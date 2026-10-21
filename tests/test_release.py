@@ -253,6 +253,34 @@ def test_find_release_invalid_match():
     )
 
 
+def test_compare_release_basic():
+    """Test comparing a simple evolution between releases."""
+    base = lzr.Release(
+        "0.1.0",
+        [
+            ("preprocessing", 0),
+            ("features", 0),
+            ("feeder-model", 0),
+            ("model", 0),
+        ],
+        datetime(2025, 1, 1, 0, 0, 0),
+    )
+    other = lzr.Release(
+        "0.2.0",
+        [("preprocessing", 0), ("features", 0), ("model", 1), ("postprocessing", 0)],
+        datetime(2025, 2, 1, 0, 0, 0),
+    )
+
+    comparison = lzr.compare_releases(base, other)
+
+    assert comparison == lzr.ReleaseDiff(
+        tags=("0.1.0", "0.2.0"),
+        identical=["features", "preprocessing"],
+        modified=[("model", 0, 1)],
+        unique=([("feeder-model", 0)], [("postprocessing", 0)]),
+    )
+
+
 def test_dump_release_to_file(tmp_path):
     """Test writing a list of releases to a file."""
     releases = [
