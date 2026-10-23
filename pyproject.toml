@@ -43,7 +43,7 @@ optional-dependencies.dev = [
     "lazyscribe[build]",
     "lazyscribe[docs]",
     "lazyscribe[qa]",
-    "lazyscribe[tests]",
+    "lazyscribe[tests]"
 ]
 optional-dependencies.docs = [
     "matplotlib",
@@ -71,15 +71,13 @@ optional-dependencies.tests = [
     "pytest-cov",
     "requests",
     "scikit-learn",
-    "time-machine",
+    "time-machine"
 ]
 urls.documentation = "https://docs.lazyscribe.dev/"
 urls.repository = "https://github.com/lazyscribe/lazyscribe"
 entry-points."lazyscribe.artifact_type".base = "lazyscribe.artifacts.base:Artifact"
 entry-points."lazyscribe.artifact_type".json = "lazyscribe.artifacts.json:JSONArtifact"
-entry-points."lazyscribe.artifact_type".pickle = """\
-    lazyscribe.artifacts.pickle:PickleArtifact\
-    """
+entry-points."lazyscribe.artifact_type".pickle = "lazyscribe.artifacts.pickle:PickleArtifact"
 
 [tool.uv]
 build-backend.module-name = "lazyscribe"
