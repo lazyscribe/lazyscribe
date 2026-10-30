@@ -54,7 +54,6 @@ repos:
     - repo: https://github.com/pre-commit/pre-commit-hooks
       rev: v6.0.0
       hooks:
-          - id: trailing-whitespace
           - id: debug-statements
           - id: end-of-file-fixer
     - repo: https://github.com/compilerla/conventional-pre-commit
