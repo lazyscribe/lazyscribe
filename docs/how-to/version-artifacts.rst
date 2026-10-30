@@ -175,6 +175,33 @@ version for each artifact present in the original repository.
 Just like artifacts themselves, :py:meth:`lazyscribe.release.find_release` supports ``asof`` matches based
 on the release creation timestamp.
 
+.. note:: New in 2.3.0
+
+    In 2.3, we have introduced a new feature: release comparisons:
+
+    .. code-block:: python
+
+        from lazyscribe import release as lzr
+
+        with open("releases.json", "r") as infile:
+            releases = lzr.load(infile)
+
+        current = lzr.find_release(releases, "v0.1.0")
+        new = lzr.find_release(releases, "v0.2.0")
+
+        comparison: lzr.ReleaseDiff = new - current
+
+    This :py:class:`lazyscribe.release.ReleaseDiff` object will tell you which artifact-versions are identical,
+    which versions have changed, and which artifacts are unique between the releases. For a more visual representation,
+    you can open the repository and create a markdown report:
+
+    .. code-block:: python
+
+        from lazyscribe import Repository
+
+        repository = Repository(..., mode="r")
+        print(comparison.report(repository))
+
 Automated release creation via ``pyproject.toml``
 +++++++++++++++++++++++++++++++++++++++++++++++++
 
