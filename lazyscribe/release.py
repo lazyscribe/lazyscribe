@@ -92,12 +92,55 @@ class ReleaseDiff:
             )
 
         second_section_: str = ""
+        if art_diffs_ or binary_arts_:
+            second_section_ += (
+                f"## Artifact comparison\n\nThis section contains artifacts that exist "
+                f"in both {self.tags[0]} and {self.tags[1]} with different versions.\n"
+            )
         if binary_arts_:
-            pass  # TODO: FINISH
+            # Find the maximum character length for each column
+            artifact_name_length = max(
+                [len("Artifact"), *(len(name) for name, _, _ in binary_arts_)]
+            )
+            ref_version_length = max(
+                [len(self.tags[0]), *(len(str(ver)) for _, ver, _ in binary_arts_)]
+            )
+            other_version_length = max(
+                [len(self.tags[1]), *(len(str(ver)) for _, _, ver in binary_arts_)]
+            )
+
+            def _tbl_line(x: str, y: str, z: str) -> str:
+                return (
+                    "| "
+                    + " | ".join(
+                        [
+                            x.ljust(artifact_name_length),
+                            y.ljust(ref_version_length),
+                            z.ljust(other_version_length),
+                        ]
+                    )
+                    + " |\n"
+                )
+
+            tbl_ = (
+                _tbl_line("Artifact", self.tags[0], self.tags[1])
+                + "| "
+                + " | ".join(
+                    [
+                        "".join(["-"] * artifact_name_length),
+                        "".join(["-"] * ref_version_length),
+                        "".join(["-"] * other_version_length),
+                    ]
+                )
+                + " |\n"
+            )
+            for art, ref, other in binary_arts_:
+                tbl_ += _tbl_line(art, str(ref), str(other))
+
+            second_section_ += f"The following artifacts are binary:\n\n{tbl_}\n\n"
         if art_diffs_:
             second_section_ += (
-                f"## Artifact diffs\n\nThe following artifacts exist in both {self.tags[0]} "
-                f"and {self.tags[1]} with different versions.\n\n"
+                "The following artifacts can be compared using ``difflib``.\n\n"
             )
             for art, ref, other, diff in art_diffs_:
                 second_section_ += (
