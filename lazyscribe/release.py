@@ -56,6 +56,57 @@ class ReleaseDiff:
     modified: list[tuple[str, int, int]]
     unique: list[list[tuple[str, int]], list[tuple[str, int]]]
 
+    def report(self, repository: Repository) -> str:
+        """Generate a human-readable report describing the differences between releases.
+
+        Parameters
+        ----------
+        repository : lazyscribe.repository.Repository
+            The repository that was used to generate the releases.
+
+        Returns
+        -------
+        str
+            A markdown-formatted string.
+        """
+        first_section_: str = f"# {self.tags[0]} vs. {self.tags[1]}\n\n"
+        if self.identical:
+            first_section_ += (
+                f"The following artifacts are identical: {', '.join(self.identical)}\n"
+            )
+        if self.unique[0]:
+            first_section_ += f"The following artifacts exist only in {self.tags[0]}: {', '.join(str(i) for i, _ in self.unique[0])}\n"
+        if self.unique[1]:
+            first_section_ += f"The following artifacts exist only in {self.tags[1]}: {', '.join(str(i) for i, _ in self.unique[1])}\n"
+        binary_arts_: list[tuple[str, int, int]] = []
+        art_diffs_: list[tuple[str, int, int, str]] = []
+        for art, ref, other in self.modified:
+            if repository._search_artifact_versions(art, ref).binary:
+                binary_arts_.append((art, ref, other))
+                continue
+            if repository._search_artifact_versions(art, other).binary:
+                binary_arts_.append((art, ref, other))
+                continue
+            art_diffs_.append(
+                (art, ref, other, repository.get_version_diff(art, (ref, other)))
+            )
+
+        second_section_: str = ""
+        if binary_arts_:
+            pass  # TODO: FINISH
+        if art_diffs_:
+            second_section_ += (
+                f"## Artifact diffs\n\nThe following artifacts exist in both {self.tags[0]} "
+                f"and {self.tags[1]} with different versions.\n\n"
+            )
+            for art, ref, other, diff in art_diffs_:
+                second_section_ += (
+                    f"### {art}\n\nVersion {ref} in {self.tags[0]} and {other} in {self.tags[1]}.\n\n"
+                    f"```diff\n{diff}\n```\n"
+                )
+
+        return first_section_ + "\n" + second_section_
+
 
 @define
 class Release:
