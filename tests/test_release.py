@@ -1,5 +1,6 @@
 """Repository release tests."""
 
+import difflib
 import json
 import logging
 import zoneinfo
@@ -371,35 +372,43 @@ def test_compare_release_report(tmp_path):
     )
 
     expected = dedent(
-        """
+        """\
         # 0.2.0 vs. 0.1.0
 
         The following artifacts are identical: features
         The following artifacts exist only in 0.2.0: postprocessing
         The following artifacts exist only in 0.1.0: feeder-model
 
-        ## Artifact diffs
+        ## Artifact comparison
 
-        The following artifacts exist in both 0.2.0 and 0.1.0 with different versions.
+        This section contains artifacts that exist in both 0.2.0 and 0.1.0 with different versions.
+        The following artifacts are binary:
+
+        | Artifact | 0.2.0 | 0.1.0 |
+        | -------- | ----- | ----- |
+        | model    | 1     | 0     |
+
+
+        The following artifacts can be compared using ``difflib``.
 
         ### preprocessing
 
         Version 1 in 0.2.0 and 0 in 0.1.0.
 
         ```diff
-        ---
-
-        +++
-
-        @@ -1 +1 @@
-
-        -["fill nulls"]
-        +["fill nulls", "engineer"]
+        {diff}
         ```
         """
+    ).format(
+        diff="\n".join(
+            difflib.unified_diff(
+                json.dumps(["fill nulls"]).splitlines(),
+                json.dumps(["fill nulls", "engineer"]).splitlines(),
+            )
+        )
     )
 
-    assert comparison.report(repository) == expected[1:]
+    assert comparison.report(repository) == expected
 
 
 def test_dump_release_to_file(tmp_path):
