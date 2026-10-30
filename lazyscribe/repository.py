@@ -112,8 +112,12 @@ class Repository:
         for artifact in data:
             handler_cls = _get_handler(artifact.pop("handler"))
             created_at = datetime.fromisoformat(artifact.pop("created_at"))
+            if (expiry := artifact.pop("expiry", None)) is not None:
+                expiry = datetime.fromisoformat(expiry)
             artifacts.append(
-                handler_cls.construct(**artifact, created_at=created_at, dirty=False)
+                handler_cls.construct(
+                    **artifact, created_at=created_at, expiry=expiry, dirty=False
+                )
             )
         self.artifacts = artifacts
 
