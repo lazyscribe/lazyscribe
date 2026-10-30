@@ -113,8 +113,12 @@ def create_release(repository: Repository, tag: str) -> Release:
     all_artifacts_ = sorted({art.name for art in repository.artifacts})
     latest: list[tuple[str, int]] = []
     for name in all_artifacts_:
-        art = repository._search_artifact_versions(name)
-        latest.append((name, art.version))
+        try:
+            art = repository._search_artifact_versions(name)
+            latest.append((name, art.version))
+        except VersionNotFoundError:
+            LOG.info("Artifact '%s' has no valid versions available", name)
+            continue
 
     return Release(tag=tag, artifacts=latest)
 
