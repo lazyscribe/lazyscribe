@@ -4,6 +4,7 @@ import json
 import logging
 import zoneinfo
 from datetime import datetime
+from textwrap import dedent
 from warnings import catch_warnings
 
 import pytest
@@ -265,20 +266,140 @@ def test_compare_release_basic():
         ],
         datetime(2025, 1, 1, 0, 0, 0),
     )
-    other = lzr.Release(
+    new = lzr.Release(
         "0.2.0",
         [("preprocessing", 0), ("features", 0), ("model", 1), ("postprocessing", 0)],
         datetime(2025, 2, 1, 0, 0, 0),
     )
 
-    comparison = base - other
+    comparison = new - base
 
     assert comparison == lzr.ReleaseDiff(
-        tags=("0.1.0", "0.2.0"),
+        tags=("0.2.0", "0.1.0"),
         identical=["features", "preprocessing"],
-        modified=[("model", 0, 1)],
-        unique=([("feeder-model", 0)], [("postprocessing", 0)]),
+        modified=[("model", 1, 0)],
+        unique=([("postprocessing", 0)], [("feeder-model", 0)]),
     )
+
+
+def test_compare_release_report(tmp_path):
+    """Test generating a release comparison report.
+
+    In this test, we will create two releases: 0.1.0 and 0.2.0.
+    """
+    location = tmp_path / "my-repository"
+    location.mkdir()
+    repository_location = location / "repository.json"
+
+    repository = Repository(repository_location)
+    # Create our first release
+    with time_machine.travel(
+        datetime(2026, 1, 1, 0, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+    ):
+        repository.log_artifact(
+            name="preprocessing",
+            value=[
+                "fill nulls",
+            ],
+            handler="json",
+        )
+        repository.log_artifact(name="features", value=["a", "b", "c"], handler="json")
+        repository.log_artifact(
+            name="feeder-model", value="score intermediate column", handler="pickle"
+        )
+        repository.log_artifact(name="model", value="core model", handler="pickle")
+
+    repository.save()
+    repository = Repository(repository_location, mode="r")
+
+    # Generate the release
+    with time_machine.travel(
+        datetime(2026, 2, 1, 0, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+    ):
+        release = lzr.create_release(repository, "0.1.0")
+        assert release == lzr.Release(
+            tag="0.1.0",
+            artifacts=[
+                ("features", 0),
+                ("feeder-model", 0),
+                ("model", 0),
+                ("preprocessing", 0),
+            ],
+        )
+
+    # Create our second release
+    repository = Repository(repository_location, mode="w+")
+    with time_machine.travel(
+        datetime(2026, 3, 1, 0, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+    ):
+        repository.log_artifact(
+            name="preprocessing", value=["fill nulls", "engineer"], handler="json"
+        )
+        repository.log_artifact(name="model", value="core model", handler="pickle")
+        repository.log_artifact(
+            name="postprocessing", value=["cap and floor"], handler="json"
+        )
+
+        repository.set_artifact_expiry("feeder-model", 0)
+
+    repository.save()
+    repository = Repository(repository_location, mode="r")
+
+    with time_machine.travel(
+        datetime(2026, 4, 1, 0, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+    ):
+        new_release = lzr.create_release(repository, "0.2.0")
+        assert new_release == lzr.Release(
+            tag="0.2.0",
+            artifacts=[
+                ("features", 0),
+                ("model", 1),
+                ("postprocessing", 0),
+                ("preprocessing", 1),
+            ],
+        )
+
+    comparison = new_release - release
+
+    assert comparison == lzr.ReleaseDiff(
+        tags=("0.2.0", "0.1.0"),
+        identical=[
+            "features",
+        ],
+        modified=[("model", 1, 0), ("preprocessing", 1, 0)],
+        unique=([("postprocessing", 0)], [("feeder-model", 0)]),
+    )
+
+    expected = dedent(
+        """
+        # 0.2.0 vs. 0.1.0
+
+        The following artifacts are identical: features
+        The following artifacts exist only in 0.2.0: postprocessing
+        The following artifacts exist only in 0.1.0: feeder-model
+
+        ## Artifact diffs
+
+        The following artifacts exist in both 0.2.0 and 0.1.0 with different versions.
+
+        ### preprocessing
+
+        Version 1 in 0.2.0 and 0 in 0.1.0.
+
+        ```diff
+        ---
+
+        +++
+
+        @@ -1 +1 @@
+
+        -["fill nulls"]
+        +["fill nulls", "engineer"]
+        ```
+        """
+    )
+
+    assert comparison.report(repository) == expected[1:]
 
 
 def test_dump_release_to_file(tmp_path):
