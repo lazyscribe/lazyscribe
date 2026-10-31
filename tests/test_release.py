@@ -55,6 +55,50 @@ def test_repository_release(tmp_path):
         }
 
 
+def test_repository_release_expired_exclusion(tmp_path):
+    """Test creating a release with an artifact in which all versions are expired."""
+    location = tmp_path / "my-repository"
+    location.mkdir()
+    repository_location = location / "repository.json"
+
+    repository = Repository(repository_location)
+    with time_machine.travel(
+        datetime(2026, 1, 1, 0, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+    ):
+        repository.log_artifact("my-data", [{"a": 1}], handler="json")
+        repository.log_artifact("my-features", [0], handler="json")
+
+    repository.save()
+    repository = Repository(repository_location, mode="r")
+
+    # Create an initial release
+    with time_machine.travel(
+        datetime(2026, 2, 1, 0, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+    ):
+        release = lzr.create_release(repository, "0.1.0")
+
+        assert release == lzr.Release(
+            tag="0.1.0", artifacts=[("my-data", 0), ("my-features", 0)]
+        )
+
+    # Set the expiry for one of the artifacts and create another release
+    repository = Repository(repository_location, mode="w+")
+    with time_machine.travel(
+        datetime(2026, 3, 1, 0, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+    ):
+        repository.set_artifact_expiry("my-data", 0)
+
+    repository.save()
+    repository = Repository(repository_location, mode="r")
+
+    with time_machine.travel(
+        datetime(2026, 4, 1, 0, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+    ):
+        release = lzr.create_release(repository, "0.2.0")
+
+        assert release == lzr.Release(tag="0.2.0", artifacts=[("my-features", 0)])
+
+
 def test_convert_release():
     """Test creating a release from a dictionary."""
     release = lzr.Release(
