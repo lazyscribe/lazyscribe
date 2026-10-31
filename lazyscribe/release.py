@@ -29,6 +29,128 @@ else:
 LOG = logging.getLogger(__name__)
 
 
+@define(auto_attribs=True)
+class ReleaseDiff:
+    """Dataclass for holding the difference between two release objects.
+
+    In particular, this class will be used to generate human-readable reports on the differences
+    between two releases.
+
+    Parameters
+    ----------
+    tags : tuple[str, str]
+        Tags of the releases being compared.
+    identical : list[str]
+        The list of artifact-version combinations that are identical between the releases.
+    modified : list[tuple[str, int, int]]
+        A list of artifacts that exist in both releases, just with different versions.
+        The second entry in each tuple is the version of the artifact present in the release
+        corresponding to the first entry of ``tags``. The second entry in each tuple is the
+        version corresponding to the second entry.
+    unique : tuple[list[tuple[str, int]], list[tuple[str, int]]]
+        A tuple of artifact-versions that exist only in the respective releases.
+    """
+
+    tags: tuple[str, str]
+    identical: list[str]
+    modified: list[tuple[str, int, int]]
+    unique: tuple[list[tuple[str, int]], list[tuple[str, int]]]
+
+    def report(self, repository: Repository) -> str:
+        """Generate a human-readable report describing the differences between releases.
+
+        Parameters
+        ----------
+        repository : lazyscribe.repository.Repository
+            The repository that was used to generate the releases.
+
+        Returns
+        -------
+        str
+            A markdown-formatted string.
+        """
+        first_section_: str = f"# {self.tags[0]} vs. {self.tags[1]}\n\n"
+        if self.identical:
+            first_section_ += (
+                f"The following artifacts are identical: {', '.join(self.identical)}\n"
+            )
+        if self.unique[0]:
+            first_section_ += f"The following artifacts exist only in {self.tags[0]}: {', '.join(str(i) for i, _ in self.unique[0])}\n"
+        if self.unique[1]:
+            first_section_ += f"The following artifacts exist only in {self.tags[1]}: {', '.join(str(i) for i, _ in self.unique[1])}\n"
+        binary_arts_: list[tuple[str, int, int]] = []
+        art_diffs_: list[tuple[str, int, int, str]] = []
+        for art, ref, other in self.modified:
+            if repository._search_artifact_versions(art, ref).binary:
+                binary_arts_.append((art, ref, other))
+                continue
+            if repository._search_artifact_versions(art, other).binary:
+                binary_arts_.append((art, ref, other))
+                continue
+            art_diffs_.append(
+                (art, ref, other, repository.get_version_diff(art, (ref, other)))
+            )
+
+        second_section_: str = ""
+        if art_diffs_ or binary_arts_:
+            second_section_ += (
+                f"## Artifact comparison\n\nThis section contains artifacts that exist "
+                f"in both {self.tags[0]} and {self.tags[1]} with different versions.\n"
+            )
+        if binary_arts_:
+            # Find the maximum character length for each column
+            artifact_name_length = max(
+                [len("Artifact"), *(len(name) for name, _, _ in binary_arts_)]
+            )
+            ref_version_length = max(
+                [len(self.tags[0]), *(len(str(ver)) for _, ver, _ in binary_arts_)]
+            )
+            other_version_length = max(
+                [len(self.tags[1]), *(len(str(ver)) for _, _, ver in binary_arts_)]
+            )
+
+            def _tbl_line(x: str, y: str, z: str) -> str:
+                return (
+                    "| "
+                    + " | ".join(
+                        [
+                            x.ljust(artifact_name_length),
+                            y.ljust(ref_version_length),
+                            z.ljust(other_version_length),
+                        ]
+                    )
+                    + " |\n"
+                )
+
+            tbl_ = (
+                _tbl_line("Artifact", self.tags[0], self.tags[1])
+                + "| "
+                + " | ".join(
+                    [
+                        "".join(["-"] * artifact_name_length),
+                        "".join(["-"] * ref_version_length),
+                        "".join(["-"] * other_version_length),
+                    ]
+                )
+                + " |\n"
+            )
+            for art, ref, other in binary_arts_:
+                tbl_ += _tbl_line(art, str(ref), str(other))
+
+            second_section_ += f"The following artifacts are binary:\n\n{tbl_}\n\n"
+        if art_diffs_:
+            second_section_ += (
+                "The following artifacts can be compared using ``difflib``.\n\n"
+            )
+            for art, ref, other, diff in art_diffs_:
+                second_section_ += (
+                    f"### {art}\n\nVersion {ref} in {self.tags[0]} and {other} in {self.tags[1]}.\n\n"
+                    f"```diff\n{diff}\n```\n"
+                )
+
+        return first_section_ + "\n" + second_section_
+
+
 @define
 class Release:
     """Create a release associated with a Repository instance.
@@ -80,6 +202,55 @@ class Release:
             tag=info["tag"],
             artifacts=info["artifacts"],
             created_at=datetime.fromisoformat(info["created_at"]),
+        )
+
+    def __sub__(self, other: Release) -> ReleaseDiff:
+        """Compare two releases.
+
+        The output dataclass can be used to generate reporting.
+
+        Parameters
+        ----------
+        other : lazyscribe.release.Release
+            The other release object.
+
+        Returns
+        -------
+        lazyscribe.release.ReleaseDiff
+            A lightweight dataclass for reporting the differences between
+            :py:class:`lazyscribe.release.Release` objects.
+        """
+        identical_: set[str] = set()
+        modified_: set[tuple[str, int, int]] = set()
+        unique_: set[tuple[str, int]] = set()
+
+        other_names_: list[str] = [art[0] for art in other.artifacts]
+        for art, version in self.artifacts:
+            try:
+                other_art_: tuple[str, int] = other.artifacts[other_names_.index(art)]
+                if other_art_[1] == version:
+                    identical_.add(art)
+                else:
+                    modified_.add((art, version, other_art_[1]))
+            except ValueError:
+                unique_.add((art, version))
+
+        other_unique_: set[tuple[str, int]] = set()
+        for art, version in other.artifacts:
+            if art in identical_:
+                continue
+            if art in {i[0] for i in modified_}:
+                continue
+            other_unique_.add((art, version))
+
+        return ReleaseDiff(
+            tags=(self.tag, other.tag),
+            identical=sorted(identical_),
+            modified=sorted(modified_, key=lambda x: x[0]),
+            unique=(
+                sorted(unique_, key=lambda x: x[0]),
+                sorted(other_unique_, key=lambda x: x[0]),
+            ),
         )
 
 
