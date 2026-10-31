@@ -16,10 +16,10 @@
 | lazyscribe/linked.py                 |       44 |        0 |    100% |           |
 | lazyscribe/project.py                |      208 |        7 |     97% |186, 188, 336-339, 375-383, 422 |
 | lazyscribe/registry.py               |       25 |        0 |    100% |           |
-| lazyscribe/release.py                |      126 |        3 |     98% |25, 106, 108 |
-| lazyscribe/repository.py             |      220 |        6 |     97% |101, 499, 501, 578-580 |
+| lazyscribe/release.py                |      130 |        3 |     98% |25, 106, 108 |
+| lazyscribe/repository.py             |      222 |        6 |     97% |101, 503, 505, 582-584 |
 | lazyscribe/test.py                   |       64 |        2 |     97% |  159, 176 |
-| **TOTAL**                            | **1043** |   **21** | **98%** |           |
+| **TOTAL**                            | **1049** |   **21** | **98%** |           |
 
 
 ## Setup coverage badge
