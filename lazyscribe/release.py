@@ -54,7 +54,7 @@ class ReleaseDiff:
     tags: tuple[str, str]
     identical: list[str]
     modified: list[tuple[str, int, int]]
-    unique: list[list[tuple[str, int]], list[tuple[str, int]]]
+    unique: tuple[list[tuple[str, int]], list[tuple[str, int]]]
 
     def report(self, repository: Repository) -> str:
         """Generate a human-readable report describing the differences between releases.
