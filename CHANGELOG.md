@@ -1,3 +1,20 @@
+## v2.3.0 (2026-11-02)
+
+### Feat
+
+- **release**: starting to develop a reporting function
+- **release**: adding a function to compare two releases and a lightweight dataclass for holding the output
+
+### Fix
+
+- **release**: error handling for only expired artifacts appearing in the release
+- **repository**: parsing the expiry field as a datetime on load
+
+### Refactor
+
+- **release**: adding a table for binary artifacts
+- **release**: moving the diff functionality to a custom subtract method
+
 ## v2.2.2 (2026-10-06)
 
 ## v2.2.1 (2026-04-24)
