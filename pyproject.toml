@@ -77,9 +77,7 @@ urls.documentation = "https://docs.lazyscribe.dev/"
 urls.repository = "https://github.com/lazyscribe/lazyscribe"
 entry-points."lazyscribe.artifact_type".base = "lazyscribe.artifacts.base:Artifact"
 entry-points."lazyscribe.artifact_type".json = "lazyscribe.artifacts.json:JSONArtifact"
-entry-points."lazyscribe.artifact_type".pickle = """\
-    lazyscribe.artifacts.pickle:PickleArtifact\
-    """
+entry-points."lazyscribe.artifact_type".pickle = "lazyscribe.artifacts.pickle:PickleArtifact"
 
 [tool.uv]
 build-backend.module-name = "lazyscribe"
@@ -121,7 +119,7 @@ lint.pydocstyle.convention = "numpy"
 lint.preview = true
 
 [tool.pyproject-fmt]
-column_width = 88
+column_width = 99
 indent = 4
 keep_full_version = true
 max_supported_python = "3.14"
