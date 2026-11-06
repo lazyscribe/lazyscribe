@@ -43,7 +43,7 @@ optional-dependencies.dev = [
     "lazyscribe[build]",
     "lazyscribe[docs]",
     "lazyscribe[qa]",
-    "lazyscribe[tests]",
+    "lazyscribe[tests]"
 ]
 optional-dependencies.docs = [
     "matplotlib",
@@ -71,7 +71,7 @@ optional-dependencies.tests = [
     "pytest-cov",
     "requests",
     "scikit-learn",
-    "time-machine",
+    "time-machine"
 ]
 urls.documentation = "https://docs.lazyscribe.dev/"
 urls.repository = "https://github.com/lazyscribe/lazyscribe"
