@@ -141,6 +141,55 @@ def load_artifact_from(
     raise ArtifactLoadError(f"No artifact with name {name}")
 
 
+def scan_artifact_from(
+    artifacts: list[Artifact],
+    path: Path,
+    fs: AbstractFileSystem,
+    name: str,
+    validate: bool = True,
+    **kwargs: Any,
+) -> Any:
+    """Lazily scan an artifact by name.
+
+    Commonly invoked for datasets like parquet files.
+
+    .. versionadded:: 2.4.0
+
+    Parameters
+    ----------
+    artifacts : list[lazyscribe.artifacts.base.Artifact]
+        The list of artifacts to search.
+    path : pathlib.Path
+        The base path for artifact files.
+    fs : fsspec.spec.AbstractFileSystem
+        The filesystem to use for reading.
+    name : str
+        The name of the artifact to scan.
+    validate : bool, optional (default True)
+        Whether or not to validate the runtime environment against the artifact
+        metadata.
+    **kwargs : Any
+        Keyword arguments for the handler scan function.
+
+    Returns
+    -------
+    Any
+        The scanned artifact file.
+
+    Raises
+    ------
+    lazyscribe.exception.ArtifactLoadError
+        If ``validate`` and the runtime environment does not match artifact metadata.
+        Or if there is no artifact found with the name provided.
+    """
+    for artifact in artifacts:
+        if artifact.name == name:
+            if validate:
+                validate_artifact_environment(artifact)
+            return artifact.scan(path / artifact.fname, fs=fs, **kwargs)
+    raise ArtifactLoadError(f"No artifact with name {name}")
+
+
 def validate_artifact_environment(artifact: Artifact) -> None:
     """Validate the artifact handler environment.
 
