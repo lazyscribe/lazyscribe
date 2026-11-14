@@ -30,6 +30,7 @@ from slugify import slugify
 
 from lazyscribe._utils import (
     load_artifact_from,
+    scan_artifact_from,
     serializer,
     utcnow,
 )
@@ -303,6 +304,39 @@ class Experiment:
                     UserWarning,
                     stacklevel=2,
                 )
+
+    def scan_artifact(self, name: str, validate: bool = True, **kwargs: Any) -> Any:
+        """Lazily scan an artifact.
+
+        This operation will mostly be reserved for artifact datasets, like the parquet
+        handler available through ``lazyscribe-arrow``.
+
+        .. versionadded:: 2.4.0
+
+        Parameters
+        ----------
+        name : str
+            The name of the artifact to scan.
+        validate : bool, optional (default True)
+            Whether or not to validate the runtime environment against the artifact
+            metadata.
+        **kwargs : Any
+            Keyword arguments for the handler scan function.
+
+        Returns
+        -------
+        Any
+            The artifact object.
+
+        Raises
+        ------
+        lazyscribe.exception.ArtifactLoadError
+            If ``validate`` and the runtime environment does not match artifact metadata.
+            Or if there is no artifact found with the name provided.
+        """
+        return scan_artifact_from(
+            self.artifacts, self.path, self.fs, name, validate, **kwargs
+        )
 
     def load_artifact(self, name: str, validate: bool = True, **kwargs: Any) -> Any:
         """Load a single artifact.

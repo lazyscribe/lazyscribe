@@ -213,6 +213,30 @@ def test_experiment_artifact_load(tmp_path):
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
+def test_scan_artifact_fail(tmp_path):
+    """Test scanning an artifact with a handler that does not implement it."""
+    location = tmp_path / "my-location"
+    location.mkdir()
+
+    today = datetime.now()
+    exp = Experiment(
+        name="My experiment", project=location / "project.json", author="root"
+    )
+    exp.log_artifact(name="features", value=[0, 1, 2], handler="json")
+    # Need to write the artifact to disk
+    fpath = exp.path / exp.artifacts[0].fname
+    exp.fs.makedirs(exp.path, exist_ok=True)
+    with exp.fs.open(fpath, "w") as buf:
+        exp.artifacts[0].write(exp.artifacts[0].value, buf)
+
+    # Attempt to scan the artifact
+    with pytest.raises(NotImplementedError):
+        _ = exp.scan_artifact(name="features")
+
+
+@time_machine.travel(
+    datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
+)
 def test_experiment_artifact_load_relative_path(tmp_path, monkeypatch):
     """Test loading an artifact when the project uses a relative path.
 
@@ -479,6 +503,9 @@ def test_test_artifact_load(tmp_path):
     with test.fs.open(str(test.path / art.fname), "w") as buf:
         art.write(art.value, buf)
 
+    # Try and fail to scan the artifact
+    with pytest.raises(NotImplementedError):
+        _ = test.scan_artifact(name="conf")
     out = test.load_artifact(name="conf")
     assert out == {"tp": 10}
 
