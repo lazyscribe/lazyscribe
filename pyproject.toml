@@ -62,7 +62,7 @@ optional-dependencies.qa = [
     "pre-commit",
     "pre-commit-uv>=4.2.1",
     "pyproject-fmt",
-    "ruff==0.15.7",
+    "ruff",
     "types-python-slugify",
 ]
 optional-dependencies.tests = [
