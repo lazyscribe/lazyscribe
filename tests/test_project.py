@@ -1,6 +1,7 @@
 """Test the project class."""
 
 import json
+import logging
 import pickle
 import warnings
 import zoneinfo
@@ -120,14 +121,22 @@ def test_invalid_project_mode():
         _ = Project(author="root", mode="fake-mode")
 
 
-def test_not_logging_experiment():
+def test_not_logging_experiment(caplog):
     """Test not logging an experiment when raising an error."""
     project = Project(author="root")
-    with pytest.raises(ValueError), project.log(name="My experiment") as exp:
-        raise ValueError("An error.")
-        exp.log_metric("name", 0.5)
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(ValueError), project.log(name="My experiment") as exp:
+            raise ValueError("An error.")
+            exp.log_metric("name", 0.5)
 
-    assert len(project.experiments) == 0
+        assert caplog.record_tuples == [
+            (
+                "lazyscribe.project",
+                logging.ERROR,
+                "Exception raised during experiment execution",
+            )
+        ]
+        assert len(project.experiments) == 0
 
 
 def test_not_logging_experiment_readonly():

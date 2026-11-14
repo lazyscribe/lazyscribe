@@ -8,7 +8,7 @@ import json
 import logging
 import warnings
 from bisect import insort
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Generator, Iterator
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
@@ -106,6 +106,9 @@ class Project:
     author : str, optional (default None)
         The project author. This author will be used for any new experiments or modifications to
         existing experiments. If not supplied, ``getpass.getuser()`` will be used.
+    fs : fsspec.spec.AbstractFileSystem, optional (default None)
+        A custom ``fsspec`` filesystem to use when reading or writing files associated with this
+        project. If not provided, the ``fsspec`` implementation will be parsed from the ``fpath``.
     **storage_options
         Storage options to pass to the filesystem initialization. Will be passed to
         :py:meth:`fsspec.filesystem`.
@@ -132,6 +135,7 @@ class Project:
         fpath: str | Path = "project.json",
         mode: Literal["r", "a", "w", "w+"] = "a",
         author: str | None = None,
+        fs: AbstractFileSystem | None = None,
         **storage_options: Any,
     ) -> None:
         """Init method."""
@@ -146,7 +150,7 @@ class Project:
 
         # If in ``r``, ``a``, or ``w+`` mode, read in the existing project.
         self.experiments = []
-        self.fs = fsspec.filesystem(self.protocol, **storage_options)
+        self.fs = fs or fsspec.filesystem(self.protocol, **storage_options)
 
         if mode not in ("r", "a", "w", "w+"):
             raise ValueError("Please provide a valid ``mode`` value.")
@@ -424,7 +428,7 @@ class Project:
             insort(self.experiments, other)
 
     @contextmanager
-    def log(self, name: str) -> Iterator[Experiment]:
+    def log(self, name: str) -> Generator[Experiment, None, None]:
         """Log an experiment to the project.
 
         Parameters
@@ -448,8 +452,11 @@ class Project:
         experiment = Experiment(
             name=name, project=self.fpath, fs=self.fs, author=self.author, dirty=True
         )
-
-        yield experiment
+        try:
+            yield experiment
+        except Exception as exc:
+            LOG.exception("Exception raised during experiment execution")
+            raise exc
 
         self.append(experiment)
 
