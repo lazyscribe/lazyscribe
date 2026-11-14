@@ -114,3 +114,19 @@ an error. You can disable validation using ``validate=False``:
 .. code-block:: python
 
     model = exp.load_artifact(name="estimator", validate=False)
+
+.. note::
+
+    In version 2.4.0, we added optional artifact scanning. The goal of this feature is
+    to enable handlers to provide lazy filesystem loading, which can be particularly useful
+    for datasets like Parquet files. For instance, if you are using the ``parquet`` handler
+    from ``lazyscribe-arrow``:
+
+    .. code-block:: python
+        :emphasize-lines: 5
+
+        from lazyscribe import Project
+
+        project = Project("project.json", mode="r")
+        exp = project["my-experiment"]
+        data = exp.scan_artifact("data")
