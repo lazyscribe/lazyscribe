@@ -23,7 +23,7 @@ jobs:
         run: uv sync --extra docs
         shell: bash
       - name: Sphinx build
-        run: make docs
+        run: uv run make docs
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
