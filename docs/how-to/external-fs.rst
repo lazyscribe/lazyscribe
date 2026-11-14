@@ -19,7 +19,16 @@ for example usage and available protocols.
 
     project = Project(fpath=fpath, **storage_options)
 
-From there, you can use your project as normal.
+If you have a non-standard filesystem implementation, you can also explicitly supply a filesystem on initialization.
+
+.. code-block:: python
+
+    from lazyscribe import Project
+
+    fs: fsspec.spec.AbstractFileSystem = ...
+    project = Project(..., fs=fs)
+
+Once initialized, you can use your project as normal.
 
 Note that to use some external filesystems, you will need to install additional packages.
 See the installation instructions `here <https://filesystem-spec.readthedocs.io/en/latest/index.html#installation>`_
