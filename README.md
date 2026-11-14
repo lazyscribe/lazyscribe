@@ -12,14 +12,14 @@
 | lazyscribe/artifacts/json.py         |       25 |        0 |    100% |           |
 | lazyscribe/artifacts/pickle.py       |       30 |        0 |    100% |           |
 | lazyscribe/exception.py              |        8 |        0 |    100% |           |
-| lazyscribe/experiment.py             |      165 |        3 |     98% |287, 510, 519 |
+| lazyscribe/experiment.py             |      169 |        3 |     98% |287, 516, 525 |
 | lazyscribe/linked.py                 |       44 |        0 |    100% |           |
-| lazyscribe/project.py                |      208 |        7 |     97% |186, 188, 336-339, 375-383, 422 |
+| lazyscribe/project.py                |      212 |        7 |     97% |190, 192, 340-343, 379-387, 426 |
 | lazyscribe/registry.py               |       25 |        0 |    100% |           |
 | lazyscribe/release.py                |      193 |        5 |     97% |25, 88-89, 277, 279 |
-| lazyscribe/repository.py             |      222 |        6 |     97% |101, 503, 505, 582-584 |
+| lazyscribe/repository.py             |      223 |        6 |     97% |106, 508, 510, 587-589 |
 | lazyscribe/test.py                   |       64 |        2 |     97% |  159, 176 |
-| **TOTAL**                            | **1112** |   **23** | **98%** |           |
+| **TOTAL**                            | **1121** |   **23** | **98%** |           |
 
 
 ## Setup coverage badge
