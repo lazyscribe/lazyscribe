@@ -11,8 +11,8 @@ from fsspec.implementations.local import LocalFileSystem
 from fsspec.spec import AbstractFileSystem
 
 from lazyscribe._utils import (
-    scan_artifact_from,
     load_artifact_from,
+    scan_artifact_from,
     serializer,
     utcnow,
 )
