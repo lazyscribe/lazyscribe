@@ -16,6 +16,7 @@ from typing import Any, Literal, TypedDict
 from urllib.parse import urlparse
 
 import fsspec
+from fsspec.spec import AbstractFileSystem
 
 from lazyscribe._utils import serialize_artifacts, utcnow, validate_artifact_environment
 from lazyscribe.artifacts import _get_handler
@@ -56,6 +57,9 @@ class Repository:
         * ``r``: All artifacts will be loaded. No new artifacts can be logged.
         * ``w``: No existing artifacts will be loaded. Artifacts can be added.
         * ``w+``: All artifacts will be loaded. New artifacts can be added.
+    fs : fsspec.spec.AbstractFileSystem, optional (default None)
+        A custom ``fsspec`` filesystem to use when reading or writing files associated with this
+        repository. If not provided, the ``fsspec`` implementation will be parsed from the ``fpath``.
     **storage_options
         Storage options to pass to the filesystem initialization. Will be passed to
         :py:meth:`fsspec.filesystem`.
@@ -75,6 +79,7 @@ class Repository:
         self,
         fpath: str | Path = "repository.json",
         mode: Literal["r", "w", "w+"] = "w+",
+        fs: AbstractFileSystem | None = None,
         **storage_options: Any,
     ) -> None:
         """Init method.
@@ -95,7 +100,7 @@ class Repository:
         self.storage_options = storage_options
 
         self.artifacts: list[Artifact] = []
-        self.fs = fsspec.filesystem(self.protocol, **storage_options)
+        self.fs = fs or fsspec.filesystem(self.protocol, **storage_options)
 
         if mode not in ("r", "w", "w+"):
             raise ValueError("Please provide a valid ``mode`` value.")

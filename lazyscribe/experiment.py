@@ -6,7 +6,7 @@ import getpass
 import logging
 import os
 import warnings
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from copy import copy
 from datetime import datetime
@@ -333,7 +333,9 @@ class Experiment:
         )
 
     @contextmanager
-    def log_test(self, name: str, description: str | None = None) -> Iterator[Test]:
+    def log_test(
+        self, name: str, description: str | None = None
+    ) -> Generator[Test, None, None]:
         """Add a test to the experiment using a context handler.
 
         A test is a specific location for non-global metrics.
@@ -357,7 +359,11 @@ class Experiment:
             fs=self.fs,
         )
 
-        yield test
+        try:
+            yield test
+        except Exception as exc:
+            LOG.exception("Exception raised during test execution")
+            raise exc
 
         with self.mutex_:
             self.last_updated = utcnow()

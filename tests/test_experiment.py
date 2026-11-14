@@ -1,6 +1,7 @@
 """Test the experiment dataclass."""
 
 import json
+import logging
 import pickle
 import warnings
 import zoneinfo
@@ -68,14 +69,22 @@ def test_experiment_logging():
     assert exp.tags == ["actually a failure"]
 
 
-def test_not_logging_test():
+def test_not_logging_test(caplog):
     """Test not logging a test when raising an error."""
     exp = Experiment(name="My experiment", project=Path("project.json"))
-    with pytest.raises(ValueError), exp.log_test(name="My test") as test:
-        test.log_metric("name-subpop", 0.3)
-        raise ValueError("An error.")
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(ValueError), exp.log_test(name="My test") as test:
+            test.log_metric("name-subpop", 0.3)
+            raise ValueError("An error.")
 
-    assert len(exp.tests) == 0
+        assert caplog.record_tuples == [
+            (
+                "lazyscribe.experiment",
+                logging.ERROR,
+                "Exception raised during test execution",
+            )
+        ]
+        assert len(exp.tests) == 0
 
 
 @time_machine.travel(
