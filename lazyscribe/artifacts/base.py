@@ -5,9 +5,11 @@ from __future__ import annotations
 from abc import ABCMeta, abstractmethod
 from datetime import datetime
 from io import BytesIO, IOBase, StringIO
+from pathlib import Path
 from typing import Any, ClassVar
 
 from attrs import asdict, define, field
+from fsspec.spec import AbstractFileSystem
 
 
 @define
@@ -131,6 +133,33 @@ class Artifact(metaclass=ABCMeta):
         Any
             The artifact object.
         """
+
+    @classmethod
+    def scan(
+        cls, source: str | Path, fs: AbstractFileSystem | None = None, **kwargs: Any
+    ) -> Any:
+        """Lazily scan an artifact.
+
+        Note that this method is unlikely to be implemented for all artifact handlers.
+
+        .. versionadded:: 2.4.0
+
+        Parameters
+        ----------
+        source : str | pathlib.Path
+            Path to the artifact.
+        fs : fsspec.spec.AbstractFileSystem, optional (default None)
+            The ``fsspec`` filesystem.
+        **kwargs : Any
+            Keyword arguments for scanners.
+
+        Returns
+        -------
+        Any
+            A lazily loaded object.
+        """
+        msg = f"Lazy artifact scanning not supported by the '{cls.alias}' handler"
+        raise NotImplementedError(msg)
 
     @classmethod
     @abstractmethod
