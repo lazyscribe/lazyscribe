@@ -187,6 +187,70 @@ class Repository:
                 stacklevel=2,
             )
 
+    def scan_artifact(
+        self,
+        name: str,
+        validate: bool = True,
+        version: datetime | str | int | None = None,
+        match: Literal["asof", "exact"] = "exact",
+        **kwargs: Any,
+    ) -> Any:
+        """Scan an artifact on the filesystem.
+
+        This operation will primarily be reserved for datasets, like parquet files.
+
+        .. versionadded:: 2.4.0
+
+        Parameters
+        ----------
+        name : str
+            The name of the artifact to scan.
+        validate : bool, optional (default True)
+            Whether or not to validate the runtime environment against the artifact
+            metadata.
+        version : datetime.datetime | str | int, optional (default None)
+            The version of the artifact to load.
+            Can be provided as a datetime corresponding to the ``created_at`` field,
+            a string corresponding to the ``created_at`` field in the format ``"%Y-%m-%dT%H:%M:%S"``
+            (e.g. ``"2025-01-25T12:36:22"``), or an integer version.
+            If set to ``None`` or not provided, defaults to the most recent version.
+        match : {"asof", "exact"}, optional (default "exact")
+            Matching logic. Only relevant for ``str`` and ``datetime.datetime`` values for
+            ``version``. ``exact`` will provide an artifact with the exact ``created_at``
+            value provided. ``asof`` will provide the most recent version as of the
+            ``version`` value.
+
+            When using an ``asof`` search, only artifacts with no expiry or an ``expiry``
+            datetime set _after_ the provided ``version`` value will be included. When
+            ``version=None``, any artifacts that are expired as of
+            :py:meth:`lazyscribe._utils.utcnow` will be excluded.
+        **kwargs
+            Keyword arguments for the handler scan function.
+
+        Returns
+        -------
+        Any
+            The artifact object.
+
+        Raises
+        ------
+        ValueError
+            Raised on invalid ``match`` value.
+            Raised if no valid artifact was found.
+        lazyscribe.exception.ArtifactLoadError
+            Raised if ``validate`` and runtime environment does not match artifact metadata.
+        """
+        # Search for the artifact
+        artifact = self._search_artifact_versions(
+            name=name, version=version, match=match
+        )
+        if validate:
+            validate_artifact_environment(artifact)
+
+        return artifact.scan(
+            self.dir / artifact.name / artifact.fname, fs=self.fs, **kwargs
+        )
+
     def load_artifact(
         self,
         name: str,
