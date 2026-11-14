@@ -88,6 +88,9 @@ def test_save_repository(tmp_path):
     ]
 
     repository_read = Repository(repository_location, "r")
+    # Try and fail to scan an artifact
+    with pytest.raises(NotImplementedError):
+        _ = repository_read.scan_artifact("my-dict")
     artifact_loaded = repository_read.load_artifact("my-dict")
     with open(location / "my-dict" / expected_fname) as infile:
         artifact_read = json.load(infile)
@@ -128,6 +131,9 @@ def test_save_repository_subdir(tmp_path):
     ]
 
     repository_read = Repository(repository_location, "r")
+    # Try and fail to scan the artifact
+    with pytest.raises(NotImplementedError):
+        _ = repository_read.scan_artifact("my-dict")
     artifact_loaded = repository_read.load_artifact("my-dict")
     with open(location / "my-dict" / "mydir" / "subdir" / "my-dict.json") as infile:
         artifact_read = json.load(infile)
