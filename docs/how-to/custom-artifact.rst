@@ -117,6 +117,30 @@ methods should expect a file buffer from the ``fsspec`` filesystem.
             """Write the content to a text file."""
             buf.write(obj)
 
+.. note::
+
+    In version 2.4.0, we added an optional I/O method: :py:meth:`lazyscribe.artifacts.base.Artifact.scan`.
+    This method is meant for lazily loading an artifact like a Parquet file that may
+    benefit from predicate pushdown. The signature of this function is slightly different
+    in that it takes the path to the file and the filesystem associated with the parent
+    experiment, test, or repository:
+
+    .. code-block:: python
+        :emphasize-lines: 9-12
+
+        from pathlib import Path
+
+        from fsspec.spec import AbstractFileSystem
+
+        @define(auto_attribs=True, getstate_setstate=False)
+        class TextArtifact(Artifact):
+            ...
+
+            @classmethod
+            def scan(
+                cls, source: str | Path, fs: AbstractFileSystem | None = None, **kwargs: Any
+            ) -> Any: ...
+
 You have a new custom handler!
 
 Using the handler
