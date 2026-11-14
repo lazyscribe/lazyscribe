@@ -89,30 +89,34 @@ exclude = [
     "docs/",
 ]
 lint.select = [
-    "ANN",    # flake8-annotations
-    "B",      # flake8-bugbear
-    "C",      # flake8-comprehensions
-    "D",      # pydocstyle
-    "E",      # pycodestyle errors
-    "F",      # pyflakes
-    "I",      # isort
-    "LOG",    # flake8-logging
-    "RUF",    # Ruff errors,
-    "SIM",    # flake8-simplify
-    "T20",    # flake8-print
-    "TID252", # flake8-tidy-imports ban relative imports
-    "UP",     # pyupgrade
-    "W",      # pycodestyle warnings
+    "ANN",              # flake8-annotations
+    "B",                # flake8-bugbear
+    "C",                # flake8-comprehensions
+    "D",                # pydocstyle
+    "E",                # pycodestyle errors
+    "F",                # pyflakes
+    "I",                # isort
+    "LOG",              # flake8-logging
+    "relative-imports", # flake8-tidy-imports ban relative imports
+    "RUF",              # Ruff errors,
+    "SIM",              # flake8-simplify
+    "T20",              # flake8-print
+    "UP",               # pyupgrade
+    "W",                # pycodestyle warnings
 ]
 lint.ignore = [
-    "ANN401", # `Any` usage
-    "C901",   # Function/method is too complex. (Add back in later.)
-    "E501",   # Line too long. Using formatter instead.
+    "any-type",          # `Any` usage
+    "complex-structure", # Function/method is too complex. (Add back in later.)
+    "line-too-long",     # Line too long. Using formatter instead.
 ]
-lint.per-file-ignores."__init__.py" = [ "E402" ]
+lint.per-file-ignores."__init__.py" = [ "module-import-not-at-top-of-file" ]
 lint.per-file-ignores."tests/**/*" = [ "ANN" ]
-lint.per-file-ignores."tutorials/*" = [ "D205", "D400", "T201" ]
-lint.per-file-ignores."{tests,docs}/**/*" = [ "E402" ]
+lint.per-file-ignores."tutorials/*" = [
+    "missing-blank-line-after-summary",
+    "missing-trailing-period",
+    "print"
+]
+lint.per-file-ignores."{tests,docs}/**/*" = [ "module-import-not-at-top-of-file" ]
 lint.flake8-tidy-imports.ban-relative-imports = "all"
 lint.flake8-type-checking.strict = true
 lint.pydocstyle.convention = "numpy"

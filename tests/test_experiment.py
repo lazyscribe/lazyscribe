@@ -218,7 +218,6 @@ def test_scan_artifact_fail(tmp_path):
     location = tmp_path / "my-location"
     location.mkdir()
 
-    today = datetime.now()
     exp = Experiment(
         name="My experiment", project=location / "project.json", author="root"
     )

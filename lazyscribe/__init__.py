@@ -1,6 +1,6 @@
 """Main module."""
 
-from lazyscribe._meta import __version__  # noqa: F401
+from lazyscribe._meta import __version__  # ruff: ignore[unused-import]
 from lazyscribe.experiment import Experiment
 from lazyscribe.project import Project
 from lazyscribe.repository import Repository
