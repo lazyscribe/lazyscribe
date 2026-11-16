@@ -1,3 +1,13 @@
+## v2.4.0 (2026-11-16)
+
+### Feat
+
+- **tests**: adding scanning to tests
+- **experiment,test**: adding artifact scanning to experiments and tests
+- **repository**: adding the option to scan an artifact instead of loading it directly
+- **artifacts**: adding a new optional method for lazy scanning an artifact
+- adding the ability to supply a custom filesystem to projects and repositories
+
 ## v2.3.0 (2026-11-02)
 
 ### Feat
