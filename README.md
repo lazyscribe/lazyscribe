@@ -6,20 +6,20 @@
 |------------------------------------- | -------: | -------: | ------: | --------: |
 | lazyscribe/\_\_init\_\_.py           |        6 |        0 |    100% |           |
 | lazyscribe/\_meta.py                 |        1 |        0 |    100% |           |
-| lazyscribe/\_utils.py                |       54 |        0 |    100% |           |
+| lazyscribe/\_utils.py                |       61 |        1 |     98% |       190 |
 | lazyscribe/artifacts/\_\_init\_\_.py |       20 |        0 |    100% |           |
-| lazyscribe/artifacts/base.py         |       47 |        0 |    100% |           |
+| lazyscribe/artifacts/base.py         |       53 |        0 |    100% |           |
 | lazyscribe/artifacts/json.py         |       25 |        0 |    100% |           |
 | lazyscribe/artifacts/pickle.py       |       30 |        0 |    100% |           |
 | lazyscribe/exception.py              |        8 |        0 |    100% |           |
-| lazyscribe/experiment.py             |      169 |        3 |     98% |287, 516, 525 |
+| lazyscribe/experiment.py             |      171 |        3 |     98% |288, 550, 559 |
 | lazyscribe/linked.py                 |       44 |        0 |    100% |           |
 | lazyscribe/project.py                |      212 |        7 |     97% |190, 192, 340-343, 379-387, 426 |
 | lazyscribe/registry.py               |       25 |        0 |    100% |           |
 | lazyscribe/release.py                |      193 |        5 |     97% |25, 88-89, 277, 279 |
-| lazyscribe/repository.py             |      223 |        6 |     97% |106, 508, 510, 587-589 |
-| lazyscribe/test.py                   |       64 |        2 |     97% |  159, 176 |
-| **TOTAL**                            | **1121** |   **23** | **98%** |           |
+| lazyscribe/repository.py             |      228 |        6 |     97% |106, 572, 574, 651-653 |
+| lazyscribe/test.py                   |       66 |        2 |     97% |  160, 177 |
+| **TOTAL**                            | **1143** |   **24** | **98%** |           |
 
 
 ## Setup coverage badge
