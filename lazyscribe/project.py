@@ -76,6 +76,7 @@ def _write_artifact(
         raise SaveError(
             f"Unable to write {label_str}artifact '{artifact.name}' to '{fpath!s}'"
         ) from exc
+    LOG.debug(f"Successfully wrote '{artifact.name}' to {fpath!s}")
     artifact.dirty = False
     if artifact.output_only:
         warnings.warn(
@@ -315,6 +316,7 @@ class Project:
                 for exp in self.experiments
                 if not isinstance(exp, ReadOnlyExperiment)
             ]
+            written_: list[Artifact] = []
             for exp in mutable_:
                 has_dirty_test_artifacts = any(
                     artifact.dirty for test in exp.tests for artifact in test.artifacts
@@ -331,7 +333,13 @@ class Project:
                     LOG.debug(
                         f"Saving '{artifact.name}' to {exp.path / artifact.fname!s}..."
                     )
-                    _write_artifact(artifact, exp.path, self.fs)
+                    try:
+                        _write_artifact(artifact, exp.path, self.fs)
+                        written_.append(artifact)
+                    except SaveError as exc:
+                        for written_art_ in written_:
+                            written_art_.dirty = True
+                        raise exc
 
                 # Write test-level artifact data
                 for test in exp.tests:
@@ -344,7 +352,13 @@ class Project:
                         LOG.debug(
                             f"Saving test artifact '{artifact.name}' to {test.path / artifact.fname!s}..."
                         )
-                        _write_artifact(artifact, test.path, self.fs, label="test")
+                        try:
+                            _write_artifact(artifact, test.path, self.fs, label="test")
+                            written_.append(artifact)
+                        except SaveError as exc:
+                            for written_art_ in written_:
+                                written_art_.dirty = True
+                            raise exc
 
                 if exp.dirty:
                     exp.dirty = False
