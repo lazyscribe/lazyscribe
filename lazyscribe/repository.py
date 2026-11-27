@@ -510,6 +510,7 @@ class Repository:
                     f"Unable to save the Repository JSON file to {self.fpath!s}"
                 ) from exc
 
+            written_: list[Artifact] = []
             for artifact in self.artifacts:
                 # Write the artifact data
                 fmode = "wb" if artifact.binary else "w"
@@ -527,11 +528,17 @@ class Repository:
                     with self.fs.open(str(fpath), fmode) as buf:
                         artifact.write(artifact.value, buf, **artifact.writer_kwargs)
                 except Exception as exc:
+                    # Reset the dirty flags for any artifacts we have written because the fsspec
+                    # transaction will remove any dangling files
+                    for written_art_ in written_:
+                        written_art_.dirty = True
                     raise SaveError(
                         f"Unable to write '{artifact.name}' to '{fpath!s}'"
                     ) from exc
 
                 # Reset the `dirty` flag since we have the updated artifact on disk
+                LOG.debug(f"Successfully wrote '{artifact.name}' to {fpath!s}")
+                written_.append(artifact)
                 artifact.dirty = False
                 if artifact.output_only:
                     warnings.warn(

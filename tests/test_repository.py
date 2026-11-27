@@ -149,10 +149,44 @@ def test_save_repository_transaction(tmp_path):
     repository = Repository(repository_location)
     repository.log_artifact(name="should-not-work", value=int, handler="json")
 
-    with pytest.raises(SaveError):
+    with pytest.raises(SaveError) as excinfo:
         repository.save()
 
+    assert "Unable to write 'should-not-work'" in str(excinfo)
     assert not repository_location.is_file()
+
+
+def test_save_repository_transaction_partial(tmp_path, caplog):
+    """Test saving an artifact successfully, then rolling back.
+
+    The idea here is that some artifact saves succeeed, but once one fails we rollback
+    all writes.
+    """
+    location = tmp_path / "my-repository"
+    location.mkdir()
+    repository_location = location / "repository.json"
+
+    repository = Repository(repository_location)
+    repository.log_artifact(name="should-work", value={"key": "value"}, handler="json")
+    repository.log_artifact(name="should-not-work", value=int, handler="json")
+
+    with (
+        pytest.raises(SaveError) as excinfo,
+        caplog.at_level(logging.DEBUG, logger="lazyscribe.repository"),
+    ):
+        repository.save()
+
+    assert "Unable to write 'should-not-work'" in str(excinfo)
+    assert caplog.record_tuples[-2] == (
+        "lazyscribe.repository",
+        logging.DEBUG,
+        f"Successfully wrote 'should-work' to {(location / 'should-work' / repository.artifacts[0].fname)!s}",
+    )
+
+    assert not repository_location.is_file()
+    assert repository.artifacts[
+        0
+    ].dirty  # Check that we will write the first artifact again
 
 
 @time_machine.travel(

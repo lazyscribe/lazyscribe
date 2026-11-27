@@ -232,6 +232,67 @@ def test_save_project_transaction(tmp_path):
     assert not project_location.is_file()
 
 
+def test_save_project_transaction_partial(tmp_path, caplog):
+    """Test saving an artifact successfully, then rolling back.
+
+    The idea here is that some artifact saves succeed, but once one fails we rollback
+    all writes.
+    """
+    location = tmp_path / "my-project"
+    project_location = location / "project.json"
+
+    project = Project(fpath=project_location, author="root")
+    with project.log(name="My experiment") as exp:
+        exp.log_artifact(name="should-work", value={"key": "value"}, handler="json")
+        exp.log_artifact(name="should-not-work", value=int, handler="json")
+
+    with (
+        pytest.raises(SaveError) as excinfo,
+        caplog.at_level(logging.DEBUG, logger="lazyscribe.project"),
+    ):
+        project.save()
+
+    assert "Unable to write artifact 'should-not-work'" in str(excinfo)
+    assert caplog.record_tuples[-2] == (
+        "lazyscribe.project",
+        logging.DEBUG,
+        f"Successfully wrote 'should-work' to {(location / exp.slug / exp.artifacts[0].fname)!s}",
+    )
+    assert not project_location.is_file()
+    assert exp.artifacts[0].dirty  # Check we will write the artifact again
+
+
+def test_save_project_test_artifact_transaction_partial(tmp_path, caplog):
+    """Test saving an artifact successfully, then rolling back with tests.
+
+    The idea here is that some artifact saves succeed, but once one fails we rollback
+    all writes.
+    """
+    location = tmp_path / "my-project"
+    project_location = location / "project.json"
+
+    project = Project(fpath=project_location, author="root")
+    with project.log(name="My experiment") as exp:
+        exp.log_artifact(name="should-work", value={"key": "value"}, handler="json")
+        with exp.log_test("My test") as test:
+            test.log_artifact(name="should-not-work", value=int, handler="json")
+
+    with (
+        pytest.raises(SaveError) as excinfo,
+        caplog.at_level(logging.DEBUG, logger="lazyscribe.project"),
+    ):
+        project.save()
+
+    assert "Unable to write test artifact 'should-not-work'" in str(excinfo)
+    assert caplog.record_tuples[-2] == (
+        "lazyscribe.project",
+        logging.DEBUG,
+        f"Successfully wrote 'should-work' to {(location / exp.slug / exp.artifacts[0].fname)!s}",
+    )
+    assert not project_location.is_file()
+    assert test.artifacts[0].dirty  # Check we will write the artifact again
+
+
 @time_machine.travel(
     datetime(2025, 1, 20, 13, 23, 30, tzinfo=zoneinfo.ZoneInfo("UTC")), tick=False
 )
